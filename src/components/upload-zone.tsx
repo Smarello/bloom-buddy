@@ -6,6 +6,7 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { IndicatoreAnalisi } from "@/components/indicatore-analisi";
 import { PannelloErroreAnalisi } from "@/components/pannello-errore-analisi";
+import { CameraModal } from "@/components/camera-modal";
 import { STRINGA_ACCEPT_INPUT } from "@/lib/image/costanti-validazione";
 
 function formattaDimensioneFile(byte: number): string {
@@ -46,6 +47,15 @@ export function UploadZone() {
   const inputFotocameraRef = useRef<HTMLInputElement>(null);
   const dragEnterCounterRef = useRef<number>(0);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [mostraModalCamera, setMostraModalCamera] = useState(false);
+  const [supportaGetUserMedia, setSupportaGetUserMedia] = useState(false);
+
+  useEffect(() => {
+    setSupportaGetUserMedia(
+      typeof navigator !== "undefined" &&
+        !!navigator.mediaDevices?.getUserMedia
+    );
+  }, []);
 
   const gestisciCambioFile = useCallback(
     (evento: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +73,23 @@ export function UploadZone() {
   }, []);
 
   const apriFotocamera = useCallback(() => {
-    inputFotocameraRef.current?.click();
+    if (supportaGetUserMedia) {
+      setMostraModalCamera(true);
+    } else {
+      inputFotocameraRef.current?.click();
+    }
+  }, [supportaGetUserMedia]);
+
+  const gestisciFotoScattata = useCallback(
+    (file: File) => {
+      setMostraModalCamera(false);
+      gestisciSelezioneFile(file);
+    },
+    [gestisciSelezioneFile]
+  );
+
+  const chiudiModalCamera = useCallback(() => {
+    setMostraModalCamera(false);
   }, []);
 
   const gestisciDragEnter = useCallback((evento: React.DragEvent) => {
@@ -134,6 +160,13 @@ export function UploadZone() {
   };
 
   return (
+    <>
+      {mostraModalCamera && (
+        <CameraModal
+          onFotoScattata={gestisciFotoScattata}
+          onChiudi={chiudiModalCamera}
+        />
+      )}
     <section className="py-4 pb-16" id="upload">
       <div className="max-w-[var(--container-max)] mx-auto px-[var(--container-padding)]">
         {/* Hidden file inputs */}
@@ -441,5 +474,6 @@ export function UploadZone() {
         </div>
       </div>
     </section>
+    </>
   );
 }
