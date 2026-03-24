@@ -68,7 +68,7 @@ export function ottieniHeaderSicurezza(): HeaderHttp[] {
       // Disabilita le funzionalità browser non necessarie per l'app
       key: "Permissions-Policy",
       value: [
-        "camera=()",         // Nessun accesso alla fotocamera (l'upload avviene tramite file input)
+        "camera=(self)",      // Accesso alla fotocamera consentito dal proprio dominio
         "microphone=()",     // Nessun accesso al microfono
         "geolocation=()",    // Nessun accesso alla geolocalizzazione
         "payment=()",        // Nessun accesso alle API di pagamento

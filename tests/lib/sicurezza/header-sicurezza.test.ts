@@ -84,12 +84,12 @@ describe("ottieniHeaderSicurezza", () => {
       expect(headerPermissionsPolicy).toBeDefined();
     });
 
-    it("la Permissions-Policy disabilita l'accesso alla fotocamera", () => {
+    it("la Permissions-Policy consente l'accesso alla fotocamera dal proprio dominio", () => {
       const headers = ottieniHeaderSicurezza();
       const headerPermissionsPolicy = headers.find(
         (h) => h.key === "Permissions-Policy",
       );
-      expect(headerPermissionsPolicy?.value).toContain("camera=()");
+      expect(headerPermissionsPolicy?.value).toContain("camera=(self)");
     });
 
     it("la Permissions-Policy disabilita l'accesso al microfono", () => {
