@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const NOME_MODELLO = "gemini-2.0-flash";
+export const NOME_MODELLO =
+  process.env.GOOGLE_GEMINI_MODEL_NAME ?? "gemini-2.5-flash";
 
 let _clienteGemini: GoogleGenerativeAI | null = null;
 

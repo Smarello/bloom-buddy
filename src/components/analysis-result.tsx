@@ -1,4 +1,5 @@
-import type { PlantAnalysis } from "@/types/analysis";
+import type { HealthStatus, PlantAnalysis } from "@/types/analysis";
+import type { CareInfo } from "@/types/analysis";
 import { HealthIndicator } from "./health-indicator";
 import { CareTipsList } from "./care-tips-list";
 import { CareInfoGrid } from "./care-info-grid";
@@ -9,48 +10,141 @@ interface PropsAnalysisResult {
   onNuovaAnalisi: () => void;
 }
 
+const TESTO_INCORAGGIAMENTO: Record<
+  HealthStatus,
+  { titolo: string; testo: string }
+> = {
+  excellent: {
+    titolo: "La tua pianta è in splendida forma!",
+    testo: "Stai facendo un lavoro eccellente. Continua con la cura attuale e la tua pianta continuerà a prosperare. Il pollice verde ce l'hai già!",
+  },
+  good: {
+    titolo: "Non preoccuparti, ce la farai!",
+    testo: "La tua pianta sta bene e, con i piccoli accorgimenti qui sotto, tornerà in forma perfetta in poco tempo. Ricorda: anche i pollici più neri possono diventare verdi con un po' di pratica!",
+  },
+  fair: {
+    titolo: "Un po' di attenzione e migliorerà presto!",
+    testo: "La tua pianta sta attraversando un momento difficile, ma niente di irrecuperabile. Segui i consigli qui sotto con costanza e vedrai la differenza in poche settimane.",
+  },
+  poor: {
+    titolo: "La tua pianta ha bisogno di te!",
+    testo: "Non è ancora troppo tardi per salvare la tua pianta. Con le cure giuste e un po' di pazienza, molte piante riescono a riprendersi anche da condizioni critiche. Segui attentamente i consigli qui sotto.",
+  },
+};
+
+const QUICK_INFO: Array<{
+  chiave: keyof CareInfo;
+  etichetta: string;
+  colore: string;
+  bg: string;
+  icona: React.ReactNode;
+}> = [
+  {
+    chiave: "annaffiatura",
+    etichetta: "Acqua",
+    colore: "#5b9bd5",
+    bg: "rgba(91, 155, 213, 0.12)",
+    icona: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-[22px] h-[22px]">
+        <path d="M12 4C9 8 6 12 6 16a6 6 0 0 0 12 0c0-4-3-8-6-12z" stroke="#5b9bd5" strokeWidth="2" fill="none" />
+        <path d="M12 4C9 8 6 12 6 16a6 6 0 0 0 12 0c0-4-3-8-6-12z" fill="#5b9bd5" opacity="0.12" />
+      </svg>
+    ),
+  },
+  {
+    chiave: "luce",
+    etichetta: "Luce",
+    colore: "#f5c542",
+    bg: "rgba(245, 197, 66, 0.12)",
+    icona: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-[22px] h-[22px]">
+        <circle cx="12" cy="12" r="4" stroke="#f5c542" strokeWidth="2" />
+        <path
+          d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"
+          stroke="#f5c542"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    chiave: "temperatura",
+    etichetta: "Temperatura",
+    colore: "#e8875a",
+    bg: "rgba(232, 135, 90, 0.12)",
+    icona: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-[22px] h-[22px]">
+        <path
+          d="M14 4v8l4 4H6l4-4V4"
+          stroke="#e8875a"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <line x1="9" y1="4" x2="15" y2="4" stroke="#e8875a" strokeWidth="2" strokeLinecap="round" />
+        <line x1="6" y1="20" x2="18" y2="20" stroke="#e8875a" strokeWidth="2" strokeLinecap="round" />
+        <line x1="12" y1="16" x2="12" y2="20" stroke="#e8875a" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    chiave: "umidita",
+    etichetta: "Umidità",
+    colore: "#7ec8c8",
+    bg: "rgba(126, 200, 200, 0.12)",
+    icona: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-[22px] h-[22px]">
+        <path d="M12 3c-4 3-8 7-8 12a8 8 0 0 0 16 0c0-5-4-9-8-12z" stroke="#7ec8c8" strokeWidth="2" fill="none" />
+        <path d="M12 3c-4 3-8 7-8 12a8 8 0 0 0 16 0c0-5-4-9-8-12z" fill="#7ec8c8" opacity="0.08" />
+        <path d="M8 16c1 2 3 3 5 3" stroke="#7ec8c8" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+      </svg>
+    ),
+  },
+];
+
 export function AnalysisResult({
   analisi,
   urlAnteprima,
   onNuovaAnalisi,
 }: PropsAnalysisResult) {
   const percentualeConfidenza = Math.round(analisi.livelloConfidenza * 100);
+  const incoraggiamento = TESTO_INCORAGGIAMENTO[analisi.statoSalute];
+
+  // Azione immediata: primo consiglio ad alta priorità
+  const azioneImmediata = analisi.consigliCura.find((c) => c.priorita === "alta");
+  const altriConsigli = analisi.consigliCura.filter((c) => c !== azioneImmediata);
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* HERO: Identità pianta con foto */}
-      <div
-        className="bg-[var(--color-bg-card)] border border-[var(--color-border-light)] rounded-2xl overflow-hidden shadow-[var(--shadow-lg)]"
-        style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both" }}
-      >
-        {/* Banner foto */}
-        <div className="relative h-[260px] max-md:h-[220px] overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={urlAnteprima}
-            alt={`Foto analizzata — ${analisi.nomeComune}`}
-            className="w-full h-full object-cover"
-            style={{ filter: "brightness(0.88) saturate(1.1)" }}
-          />
-          {/* Gradiente scuro in basso */}
+    <div className="flex flex-col gap-8">
+
+      {/* 1. PLANT HERO */}
+      <div style={{ animation: "scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+        {/* Banner gradiente */}
+        <div
+          className="h-[200px] max-md:h-[160px] rounded-t-2xl relative overflow-hidden"
+          style={{
+            background:
+              "radial-gradient(ellipse at 30% 40%, rgba(106, 158, 106, 0.3), transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(192, 106, 48, 0.15), transparent 60%), linear-gradient(160deg, var(--color-primary-700) 0%, #2a4a2a 40%, #3a5a3a 100%)",
+          }}
+        >
+          {/* Pattern botanico */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
+            className="absolute inset-0"
+            aria-hidden="true"
             style={{
-              background:
-                "linear-gradient(to top, rgba(20, 32, 20, 0.72) 0%, transparent 100%)",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10c-3 2-6 8-4 14 5-1 8-5 7-11' fill='white' opacity='0.03'/%3E%3C/svg%3E")`,
+              backgroundSize: "80px 80px",
             }}
           />
-
-          {/* Chip confidenza in alto a destra */}
+          {/* Badge confidenza */}
           <div
-            className="absolute top-4 right-4 flex items-center gap-1 text-xs font-[family-name:var(--font-display)] font-semibold px-3 py-1.5 rounded-full border z-10"
+            className="absolute top-4 right-4 flex items-center gap-1.5 text-sm font-[family-name:var(--font-display)] font-semibold px-4 py-2 rounded-full z-10"
             style={{
-              background: "rgba(0, 0, 0, 0.38)",
-              backdropFilter: "blur(14px)",
-              WebkitBackdropFilter: "blur(14px)",
-              color: "rgba(255, 255, 255, 0.95)",
-              borderColor: "rgba(255, 255, 255, 0.15)",
-              letterSpacing: "0.02em",
+              background: "rgba(0, 0, 0, 0.4)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              color: "white",
             }}
             aria-label={`Confidenza identificazione: ${percentualeConfidenza}%`}
           >
@@ -59,140 +153,347 @@ export function AnalysisResult({
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-3 h-3"
+              className="w-4 h-4"
               aria-hidden="true"
             >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
+              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
             </svg>
-            {percentualeConfidenza}% confidenza
+            Confidenza: {percentualeConfidenza}%
+          </div>
+        </div>
+
+        {/* Content card (bordo inferiore, senza bordo top) */}
+        <div
+          className="bg-[var(--color-bg-card)] border border-[var(--color-border-light)] border-t-0 rounded-b-2xl pt-8 px-8 pb-8 shadow-[var(--shadow-md)]"
+          style={{ position: "relative", overflow: "visible" }}
+        >
+          {/* Foto flottante che sovrasta il banner */}
+          <div
+            className="absolute left-8 w-[120px] h-[120px] rounded-xl overflow-hidden border-4 border-white shadow-[var(--shadow-lg)]"
+            style={{ top: "-70px" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={urlAnteprima}
+              alt={`Foto analizzata — ${analisi.nomeComune}`}
+              className="w-full h-full object-cover"
+            />
           </div>
 
-          {/* Nome pianta sovrapposto in basso */}
-          <div className="absolute bottom-5 left-6 z-10">
+          {/* Nome pianta con padding per far spazio alla foto su desktop */}
+          <div className="pt-10 sm:pt-0 sm:pl-[156px]">
             <h1
-              className="font-[family-name:var(--font-display)] font-bold text-3xl max-md:text-2xl text-white leading-tight mb-1"
-              style={{ textShadow: "0 2px 12px rgba(0, 0, 0, 0.4)" }}
+              className="font-[family-name:var(--font-display)] font-bold text-3xl max-md:text-2xl text-[var(--color-text-primary)] leading-tight"
             >
               {analisi.nomeComune}
             </h1>
             {analisi.nomeScientifico && (
-              <p
-                className="text-sm font-medium"
-                style={{
-                  color: "rgba(255, 255, 255, 0.75)",
-                  fontStyle: "italic",
-                  letterSpacing: "0.02em",
-                }}
-              >
+              <p className="text-base italic text-[var(--color-text-muted)] mt-1">
                 {analisi.nomeScientifico}
               </p>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Banda stato salute */}
-        <div className="px-6 py-5 border-b border-[var(--color-border-light)]">
+      {/* 2. QUICK INFO */}
+      <div
+        className="grid grid-cols-4 max-md:grid-cols-2 gap-4"
+        style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 100ms both" }}
+      >
+        {QUICK_INFO.map(({ chiave, etichetta, bg, icona }) => (
+          <div
+            key={chiave}
+            className="text-center py-5 px-3 bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-light)] shadow-[var(--shadow-sm)] transition-all duration-[var(--transition-base)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
+          >
+            <div
+              className="w-10 h-10 mx-auto mb-3 rounded-[var(--radius-md)] flex items-center justify-center"
+              style={{ background: bg }}
+              aria-hidden="true"
+            >
+              {icona}
+            </div>
+            <span className="block font-[family-name:var(--font-display)] font-semibold text-xs text-[var(--color-text-muted)] uppercase tracking-[0.06em] mb-1">
+              {etichetta}
+            </span>
+            <span className="font-[family-name:var(--font-display)] font-bold text-xs text-[var(--color-text-primary)] line-clamp-2 leading-snug">
+              {analisi.informazioniGenerali[chiave]}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* 3. HEALTH SECTION */}
+      <section
+        aria-labelledby="titolo-salute"
+        style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 200ms both" }}
+      >
+        <div className="flex items-center gap-3 mb-5">
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(124, 179, 66, 0.15), rgba(124, 179, 66, 0.05))",
+            }}
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+              <circle cx="12" cy="10" r="7" stroke="#7cb342" strokeWidth="2" fill="none" />
+              <path d="M12 17v3" stroke="#7cb342" strokeWidth="2" strokeLinecap="round" />
+              <path
+                d="M9.5 8.5l2 2.5 3.5-4"
+                stroke="#7cb342"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <h2
+            id="titolo-salute"
+            className="font-[family-name:var(--font-display)] font-bold text-xl text-[var(--color-text-primary)]"
+          >
+            Stato di salute
+          </h2>
+        </div>
+        <div className="bg-[var(--color-bg-card)] border border-[var(--color-border-light)] rounded-xl p-6 shadow-[var(--shadow-sm)]">
           <HealthIndicator
             stato={analisi.statoSalute}
             descrizione={analisi.descrizioneSalute}
           />
         </div>
+      </section>
+
+      {/* 4. ENCOURAGEMENT BOX */}
+      <div
+        className="relative rounded-xl border border-[var(--color-primary-200)] p-6 flex items-start gap-4 overflow-hidden"
+        style={{
+          background:
+            "radial-gradient(ellipse at 0% 0%, rgba(124, 179, 66, 0.08), transparent 50%), linear-gradient(135deg, var(--color-primary-50), var(--color-cream-100))",
+          animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 300ms both",
+        }}
+      >
+        <div
+          className="absolute bottom-[-20px] right-[-20px] w-24 h-24 rounded-full opacity-[0.03] bg-[var(--color-primary-400)]"
+          aria-hidden="true"
+        />
+        <div
+          className="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center"
+          style={{
+            background: "linear-gradient(135deg, var(--color-primary-200), var(--color-primary-100))",
+          }}
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 28 28" fill="none" className="w-[26px] h-[26px]">
+            <path
+              d="M14 24c-7-4-10-8-10-12a5 5 0 0 1 10-1 5 5 0 0 1 10 1c0 4-3 8-10 12z"
+              fill="#6a9e6a"
+              opacity="0.4"
+              stroke="#4a7c4a"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M14 17c-1-0.5-3-2-3-4a1.8 1.8 0 0 1 3-.8 1.8 1.8 0 0 1 3 .8c0 2-2 3.5-3 4z"
+              fill="#e8a87a"
+              opacity="0.7"
+            />
+          </svg>
+        </div>
+        <div>
+          <h4 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-primary-700)] mb-2">
+            {incoraggiamento.titolo}
+          </h4>
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            {incoraggiamento.testo}
+          </p>
+        </div>
       </div>
 
-      {/* Griglia sezioni */}
-      <div className="grid gap-5 md:grid-cols-2">
-        {/* Consigli personalizzati — larghezza piena */}
-        <div
-          className="md:col-span-2 bg-[var(--color-bg-card)] border border-[var(--color-border-light)] rounded-xl overflow-hidden shadow-[var(--shadow-sm)]"
-          style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 150ms both" }}
-        >
-          <div className="flex items-center gap-3 px-6 py-5 pb-4 border-b border-[var(--color-border-light)]">
-            <div className="w-[38px] h-[38px] rounded-lg bg-[rgba(74,124,74,0.1)] flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#4a7c4a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
-                <path d="M12 22V12" />
-                <path d="M12 12C10 8 4 4 2 6c0 6 5 10 10 9" />
-                <path d="M12 16c2-3 8-5 10-2-1 5-6 8-10 6" />
-              </svg>
-            </div>
-            <h2 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-text-primary)]">
-              Consigli personalizzati
-            </h2>
-          </div>
-          <div className="px-6 py-5">
-            <CareTipsList consigli={analisi.consigliCura} />
-          </div>
-        </div>
-
-        {/* Cura della specie */}
-        <div
-          className="bg-[var(--color-bg-card)] border border-[var(--color-border-light)] rounded-xl overflow-hidden shadow-[var(--shadow-sm)]"
-          style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 220ms both" }}
-        >
-          <div className="flex items-center gap-3 px-6 py-5 pb-4 border-b border-[var(--color-border-light)]">
-            <div className="w-[38px] h-[38px] rounded-lg bg-[rgba(192,106,48,0.1)] flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#c06a30" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v4l3 3" />
-              </svg>
-            </div>
-            <h2 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-text-primary)]">
-              Cura della specie
-            </h2>
-          </div>
-          <CareInfoGrid informazioni={analisi.informazioniGenerali} />
-        </div>
-
-        {/* Pulsante Nuova analisi */}
-        <div
-          className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl text-center border"
-          style={{
-            background: "linear-gradient(135deg, rgba(74, 124, 74, 0.06) 0%, rgba(192, 106, 48, 0.04) 100%)",
-            borderColor: "rgba(74, 124, 74, 0.12)",
-            animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 290ms both",
-          }}
-        >
-          <div className="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-[var(--shadow-md)]" aria-hidden="true">
-            <svg viewBox="0 0 40 40" fill="none" className="w-7 h-7">
-              <path d="M20 34V20" stroke="#4a7c4a" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M20 20C18 14 10 8 6 10c0 8 6 14 14 13" fill="#6a9e6a" opacity="0.8" />
-              <path d="M20 26c3-4 10-6 13-3-1 6-7 10-13 8" fill="#4a7c4a" opacity="0.6" />
+      {/* 5. CARE SECTION */}
+      <section
+        aria-labelledby="titolo-cura"
+        style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 400ms both" }}
+      >
+        <div className="flex items-center gap-3 mb-5">
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(74, 124, 74, 0.12), rgba(74, 124, 74, 0.04))",
+            }}
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+              <path d="M12 22V12" stroke="#4a7c4a" strokeWidth="2" strokeLinecap="round" />
+              <path
+                d="M12 14c-4-1-7-5-6-10 5.5.5 8 4 8 8"
+                fill="#6a9e6a"
+                opacity="0.6"
+                stroke="#4a7c4a"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M12 12c3-1.5 7-2 9 1.5-4 2.5-7.5 1.5-8.5-1"
+                fill="#8eba8e"
+                opacity="0.5"
+                stroke="#4a7c4a"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              />
             </svg>
           </div>
-          <div>
-            <p className="font-[family-name:var(--font-display)] font-bold text-xl text-[var(--color-text-primary)] mb-1">
-              Hai un&apos;altra pianta?
-            </p>
-            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-              Carica una nuova foto e scopri tutto sulla prossima pianta.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onNuovaAnalisi}
-            className="inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-6 py-3 rounded-full text-white bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_4px_15px_rgba(74,124,74,0.3)] transition-all duration-[var(--transition-base)] hover:from-primary-400 hover:to-primary-500 hover:shadow-[0_6px_22px_rgba(74,124,74,0.38)] hover:-translate-y-0.5 active:scale-[0.97]"
+          <h2
+            id="titolo-cura"
+            className="font-[family-name:var(--font-display)] font-bold text-xl text-[var(--color-text-primary)]"
+          >
+            Piano di cura
+          </h2>
+        </div>
+
+        {/* Azione immediata (solo se presente un consiglio ad alta priorità) */}
+        {azioneImmediata && (
+          <div
+            className="relative rounded-2xl p-8 mb-6 overflow-hidden"
             style={{
-              background: "linear-gradient(135deg, #4a7c4a, #3d663d)",
+              background:
+                "radial-gradient(ellipse at 100% 0%, rgba(192, 106, 48, 0.08), transparent 50%), linear-gradient(135deg, var(--color-secondary-50), #fff8f3)",
+              border: "2px solid var(--color-secondary-300)",
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-[18px] h-[18px]"
+            {/* Bordo sinistro accentuato */}
+            <div
+              className="absolute top-0 left-0 w-1.5 h-full rounded-sm"
+              style={{
+                background:
+                  "linear-gradient(180deg, var(--color-secondary-400), var(--color-secondary-500))",
+              }}
               aria-hidden="true"
-            >
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-            Nuova analisi
-          </button>
-        </div>
+            />
+            <div className="flex items-center gap-4 mb-4">
+              <div
+                className="w-16 h-16 shrink-0 rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(192,106,48,0.12)]"
+                style={{
+                  background:
+                    "linear-gradient(145deg, var(--color-secondary-100), var(--color-secondary-50))",
+                }}
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#a35628"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-8 h-8"
+                >
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+              </div>
+              <div>
+                <span
+                  className="inline-flex items-center gap-1.5 font-[family-name:var(--font-display)] font-bold text-xs uppercase tracking-[0.08em] px-3 py-1 rounded-full mb-1"
+                  style={{
+                    color: "var(--color-secondary-600)",
+                    background: "rgba(192, 106, 48, 0.12)",
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="w-3.5 h-3.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                  Da fare subito
+                </span>
+                <h3
+                  className="font-[family-name:var(--font-display)] font-bold text-2xl"
+                  style={{ color: "var(--color-secondary-700)" }}
+                >
+                  {azioneImmediata.titolo}
+                </h3>
+              </div>
+            </div>
+            <p className="text-base text-[var(--color-text-secondary)] leading-relaxed">
+              {azioneImmediata.descrizione}
+            </p>
+          </div>
+        )}
+
+        {/* Altri consigli (media/bassa priorità, o tutti se non c'è azione immediata) */}
+        {altriConsigli.length > 0 && (
+          <div className="bg-[var(--color-bg-card)] border border-[var(--color-border-light)] rounded-xl overflow-hidden shadow-[var(--shadow-sm)] mb-6">
+            <div className="flex items-center gap-3 px-6 py-5 pb-4 border-b border-[var(--color-border-light)]">
+              <div
+                className="w-[38px] h-[38px] rounded-lg bg-[rgba(74,124,74,0.1)] flex items-center justify-center shrink-0"
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#4a7c4a"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                >
+                  <path d="M12 22V12" />
+                  <path d="M12 12C10 8 4 4 2 6c0 6 5 10 10 9" />
+                  <path d="M12 16c2-3 8-5 10-2-1 5-6 8-10 6" />
+                </svg>
+              </div>
+              <h2 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-text-primary)]">
+                {azioneImmediata ? "Altri consigli" : "Consigli personalizzati"}
+              </h2>
+            </div>
+            <div className="px-6 py-5">
+              <CareTipsList consigli={altriConsigli} />
+            </div>
+          </div>
+        )}
+
+        {/* Cura quotidiana — care cards */}
+        <p className="font-[family-name:var(--font-display)] font-semibold text-sm text-[var(--color-text-muted)] uppercase tracking-[0.06em] mb-4">
+          Cura quotidiana
+        </p>
+        <CareInfoGrid informazioni={analisi.informazioniGenerali} />
+      </section>
+
+      {/* 6. NEW ANALYSIS CTA */}
+      <div
+        className="text-center py-10"
+        style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms both" }}
+      >
+        <p className="text-[var(--color-text-secondary)] mb-4">
+          Hai un&apos;altra pianta che ti preoccupa?
+        </p>
+        <button
+          type="button"
+          onClick={onNuovaAnalisi}
+          className="inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-8 py-3.5 rounded-full text-white shadow-[0_4px_15px_rgba(74,124,74,0.3)] transition-all duration-[var(--transition-base)] hover:shadow-[0_6px_22px_rgba(74,124,74,0.38)] hover:-translate-y-0.5 active:scale-[0.97]"
+          style={{ background: "linear-gradient(135deg, #4a7c4a, #3d663d)" }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-[18px] h-[18px]"
+            aria-hidden="true"
+          >
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Analizza un&apos;altra pianta
+        </button>
       </div>
     </div>
   );

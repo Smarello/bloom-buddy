@@ -22,6 +22,15 @@ export interface AzioniUseAnalysis {
 
 export const CHIAVE_SESSION_STORAGE = "bloombuddy-analisi-corrente";
 
+function leggiFileComDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export function useAnalysis(): StatoUseAnalysis & AzioniUseAnalysis {
   const [stato, setStato] = useState<StatoAnalisi>("idle");
   const [errore, setErrore] = useState<ErroreAnalisiHook | null>(null);
@@ -40,6 +49,10 @@ export function useAnalysis(): StatoUseAnalysis & AzioniUseAnalysis {
       formData.append("immagine", fileCompresso);
 
       try {
+        // Converti il file in data URL prima della navigazione per evitare
+        // che la revoca del blob URL al dismount del componente renda l'immagine invisibile
+        const dataUrlAnteprima = await leggiFileComDataUrl(fileCompresso);
+
         const risposta = await fetch("/api/analyze", {
           method: "POST",
           body: formData,
@@ -56,10 +69,10 @@ export function useAnalysis(): StatoUseAnalysis & AzioniUseAnalysis {
           return;
         }
 
-        // Salva il risultato e l'URL anteprima in sessionStorage per la pagina /analysis
+        // Salva il risultato e il data URL (base64) in sessionStorage per la pagina /analysis
         const datoCompleto = {
           analisi: dati as PlantAnalysis,
-          urlAnteprima,
+          urlAnteprima: dataUrlAnteprima,
         };
         sessionStorage.setItem(CHIAVE_SESSION_STORAGE, JSON.stringify(datoCompleto));
 
