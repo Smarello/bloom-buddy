@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import type { HealthStatus, PlantAnalysis } from "@/types/analysis";
 import type { CareInfo } from "@/types/analysis";
 import { HealthIndicator } from "./health-indicator";
@@ -108,6 +111,64 @@ export function AnalysisResult({
   urlAnteprima,
   onNuovaAnalisi,
 }: PropsAnalysisResult) {
+  const [popupAperto, setPopupAperto] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [traslazione, setTraslazione] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const puntoInizioTrascinamento = useRef({ x: 0, y: 0 });
+  const refHaTrascinato = useRef(false);
+  const refContenitorePopup = useRef<HTMLDivElement>(null);
+
+  // Chiusura con Escape e reset zoom alla chiusura
+  useEffect(() => {
+    if (!popupAperto) {
+      setZoomLevel(1);
+      setTraslazione({ x: 0, y: 0 });
+      return;
+    }
+    const chiudiConEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopupAperto(false);
+    };
+    document.addEventListener("keydown", chiudiConEscape);
+    return () => document.removeEventListener("keydown", chiudiConEscape);
+  }, [popupAperto]);
+
+  // Zoom con Ctrl + rotella — listener imperativo per poter chiamare preventDefault
+  useEffect(() => {
+    if (!popupAperto) return;
+    const el = refContenitorePopup.current;
+    if (!el) return;
+    const gestisciRotella = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.25 : 0.25;
+      setZoomLevel((prev) => Math.min(5, Math.max(1, prev + delta)));
+    };
+    el.addEventListener("wheel", gestisciRotella, { passive: false });
+    return () => el.removeEventListener("wheel", gestisciRotella);
+  }, [popupAperto]);
+
+  const gestisciMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel <= 1) return;
+    e.preventDefault();
+    setIsDragging(true);
+    refHaTrascinato.current = false;
+    puntoInizioTrascinamento.current = { x: e.clientX - traslazione.x, y: e.clientY - traslazione.y };
+  };
+
+  const gestisciMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    refHaTrascinato.current = true;
+    setTraslazione({ x: e.clientX - puntoInizioTrascinamento.current.x, y: e.clientY - puntoInizioTrascinamento.current.y });
+  };
+
+  const gestisciMouseUp = () => setIsDragging(false);
+
+  const gestisciDoppioClick = () => {
+    setZoomLevel(1);
+    setTraslazione({ x: 0, y: 0 });
+  };
+
   const percentualeConfidenza = Math.round(analisi.livelloConfidenza * 100);
   const incoraggiamento = TESTO_INCORAGGIAMENTO[analisi.statoSalute];
 
@@ -124,17 +185,32 @@ export function AnalysisResult({
         style={{ animation: "scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}
       >
         {/* Pannello sinistro: immagine pianta */}
-        <div
-          className="relative flex-none w-[42%] max-sm:w-full max-sm:h-[260px] overflow-hidden"
+        <button
+          type="button"
+          className="relative flex-none w-[42%] max-sm:w-full max-sm:h-[260px] overflow-hidden group cursor-zoom-in"
+          onClick={() => setPopupAperto(true)}
+          aria-label="Ingrandisci foto della pianta"
         >
           {/* Foto della pianta — full-bleed */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={urlAnteprima}
             alt={`Foto analizzata — ${analisi.nomeComune}`}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
-        </div>
+          {/* Overlay icona zoom */}
+          <div
+            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            style={{ background: "rgba(0,0,0,0.25)" }}
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 drop-shadow-lg">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+              <path d="M11 8v6M8 11h6" />
+            </svg>
+          </div>
+        </button>
 
         {/* Pannello destro: nome e info pianta */}
         <div className="flex-1 bg-[var(--color-bg-card)] p-8 flex flex-col justify-center">
@@ -444,6 +520,79 @@ export function AnalysisResult({
         </p>
         <CareInfoGrid informazioni={analisi.informazioniGenerali} />
       </section>
+
+      {/* POPUP ZOOM FOTO */}
+      {popupAperto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.85)" }}
+          onClick={() => { if (!refHaTrascinato.current) setPopupAperto(false); refHaTrascinato.current = false; }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Foto ingrandita — ${analisi.nomeComune}`}
+        >
+          {/* Contenitore immagine — intercetta rotella e drag */}
+          <div
+            ref={refContenitorePopup}
+            className="relative select-none overflow-hidden"
+            style={{
+              animation: "scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both",
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={gestisciMouseDown}
+            onMouseMove={gestisciMouseMove}
+            onMouseUp={gestisciMouseUp}
+            onMouseLeave={gestisciMouseUp}
+            onDoubleClick={gestisciDoppioClick}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={urlAnteprima}
+              alt={`Foto ingrandita — ${analisi.nomeComune}`}
+              className="max-w-[90vw] max-h-[90vh] rounded-xl object-contain shadow-2xl"
+              style={{
+                transform: `translate(${traslazione.x}px, ${traslazione.y}px) scale(${zoomLevel})`,
+                transformOrigin: "center",
+                transition: isDragging ? "none" : "transform 0.12s ease",
+                cursor: zoomLevel > 1 ? (isDragging ? "grabbing" : "grab") : "default",
+              }}
+              draggable={false}
+            />
+
+            {/* Indicatore livello zoom */}
+            {zoomLevel > 1 && (
+              <div
+                className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md text-white text-xs font-mono font-semibold pointer-events-none"
+                style={{ background: "rgba(0,0,0,0.6)" }}
+                aria-live="polite"
+                aria-label={`Zoom ${Math.round(zoomLevel * 100)}%`}
+              >
+                {Math.round(zoomLevel * 100)}%
+              </div>
+            )}
+
+            {/* Bottone chiudi */}
+            <button
+              type="button"
+              onClick={() => setPopupAperto(false)}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-black/70"
+              style={{ background: "rgba(0,0,0,0.55)" }}
+              aria-label="Chiudi anteprima"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" className="w-5 h-5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Suggerimento comandi */}
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-xs whitespace-nowrap pointer-events-none">
+            Ctrl + rotella per zoomare · Trascina per spostarti · Doppio clic per resettare
+          </p>
+        </div>
+      )}
 
       {/* 6. NEW ANALYSIS CTA */}
       <div

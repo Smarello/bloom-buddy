@@ -6,7 +6,7 @@ Lo schema JSON richiesto è:
 {
   "nomeComune": "string — nome comune della pianta in italiano",
   "nomeScientifico": "string — nome scientifico in latino",
-  "descrizione": "string — breve descrizione della specie identificata in massimo 20-25 parole. tono pacato, in italiano",
+  "descrizione": "string — breve descrizione generale della specie identificata in massimo 20-25 parole. NON DESCRIVERE LO STATO DELLA PIANTA. tono pacato, in italiano",
   "livelloConfidenza": "number — da 0 a 1, quanto sei sicuro dell'identificazione",
   "statoSalute": "string — uno tra: excellent, good, fair, poor",
   "descrizioneSalute": "string — descrizione dello stato di salute in 1-2 frasi, tono empatico e incoraggiante, in italiano",
