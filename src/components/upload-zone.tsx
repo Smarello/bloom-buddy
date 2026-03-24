@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAnalysis } from "@/hooks/useAnalysis";
@@ -38,6 +38,8 @@ export function UploadZone() {
 
   const inputGalleriaRef = useRef<HTMLInputElement>(null);
   const inputFotocameraRef = useRef<HTMLInputElement>(null);
+  const dragEnterCounterRef = useRef<number>(0);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const gestisciCambioFile = useCallback(
     (evento: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,10 +60,28 @@ export function UploadZone() {
     inputFotocameraRef.current?.click();
   }, []);
 
+  const gestisciDragEnter = useCallback((evento: React.DragEvent) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+    dragEnterCounterRef.current += 1;
+    setIsDragOver(true);
+  }, []);
+
+  const gestisciDragLeave = useCallback((evento: React.DragEvent) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+    dragEnterCounterRef.current -= 1;
+    if (dragEnterCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
+
   const gestisciDrop = useCallback(
     (evento: React.DragEvent) => {
       evento.preventDefault();
       evento.stopPropagation();
+      dragEnterCounterRef.current = 0;
+      setIsDragOver(false);
       const file = evento.dataTransfer.files?.[0];
       if (file) {
         gestisciSelezioneFile(file);
@@ -93,7 +113,9 @@ export function UploadZone() {
       ? "border-dashed border-[var(--color-accent-400)]"
       : isPronto
         ? "border-solid border-primary-200 cursor-default"
-        : "border-dashed border-primary-300 cursor-pointer hover:border-primary-400 hover:shadow-[var(--shadow-glow),var(--shadow-md)] hover:-translate-y-[3px]",
+        : isIdle && isDragOver
+          ? "border-solid border-primary-500 shadow-[var(--shadow-glow),var(--shadow-md)] -translate-y-[3px] cursor-copy"
+          : "border-dashed border-primary-300 cursor-pointer hover:border-primary-400 hover:shadow-[var(--shadow-glow),var(--shadow-md)] hover:-translate-y-[3px]",
   ].join(" ");
 
   const stileZona = {
@@ -101,7 +123,9 @@ export function UploadZone() {
       ? "radial-gradient(ellipse at 50% 30%, rgba(224, 96, 96, 0.04), transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(250, 232, 219, 0.15), transparent 60%), var(--color-bg-card)"
       : isPronto
         ? "radial-gradient(ellipse at 30% 20%, rgba(218, 232, 218, 0.15), transparent 60%), var(--color-bg-card)"
-        : "radial-gradient(ellipse at 30% 20%, rgba(218, 232, 218, 0.2), transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(250, 232, 219, 0.2), transparent 60%), var(--color-bg-card)",
+        : isIdle && isDragOver
+          ? "radial-gradient(ellipse at 50% 50%, rgba(74, 124, 74, 0.12), transparent 70%), radial-gradient(ellipse at 30% 20%, rgba(218, 232, 218, 0.3), transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(250, 232, 219, 0.3), transparent 60%), var(--color-bg-card)"
+          : "radial-gradient(ellipse at 30% 20%, rgba(218, 232, 218, 0.2), transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(250, 232, 219, 0.2), transparent 60%), var(--color-bg-card)",
   };
 
   return (
@@ -134,6 +158,8 @@ export function UploadZone() {
           role={isIdle ? "button" : undefined}
           tabIndex={isIdle ? 0 : undefined}
           aria-label="Area di caricamento foto"
+          onDragEnter={gestisciDragEnter}
+          onDragLeave={gestisciDragLeave}
           onDrop={gestisciDrop}
           onDragOver={gestisciDragOver}
           onClick={isIdle ? apriGalleria : undefined}

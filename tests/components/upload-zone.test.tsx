@@ -387,4 +387,126 @@ describe("UploadZone", () => {
       screen.getByText("Sto osservando la tua pianta..."),
     ).toBeInTheDocument();
   });
+
+  describe("drag and drop — feedback visivo e gestione file", () => {
+    function ottieniZona() {
+      return screen.getByLabelText("Area di caricamento foto");
+    }
+
+    function creaDataTransferConFile(file: File): DataTransfer {
+      const dataTransfer = {
+        files: { 0: file, length: 1, item: () => file },
+        items: [],
+        types: ["Files"],
+      } as unknown as DataTransfer;
+      return dataTransfer;
+    }
+
+    it("dragEnter sulla zona nello stato idle applica la classe di evidenziazione", () => {
+      impostaStatoHook();
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      fireEvent.dragEnter(zona);
+
+      expect(zona.className).toContain("border-primary-500");
+    });
+
+    it("dragLeave dalla zona rimuove la classe di evidenziazione", () => {
+      impostaStatoHook();
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      fireEvent.dragEnter(zona);
+      fireEvent.dragLeave(zona);
+
+      expect(zona.className).not.toContain("border-primary-500");
+    });
+
+    it("sequenza dragEnter figlio + dragLeave figlio non resetta prematuramente isDragOver", () => {
+      impostaStatoHook();
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      // Simula: cursore entra nella zona, poi entra nel figlio (doppio enter) e lascia il figlio (un leave)
+      fireEvent.dragEnter(zona); // counter = 1, isDragOver = true
+      fireEvent.dragEnter(zona); // counter = 2, isDragOver = true
+      fireEvent.dragLeave(zona); // counter = 1, isDragOver rimane true
+
+      expect(zona.className).toContain("border-primary-500");
+    });
+
+    it("dopo due dragEnter e due dragLeave isDragOver è false", () => {
+      impostaStatoHook();
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      fireEvent.dragEnter(zona); // counter = 1
+      fireEvent.dragEnter(zona); // counter = 2
+      fireEvent.dragLeave(zona); // counter = 1
+      fireEvent.dragLeave(zona); // counter = 0, isDragOver = false
+
+      expect(zona.className).not.toContain("border-primary-500");
+    });
+
+    it("drop con file valido chiama gestisciSelezioneFile con il file corretto", () => {
+      impostaStatoHook();
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      const filePianta = new File(["contenuto"], "pianta.jpg", { type: "image/jpeg" });
+      const dataTransfer = creaDataTransferConFile(filePianta);
+
+      fireEvent.dragEnter(zona);
+      fireEvent.drop(zona, { dataTransfer });
+
+      expect(mockGestisciSelezioneFile).toHaveBeenCalledWith(filePianta);
+    });
+
+    it("dopo il drop isDragOver è false (classe evidenziazione rimossa)", () => {
+      impostaStatoHook();
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      const filePianta = new File(["contenuto"], "pianta.jpg", { type: "image/jpeg" });
+      const dataTransfer = creaDataTransferConFile(filePianta);
+
+      fireEvent.dragEnter(zona);
+      expect(zona.className).toContain("border-primary-500");
+
+      fireEvent.drop(zona, { dataTransfer });
+      expect(zona.className).not.toContain("border-primary-500");
+    });
+
+    it("drop con file non immagine chiama gestisciSelezioneFile (la validazione errore è gestita dall'hook)", () => {
+      impostaStatoHook();
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      const filePdf = new File(["contenuto"], "documento.pdf", { type: "application/pdf" });
+      const dataTransfer = creaDataTransferConFile(filePdf);
+
+      fireEvent.drop(zona, { dataTransfer });
+
+      expect(mockGestisciSelezioneFile).toHaveBeenCalledWith(filePdf);
+    });
+
+    it("il feedback visivo drag NON appare quando lo stato è 'pronto' (file già caricato)", () => {
+      const fileOriginale = new File(["contenuto"], "pianta.jpg", { type: "image/jpeg" });
+      const fileCompresso = new File(["compresso"], "pianta-compressa.jpg", { type: "image/jpeg" });
+      impostaStatoHook({
+        fileOriginale,
+        fileCompresso,
+        urlAnteprima: "blob:http://localhost:3000/fake-uuid",
+        statoProcessamento: "pronto",
+      });
+      render(<UploadZone />);
+
+      const zona = ottieniZona();
+      fireEvent.dragEnter(zona);
+
+      // In stato "pronto" il bordo non diventa border-primary-500 (isDragOver non cambia le classi)
+      expect(zona.className).not.toContain("border-primary-500");
+    });
+  });
 });
