@@ -19,6 +19,16 @@ vi.mock("@/components/indicatore-analisi", () => ({
   IndicatoreAnalisi: () => <div data-testid="indicatore-analisi-mock">Sto osservando la tua pianta...</div>,
 }));
 
+vi.mock("@/components/pannello-errore-analisi", () => ({
+  PannelloErroreAnalisi: ({ errore, onRiprova }: { errore: { messaggio: string; tipo?: string }; onRiprova: () => void }) => (
+    <div data-testid="pannello-errore-analisi-mock">
+      <span data-testid="messaggio-errore-mock">{errore.messaggio}</span>
+      <span data-testid="tipo-errore-mock">{errore.tipo}</span>
+      <button type="button" onClick={onRiprova} data-testid="bottone-riprova-mock">Riprova</button>
+    </div>
+  ),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
@@ -259,6 +269,94 @@ describe("UploadZone", () => {
 
     expect(screen.getByTestId("indicatore-analisi-mock")).toBeInTheDocument();
     expect(screen.queryByAltText("Anteprima foto pianta")).not.toBeInTheDocument();
+  });
+
+  describe("errori dell'analisi — PannelloErroreAnalisi", () => {
+    function impostaConAnteprima() {
+      const fileOriginale = new File(["contenuto"], "pianta.jpg", { type: "image/jpeg" });
+      const fileCompresso = new File(["compresso"], "pianta-compressa.jpg", { type: "image/jpeg" });
+      impostaStatoHook({
+        fileOriginale,
+        fileCompresso,
+        urlAnteprima: "blob:http://localhost:3000/fake-uuid",
+        statoProcessamento: "pronto",
+      });
+    }
+
+    it("mostra PannelloErroreAnalisi quando useAnalysis restituisce un errore", () => {
+      impostaConAnteprima();
+      vi.mocked(useAnalysis).mockReturnValue({
+        stato: "errore",
+        errore: { messaggio: "Foto non abbastanza chiara", tipo: "confidenza-bassa" },
+        avviaAnalisi: vi.fn(),
+        resetta: vi.fn(),
+      });
+
+      render(<UploadZone />);
+
+      expect(screen.getByTestId("pannello-errore-analisi-mock")).toBeInTheDocument();
+      expect(screen.getByTestId("messaggio-errore-mock")).toHaveTextContent("Foto non abbastanza chiara");
+      expect(screen.getByTestId("tipo-errore-mock")).toHaveTextContent("confidenza-bassa");
+    });
+
+    it("non mostra PannelloErroreAnalisi quando non ci sono errori di analisi", () => {
+      impostaConAnteprima();
+      vi.mocked(useAnalysis).mockReturnValue({
+        stato: "idle",
+        errore: null,
+        avviaAnalisi: vi.fn(),
+        resetta: vi.fn(),
+      });
+
+      render(<UploadZone />);
+
+      expect(screen.queryByTestId("pannello-errore-analisi-mock")).not.toBeInTheDocument();
+    });
+
+    it("il pulsante 'Riprova' nel pannello chiama resetta di useAnalysis", () => {
+      impostaConAnteprima();
+      const resetta = vi.fn();
+      vi.mocked(useAnalysis).mockReturnValue({
+        stato: "errore",
+        errore: { messaggio: "Connessione non disponibile", tipo: "rete" },
+        avviaAnalisi: vi.fn(),
+        resetta,
+      });
+
+      render(<UploadZone />);
+
+      fireEvent.click(screen.getByTestId("bottone-riprova-mock"));
+
+      expect(resetta).toHaveBeenCalledOnce();
+    });
+
+    it("mostra il pannello errore per tipo 'pianta-non-riconosciuta'", () => {
+      impostaConAnteprima();
+      vi.mocked(useAnalysis).mockReturnValue({
+        stato: "errore",
+        errore: { messaggio: "Nessuna pianta rilevata", tipo: "pianta-non-riconosciuta" },
+        avviaAnalisi: vi.fn(),
+        resetta: vi.fn(),
+      });
+
+      render(<UploadZone />);
+
+      expect(screen.getByTestId("tipo-errore-mock")).toHaveTextContent("pianta-non-riconosciuta");
+    });
+
+    it("mostra il pannello errore per tipo 'errore-api'", () => {
+      impostaConAnteprima();
+      vi.mocked(useAnalysis).mockReturnValue({
+        stato: "errore",
+        errore: { messaggio: "Servizio non disponibile", tipo: "errore-api" },
+        avviaAnalisi: vi.fn(),
+        resetta: vi.fn(),
+      });
+
+      render(<UploadZone />);
+
+      expect(screen.getByTestId("tipo-errore-mock")).toHaveTextContent("errore-api");
+    });
   });
 
   it("con statoAnalisi='caricamento' l'indicatore mostra un messaggio di caricamento", () => {

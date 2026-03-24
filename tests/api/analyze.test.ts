@@ -139,6 +139,40 @@ describe("POST /api/analyze", () => {
       expect(dati.errore).not.toContain("API");
     });
 
+    it("ritorna 422 se la confidenza dell'identificazione è bassa", async () => {
+      const rispostaConfidenzaBassa = JSON.stringify({
+        nomeComune: "Pianta sconosciuta",
+        nomeScientifico: "",
+        livelloConfidenza: 0.2,
+        statoSalute: "fair",
+        descrizioneSalute: "Identificazione incerta.",
+        consigliCura: [],
+        informazioniGenerali: {
+          annaffiatura: "",
+          luce: "",
+          temperatura: "",
+          umidita: "",
+        },
+      });
+
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: { text: () => rispostaConfidenzaBassa },
+      });
+      mockGetGenerativeModel.mockReturnValue({ generateContent: mockGenerateContent } as ReturnType<typeof mockGetGenerativeModel>);
+
+      const file = creaFileFinto("pianta-sfocata.jpg", 1024 * 1024);
+      const richiesta = creaRichiestaConFile(file);
+
+      const risposta = await POST(richiesta as Parameters<typeof POST>[0]);
+      const dati = await risposta.json();
+
+      expect(risposta.status).toBe(422);
+      expect(dati.tipo).toBe("confidenza-bassa");
+      // Il messaggio non deve contenere dettagli tecnici
+      expect(dati.errore).not.toContain("0.2");
+      expect(dati.errore).not.toContain("threshold");
+    });
+
     it("ritorna 422 se la pianta non è riconosciuta nell'immagine", async () => {
       const rispostaNessunaPianta = JSON.stringify({
         nomeComune: "Nessuna pianta riconosciuta",

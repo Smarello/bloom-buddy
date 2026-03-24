@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { IndicatoreAnalisi } from "@/components/indicatore-analisi";
+import { PannelloErroreAnalisi } from "@/components/pannello-errore-analisi";
 import { STRINGA_ACCEPT_INPUT } from "@/lib/image/costanti-validazione";
 
 function formattaDimensioneFile(byte: number): string {
@@ -339,22 +340,13 @@ export function UploadZone() {
                   </button>
                 </div>
 
-                {/* Errore analisi inline */}
+                {/* Errore analisi con pannello dedicato */}
                 {erroreAnalisi && (
-                  <div
-                    role="alert"
-                    className="mt-4 flex items-start gap-3 px-4 py-3 rounded-lg border text-sm text-left"
-                    style={{
-                      background: "rgba(224, 96, 96, 0.06)",
-                      borderColor: "rgba(224, 96, 96, 0.2)",
-                      color: "var(--color-accent-600)",
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 8v4M12 16h.01" />
-                    </svg>
-                    <span>{erroreAnalisi.messaggio}</span>
+                  <div className="mt-4">
+                    <PannelloErroreAnalisi
+                      errore={erroreAnalisi}
+                      onRiprova={resettaAnalisi}
+                    />
                   </div>
                 )}
               </div>
