@@ -54,7 +54,7 @@
   --color-bg-elevated: #fffdf9;
   --color-text-primary: #2c3e2c;
   --color-text-secondary: #5a6b5a;
-  --color-text-muted: #8a9a8a;
+  --color-text-muted: #6b7d6b;
   --color-text-on-primary: #ffffff;
   --color-border: #e0ddd6;
   --color-border-light: #ede9e2;
@@ -63,7 +63,7 @@
   --color-health-excellent: #4a9e4a;
   --color-health-good: #7cb342;
   --color-health-fair: #e8a87a;
-  --color-health-poor: #e06060;
+  --color-health-poor: #c94a4a;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(44, 62, 44, 0.06);
@@ -94,7 +94,7 @@
   --secondary: #fdf8f0;
   --secondary-foreground: #3d663d;
   --muted: #f0f5f0;
-  --muted-foreground: #8a9a8a;
+  --muted-foreground: #6b7d6b;
   --accent: #f0f5f0;
   --accent-foreground: #2c3e2c;
   --destructive: #e06060;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnalysisResult } from "@/components/analysis-result";
 import { CHIAVE_SESSION_STORAGE } from "@/hooks/useAnalysis";
@@ -15,6 +15,7 @@ export default function PaginaAnalisi() {
   const router = useRouter();
   const [dati, setDati] = useState<DatiAnalisi | null>(null);
   const [isCaricamento, setIsCaricamento] = useState(true);
+  const refTitoloPrincipale = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const serializzato = sessionStorage.getItem(CHIAVE_SESSION_STORAGE);
@@ -33,6 +34,12 @@ export default function PaginaAnalisi() {
       setIsCaricamento(false);
     }
   }, [router]);
+
+  useEffect(() => {
+    if (!isCaricamento && dati && refTitoloPrincipale.current) {
+      refTitoloPrincipale.current.focus();
+    }
+  }, [isCaricamento, dati]);
 
   const gestisciNuovaAnalisi = () => {
     sessionStorage.removeItem(CHIAVE_SESSION_STORAGE);
@@ -62,6 +69,15 @@ export default function PaginaAnalisi() {
         className="mx-auto px-6 max-md:px-4"
         style={{ maxWidth: "var(--container-max, 1100px)" }}
       >
+        {/* Ancora focus accessibile per screen reader e navigazione tastiera */}
+        <h1
+          ref={refTitoloPrincipale}
+          tabIndex={-1}
+          className="sr-only"
+        >
+          Risultato analisi: {dati.analisi.nomeComune}
+        </h1>
+
         {/* Link torna indietro */}
         <button
           type="button"

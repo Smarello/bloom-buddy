@@ -238,7 +238,11 @@ export function UploadZone() {
 
           {/* STATE: Compressing */}
           {isCompressione && (
-            <div className="flex flex-col items-center gap-4">
+            <div
+              className="flex flex-col items-center gap-4"
+              aria-live="polite"
+              aria-label="Compressione immagine in corso"
+            >
               <div className="w-20 h-20 relative">
                 <div
                   className="absolute inset-0 border-3 border-primary-100 border-t-primary-500 rounded-full"
@@ -330,6 +334,7 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={apriGalleria}
+                    aria-label="Cambia foto selezionata"
                     className="flex-1 inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-6 py-3 rounded-full text-primary-600 bg-cream-100 border-2 border-primary-200 transition-all duration-[var(--transition-base)] hover:bg-primary-50 hover:border-primary-400 hover:-translate-y-0.5 active:scale-[0.97]"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -381,7 +386,7 @@ export function UploadZone() {
 
           {/* STATE: Error */}
           {isErrore && errore && (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-4" role="alert">
               {/* Error icon */}
               <div className="w-20 h-20 max-md:w-16 max-md:h-16 relative">
                 <div
@@ -433,9 +438,10 @@ export function UploadZone() {
               <button
                 type="button"
                 onClick={rimuoviFile}
+                aria-label="Riprova a caricare una foto"
                 className="inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-6 py-3 rounded-full text-white bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_4px_15px_rgba(74,124,74,0.3)] transition-all duration-[var(--transition-base)] hover:from-primary-400 hover:to-primary-500 hover:shadow-[0_6px_22px_rgba(74,124,74,0.38)] hover:-translate-y-0.5 active:scale-[0.97]"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M1 4v6h6" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                 </svg>
                 Riprova
