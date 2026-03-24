@@ -9,15 +9,15 @@ export function HeroSection() {
               <svg
                 width="16"
                 height="16"
-                viewBox="0 0 24 24"
+                viewBox="0 0 20 22"
                 fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
               >
-                <path d="M12 22V12" />
-                <path d="M12 14c-3-1-6-5-5-10 5 0.5 7 4 7 8" />
-                <path d="M12 13c3-1.5 7-2 9.5 1-3 2.5-7 1.5-8.5-.5" />
+                {/* stelo */}
+                <line x1="10" y1="20" x2="10" y2="11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                {/* foglia sinistra */}
+                <path d="M10 16 C7 13 3 8 5 3 C7 0 11 6 10 16Z" fill="currentColor" />
+                {/* foglia destra */}
+                <path d="M10 12 C13 9 17 5 15 1 C13 -1 9 6 10 12Z" fill="currentColor" opacity={0.65} />
               </svg>
               Nessuna registrazione richiesta
             </span>

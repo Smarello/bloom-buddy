@@ -184,7 +184,7 @@ export function AnalysisResult({
         {QUICK_INFO.map(({ chiave, etichetta, bg, icona }) => (
           <div
             key={chiave}
-            className="text-center py-5 px-3 bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-light)] shadow-[var(--shadow-sm)] transition-all duration-[var(--transition-base)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5"
+            className="text-center py-5 px-3 bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-light)] shadow-[var(--shadow-sm)]"
           >
             <div
               className="w-10 h-10 mx-auto mb-3 rounded-[var(--radius-md)] flex items-center justify-center"

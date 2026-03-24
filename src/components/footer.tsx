@@ -9,24 +9,18 @@ export function Footer() {
           <svg
             width="20"
             height="20"
-            viewBox="0 0 24 24"
+            viewBox="0 0 20 20"
             fill="none"
             className="flex-shrink-0"
           >
-            <path
-              d="M12 22V14"
-              stroke="#4a7c4a"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M12 16c-3-1-6-4.5-5-9 4.5 0.5 7 3.5 7 7"
-              fill="#6a9e6a"
-            />
-            <path
-              d="M12 15c2.5-1.5 6-2 8 1-3 2-6 1.5-7-0.5"
-              fill="#8eba8e"
-            />
+            {/* stelo */}
+            <line x1="10" y1="18" x2="10" y2="10" stroke="#4a7c4a" strokeWidth="1.8" strokeLinecap="round" />
+            {/* foglia sinistra */}
+            <path d="M10 14 C7 11 3 7 5 3 C7 0 11 5 10 14Z" fill="#6aab6a" />
+            {/* foglia destra */}
+            <path d="M10 11 C13 8 17 4 15 1 C13 -1 9 5 10 11Z" fill="#4a7c4a" />
+            {/* terra */}
+            <ellipse cx="10" cy="18.5" rx="3.5" ry="1.3" fill="#c06a30" opacity={0.3} />
           </svg>
           Bloom Buddy
         </span>

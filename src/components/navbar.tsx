@@ -16,27 +16,14 @@ export function Navbar() {
               className="w-full h-full"
             >
               <rect width="38" height="38" rx="10" fill="url(#logo-grad)" />
-              <path
-                d="M19 28V20"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M19 22c-3-1-6-4.5-5-9 4.5 0.5 7 3.5 7 7"
-                stroke="white"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d="M19 20c2.5-1.5 6.5-2 9 1-3 2-6.5 1.5-8-0.5"
-                stroke="white"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <circle cx="19" cy="28.5" r="1.2" fill="white" opacity="0.6" />
+              {/* stelo */}
+              <line x1="19" y1="34" x2="19" y2="18" stroke="white" strokeWidth="2" strokeLinecap="round" />
+              {/* foglia sinistra */}
+              <path d="M19 28 C13 24 7 16 11 9 C14 4 20 13 19 28Z" fill="white" />
+              {/* foglia destra */}
+              <path d="M19 22 C25 18 32 10 28 5 C25 1 18 12 19 22Z" fill="white" opacity={0.72} />
+              {/* terra */}
+              <ellipse cx="19" cy="35" rx="5" ry="1.8" fill="white" opacity={0.25} />
               <defs>
                 <linearGradient
                   id="logo-grad"
