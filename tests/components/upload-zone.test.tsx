@@ -15,6 +15,10 @@ vi.mock("@/hooks/useAnalysis", () => ({
   CHIAVE_SESSION_STORAGE: "bloombuddy-analisi-corrente",
 }));
 
+vi.mock("@/components/indicatore-analisi", () => ({
+  IndicatoreAnalisi: () => <div data-testid="indicatore-analisi-mock">Sto osservando la tua pianta...</div>,
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
@@ -24,6 +28,7 @@ vi.mock("next/navigation", () => ({
 
 import { UploadZone } from "@/components/upload-zone";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useAnalysis } from "@/hooks/useAnalysis";
 
 const mockGestisciSelezioneFile = vi.fn();
 const mockRimuoviFile = vi.fn();
@@ -226,5 +231,62 @@ describe("UploadZone", () => {
 
     const inputFotocamera = screen.getByTestId("input-fotocamera");
     expect(inputFotocamera).toHaveAttribute("capture", "environment");
+  });
+
+  it("con statoAnalisi='caricamento' mostra IndicatoreAnalisi al posto dell'anteprima", () => {
+    const fileOriginale = new File(["contenuto"], "pianta.jpg", {
+      type: "image/jpeg",
+    });
+    const fileCompresso = new File(["compresso"], "pianta-compressa.jpg", {
+      type: "image/jpeg",
+    });
+
+    impostaStatoHook({
+      fileOriginale,
+      fileCompresso,
+      urlAnteprima: "blob:http://localhost:3000/fake-uuid",
+      statoProcessamento: "pronto",
+    });
+
+    vi.mocked(useAnalysis).mockReturnValue({
+      stato: "caricamento",
+      errore: null,
+      avviaAnalisi: vi.fn(),
+      resetta: vi.fn(),
+    });
+
+    render(<UploadZone />);
+
+    expect(screen.getByTestId("indicatore-analisi-mock")).toBeInTheDocument();
+    expect(screen.queryByAltText("Anteprima foto pianta")).not.toBeInTheDocument();
+  });
+
+  it("con statoAnalisi='caricamento' l'indicatore mostra un messaggio di caricamento", () => {
+    const fileOriginale = new File(["contenuto"], "pianta.jpg", {
+      type: "image/jpeg",
+    });
+    const fileCompresso = new File(["compresso"], "pianta-compressa.jpg", {
+      type: "image/jpeg",
+    });
+
+    impostaStatoHook({
+      fileOriginale,
+      fileCompresso,
+      urlAnteprima: "blob:http://localhost:3000/fake-uuid",
+      statoProcessamento: "pronto",
+    });
+
+    vi.mocked(useAnalysis).mockReturnValue({
+      stato: "caricamento",
+      errore: null,
+      avviaAnalisi: vi.fn(),
+      resetta: vi.fn(),
+    });
+
+    render(<UploadZone />);
+
+    expect(
+      screen.getByText("Sto osservando la tua pianta..."),
+    ).toBeInTheDocument();
   });
 });

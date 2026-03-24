@@ -4,6 +4,7 @@ import { useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAnalysis } from "@/hooks/useAnalysis";
+import { IndicatoreAnalisi } from "@/components/indicatore-analisi";
 import { STRINGA_ACCEPT_INPUT } from "@/lib/image/costanti-validazione";
 
 function formattaDimensioneFile(byte: number): string {
@@ -239,8 +240,13 @@ export function UploadZone() {
             </div>
           )}
 
+          {/* STATE: Analisi in corso */}
+          {isPronto && statoAnalisi === "caricamento" && (
+            <IndicatoreAnalisi />
+          )}
+
           {/* STATE: Preview */}
-          {isPronto && urlAnteprima && (
+          {isPronto && statoAnalisi !== "caricamento" && urlAnteprima && (
             <div className="flex flex-col items-center">
               <div className="w-full max-w-[360px]">
                 {/* Image frame */}
