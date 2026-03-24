@@ -7,8 +7,25 @@ import {
   validaDimensioneImmagine,
   FORMATI_IMMAGINE_ACCETTATI,
 } from "@/lib/image/costanti-validazione";
+import { verificaRateLimit } from "@/lib/sicurezza/rate-limiter";
+import { estraiIpCliente } from "@/lib/sicurezza/estrai-ip-cliente";
 
 export async function POST(request: NextRequest) {
+  // Rate limiting per IP
+  const ipCliente = estraiIpCliente(request);
+  const risultatoRateLimit = verificaRateLimit(ipCliente);
+
+  if (!risultatoRateLimit.consentito) {
+    return Response.json(
+      {
+        errore: `Hai effettuato troppe richieste. Riprova tra ${risultatoRateLimit.secondiRimanenti} secondi.`,
+        tipo: "rate-limit-superato",
+        secondiRimanenti: risultatoRateLimit.secondiRimanenti,
+      },
+      { status: 429 },
+    );
+  }
+
   let formData: FormData;
 
   try {

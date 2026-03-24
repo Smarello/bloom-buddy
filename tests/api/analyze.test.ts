@@ -16,6 +16,19 @@ vi.mock("@/lib/ai/client", () => ({
   NOME_MODELLO: "gemini-2.0-flash",
 }));
 
+// Mock del rate limiter e dell'estrazione IP
+const mockVerificaRateLimit = vi.fn(() => ({ consentito: true, secondiRimanenti: 0 }));
+const mockEstraiIpCliente = vi.fn(() => "127.0.0.1");
+
+vi.mock("@/lib/sicurezza/rate-limiter", () => ({
+  verificaRateLimit: (...args: unknown[]) => mockVerificaRateLimit(...args),
+  resetRateLimiter: vi.fn(),
+}));
+
+vi.mock("@/lib/sicurezza/estrai-ip-cliente", () => ({
+  estraiIpCliente: (...args: unknown[]) => mockEstraiIpCliente(...args),
+}));
+
 import { POST } from "@/app/api/analyze/route";
 
 function creaFileFinto(nome: string, dimensione: number, tipo = "image/jpeg"): File {
@@ -59,6 +72,9 @@ function creaRispostaGeminiValida(): string {
 describe("POST /api/analyze", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: rate limit non superato
+    mockVerificaRateLimit.mockReturnValue({ consentito: true, secondiRimanenti: 0 });
+    mockEstraiIpCliente.mockReturnValue("127.0.0.1");
   });
 
   describe("richiesta valida", () => {
@@ -116,6 +132,71 @@ describe("POST /api/analyze", () => {
 
       expect(risposta.status).toBe(400);
       expect(dati.errore).toContain("troppo grande");
+    });
+  });
+
+  describe("rate limiting", () => {
+    it("ritorna 429 con messaggio user-friendly quando il limite è superato", async () => {
+      mockVerificaRateLimit.mockReturnValue({ consentito: false, secondiRimanenti: 45 });
+
+      const file = creaFileFinto("pianta.jpg", 1024 * 1024);
+      const richiesta = creaRichiestaConFile(file);
+
+      const risposta = await POST(richiesta as Parameters<typeof POST>[0]);
+      const dati = await risposta.json();
+
+      expect(risposta.status).toBe(429);
+      expect(dati.errore).toContain("45");
+      expect(dati.tipo).toBe("rate-limit-superato");
+      expect(dati.secondiRimanenti).toBe(45);
+    });
+
+    it("il messaggio di errore 429 è user-friendly e non contiene dettagli tecnici", async () => {
+      mockVerificaRateLimit.mockReturnValue({ consentito: false, secondiRimanenti: 30 });
+
+      const file = creaFileFinto("pianta.jpg", 1024 * 1024);
+      const richiesta = creaRichiestaConFile(file);
+
+      const risposta = await POST(richiesta as Parameters<typeof POST>[0]);
+      const dati = await risposta.json();
+
+      expect(dati.errore).toBeTruthy();
+      expect(dati.errore).not.toContain("Map");
+      expect(dati.errore).not.toContain("store");
+      expect(dati.errore).not.toContain("undefined");
+    });
+
+    it("le richieste nei limiti (consentito: true) continuano a restituire 200", async () => {
+      mockVerificaRateLimit.mockReturnValue({ consentito: true, secondiRimanenti: 0 });
+
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: { text: () => creaRispostaGeminiValida() },
+      });
+      mockGetGenerativeModel.mockReturnValue({ generateContent: mockGenerateContent } as ReturnType<typeof mockGetGenerativeModel>);
+
+      const file = creaFileFinto("pianta.jpg", 1024 * 1024);
+      const richiesta = creaRichiestaConFile(file);
+
+      const risposta = await POST(richiesta as Parameters<typeof POST>[0]);
+
+      expect(risposta.status).toBe(200);
+    });
+
+    it("passa l'IP estratto al verificaRateLimit", async () => {
+      mockEstraiIpCliente.mockReturnValue("203.0.113.5");
+      mockVerificaRateLimit.mockReturnValue({ consentito: true, secondiRimanenti: 0 });
+
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: { text: () => creaRispostaGeminiValida() },
+      });
+      mockGetGenerativeModel.mockReturnValue({ generateContent: mockGenerateContent } as ReturnType<typeof mockGetGenerativeModel>);
+
+      const file = creaFileFinto("pianta.jpg", 1024 * 1024);
+      const richiesta = creaRichiestaConFile(file);
+
+      await POST(richiesta as Parameters<typeof POST>[0]);
+
+      expect(mockVerificaRateLimit).toHaveBeenCalledWith("203.0.113.5");
     });
   });
 
