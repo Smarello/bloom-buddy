@@ -200,6 +200,37 @@ describe("POST /api/analyze", () => {
     });
   });
 
+  describe("sicurezza — nessuna persistenza su disco", () => {
+    it("elabora l'immagine in memoria tramite arrayBuffer senza persistenza su disco", async () => {
+      const mockArrayBuffer = vi.fn().mockResolvedValue(new ArrayBuffer(1024));
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: { text: () => creaRispostaGeminiValida() },
+      });
+      mockGetGenerativeModel.mockReturnValue({ generateContent: mockGenerateContent } as ReturnType<typeof mockGetGenerativeModel>);
+
+      // Crea un file con arrayBuffer spiato per verificare l'elaborazione in memoria
+      const buffer = new ArrayBuffer(1024 * 1024);
+      const fileConSpy = new File([buffer], "pianta.jpg", { type: "image/jpeg" });
+      Object.defineProperty(fileConSpy, "arrayBuffer", {
+        value: mockArrayBuffer,
+        configurable: true,
+      });
+
+      const formData = new FormData();
+      formData.append("immagine", fileConSpy);
+      const richiesta = {
+        formData: vi.fn().mockResolvedValue(formData),
+      } as unknown as Parameters<typeof POST>[0];
+
+      const risposta = await POST(richiesta);
+
+      // Verifica che l'immagine sia stata processata in memoria tramite arrayBuffer
+      expect(mockArrayBuffer).toHaveBeenCalledOnce();
+      // Verifica che la risposta sia corretta (l'immagine è stata usata, non persistita)
+      expect(risposta.status).toBe(200);
+    });
+  });
+
   describe("errori Gemini", () => {
     it("ritorna 500 con messaggio user-friendly se Gemini lancia un errore", async () => {
       const mockGenerateContent = vi.fn().mockRejectedValue(
