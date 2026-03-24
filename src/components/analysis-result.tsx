@@ -118,33 +118,33 @@ export function AnalysisResult({
   return (
     <div className="flex flex-col gap-8">
 
-      {/* 1. PLANT HERO */}
-      <div style={{ animation: "scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
-        {/* Banner gradiente */}
+      {/* 1. PLANT HERO — Split card: immagine grande a sinistra, info a destra */}
+      <div
+        className="flex max-sm:flex-col rounded-2xl overflow-hidden border border-[var(--color-border-light)] shadow-[var(--shadow-lg)] min-h-[320px]"
+        style={{ animation: "scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+      >
+        {/* Pannello sinistro: immagine pianta */}
         <div
-          className="h-[200px] max-md:h-[160px] rounded-t-2xl relative overflow-hidden"
-          style={{
-            background:
-              "radial-gradient(ellipse at 30% 40%, rgba(106, 158, 106, 0.3), transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(192, 106, 48, 0.15), transparent 60%), linear-gradient(160deg, var(--color-primary-700) 0%, #2a4a2a 40%, #3a5a3a 100%)",
-          }}
+          className="relative flex-none w-[42%] max-sm:w-full max-sm:h-[260px] overflow-hidden"
         >
-          {/* Pattern botanico */}
-          <div
-            className="absolute inset-0"
-            aria-hidden="true"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10c-3 2-6 8-4 14 5-1 8-5 7-11' fill='white' opacity='0.03'/%3E%3C/svg%3E")`,
-              backgroundSize: "80px 80px",
-            }}
+          {/* Foto della pianta — full-bleed */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={urlAnteprima}
+            alt={`Foto analizzata — ${analisi.nomeComune}`}
+            className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* Badge confidenza */}
+        </div>
+
+        {/* Pannello destro: nome e info pianta */}
+        <div className="flex-1 bg-[var(--color-bg-card)] p-8 flex flex-col justify-center">
+          {/* Badge confidenza in cima */}
           <div
-            className="absolute top-4 right-4 flex items-center gap-1.5 text-sm font-[family-name:var(--font-display)] font-semibold px-4 py-2 rounded-full z-10"
+            className="self-start flex items-center gap-1.5 text-sm font-[family-name:var(--font-display)] font-semibold px-3 py-1.5 rounded-full mb-4 whitespace-nowrap"
             style={{
-              background: "rgba(0, 0, 0, 0.4)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              color: "white",
+              background: "rgba(47, 79, 47, 0.08)",
+              color: "var(--color-primary-700)",
+              border: "1px solid var(--color-primary-200)",
             }}
             aria-label={`Confidenza identificazione: ${percentualeConfidenza}%`}
           >
@@ -153,46 +153,26 @@ export function AnalysisResult({
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
-              className="w-4 h-4"
+              className="w-3.5 h-3.5 shrink-0"
               aria-hidden="true"
             >
               <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
             </svg>
             Confidenza: {percentualeConfidenza}%
           </div>
-        </div>
-
-        {/* Content card (bordo inferiore, senza bordo top) */}
-        <div
-          className="bg-[var(--color-bg-card)] border border-[var(--color-border-light)] border-t-0 rounded-b-2xl pt-8 px-8 pb-8 shadow-[var(--shadow-md)]"
-          style={{ position: "relative", overflow: "visible" }}
-        >
-          {/* Foto flottante che sovrasta il banner */}
-          <div
-            className="absolute left-8 w-[120px] h-[120px] rounded-xl overflow-hidden border-4 border-white shadow-[var(--shadow-lg)]"
-            style={{ top: "-70px" }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={urlAnteprima}
-              alt={`Foto analizzata — ${analisi.nomeComune}`}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Nome pianta con padding per far spazio alla foto su desktop */}
-          <div className="pt-10 sm:pt-0 sm:pl-[156px]">
-            <h1
-              className="font-[family-name:var(--font-display)] font-bold text-3xl max-md:text-2xl text-[var(--color-text-primary)] leading-tight"
-            >
-              {analisi.nomeComune}
-            </h1>
-            {analisi.nomeScientifico && (
-              <p className="text-base italic text-[var(--color-text-muted)] mt-1">
-                {analisi.nomeScientifico}
-              </p>
-            )}
-          </div>
+          <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl max-md:text-2xl text-[var(--color-text-primary)] leading-tight">
+            {analisi.nomeComune}
+          </h1>
+          {analisi.nomeScientifico && (
+            <p className="text-base italic text-[var(--color-text-muted)] mt-1">
+              {analisi.nomeScientifico}
+            </p>
+          )}
+          {analisi.descrizione && (
+            <p className="text-base text-[var(--color-text-secondary)] leading-relaxed mt-4 max-w-[560px]">
+              {analisi.descrizione}
+            </p>
+          )}
         </div>
       </div>
 
@@ -216,8 +196,8 @@ export function AnalysisResult({
             <span className="block font-[family-name:var(--font-display)] font-semibold text-xs text-[var(--color-text-muted)] uppercase tracking-[0.06em] mb-1">
               {etichetta}
             </span>
-            <span className="font-[family-name:var(--font-display)] font-bold text-xs text-[var(--color-text-primary)] line-clamp-2 leading-snug">
-              {analisi.informazioniGenerali[chiave]}
+            <span className="font-[family-name:var(--font-display)] font-bold text-sm text-[var(--color-text-primary)] leading-snug">
+              {analisi.informazioniRapide[chiave]}
             </span>
           </div>
         ))}

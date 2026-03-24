@@ -1,4 +1,4 @@
-import type { PlantAnalysis, HealthStatus } from "@/types/analysis";
+import type { PlantAnalysis, HealthStatus, CareInfo } from "@/types/analysis";
 
 export class ErroreAnalisi extends Error {
   constructor(
@@ -85,6 +85,12 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
   const nomeScientifico =
     typeof dati.nomeScientifico === "string" ? dati.nomeScientifico : "";
 
+  // Validazione descrizione
+  const descrizione =
+    typeof dati.descrizione === "string" && dati.descrizione.trim() !== ""
+      ? dati.descrizione
+      : "";
+
   // Validazione statoSalute
   const statoSalute: HealthStatus = eStatoSaluteValido(dati.statoSalute)
     ? dati.statoSalute
@@ -109,38 +115,29 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
       priorita: ePrioritaValida(c.priorita) ? c.priorita : ("media" as const),
     }));
 
-  // Validazione informazioniGenerali
-  const infoGrezze =
-    typeof dati.informazioniGenerali === "object" && dati.informazioniGenerali !== null
-      ? (dati.informazioniGenerali as Record<string, unknown>)
-      : {};
+  function estraiCareInfo(raw: unknown, fallback: string): CareInfo {
+    const obj =
+      typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+    return {
+      annaffiatura: typeof obj.annaffiatura === "string" ? obj.annaffiatura : fallback,
+      luce: typeof obj.luce === "string" ? obj.luce : fallback,
+      temperatura: typeof obj.temperatura === "string" ? obj.temperatura : fallback,
+      umidita: typeof obj.umidita === "string" ? obj.umidita : fallback,
+    };
+  }
 
-  const informazioniGenerali = {
-    annaffiatura:
-      typeof infoGrezze.annaffiatura === "string"
-        ? infoGrezze.annaffiatura
-        : "Informazione non disponibile.",
-    luce:
-      typeof infoGrezze.luce === "string"
-        ? infoGrezze.luce
-        : "Informazione non disponibile.",
-    temperatura:
-      typeof infoGrezze.temperatura === "string"
-        ? infoGrezze.temperatura
-        : "Informazione non disponibile.",
-    umidita:
-      typeof infoGrezze.umidita === "string"
-        ? infoGrezze.umidita
-        : "Informazione non disponibile.",
-  };
+  const informazioniGenerali = estraiCareInfo(dati.informazioniGenerali, "Informazione non disponibile.");
+  const informazioniRapide = estraiCareInfo(dati.informazioniRapide, "—");
 
   return {
     nomeComune: dati.nomeComune.trim(),
     nomeScientifico,
+    descrizione,
     livelloConfidenza: confidenza,
     statoSalute,
     descrizioneSalute,
     consigliCura,
     informazioniGenerali,
+    informazioniRapide,
   };
 }

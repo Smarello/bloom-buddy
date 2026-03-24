@@ -6,6 +6,7 @@ Lo schema JSON richiesto è:
 {
   "nomeComune": "string — nome comune della pianta in italiano",
   "nomeScientifico": "string — nome scientifico in latino",
+  "descrizione": "string — breve descrizione della specie identificata in massimo 20-25 parole. tono pacato, in italiano",
   "livelloConfidenza": "number — da 0 a 1, quanto sei sicuro dell'identificazione",
   "statoSalute": "string — uno tra: excellent, good, fair, poor",
   "descrizioneSalute": "string — descrizione dello stato di salute in 1-2 frasi, tono empatico e incoraggiante, in italiano",
@@ -21,6 +22,12 @@ Lo schema JSON richiesto è:
     "luce": "string — esposizione alla luce ideale",
     "temperatura": "string — range di temperatura ideale",
     "umidita": "string — livello di umidità consigliato"
+  },
+  "informazioniRapide": {
+    "annaffiatura": "string — valore sintetico, max 4 parole, es. '1× a settimana'",
+    "luce": "string — valore sintetico, max 4 parole, es. 'Luce indiretta'",
+    "temperatura": "string — valore sintetico, max 4 parole, es. '18–24 °C'",
+    "umidita": "string — valore sintetico, max 4 parole, es. 'Alta'"
   }
 }
 

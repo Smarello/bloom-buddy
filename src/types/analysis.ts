@@ -16,9 +16,11 @@ export interface CareInfo {
 export interface PlantAnalysis {
   nomeComune: string;
   nomeScientifico: string;
+  descrizione: string;
   livelloConfidenza: number;
   statoSalute: HealthStatus;
   descrizioneSalute: string;
   consigliCura: CareTip[];
   informazioniGenerali: CareInfo;
+  informazioniRapide: CareInfo;
 }

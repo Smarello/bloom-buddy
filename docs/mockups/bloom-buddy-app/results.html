@@ -27,38 +27,75 @@
     .back-link:hover { color: var(--color-primary-600); }
     .back-link svg { width: 16px; height: 16px; }
 
-    /* === PLANT HERO — Overlapping card layout === */
+    /* === PLANT HERO — Split card layout === */
     .plant-hero {
-      position: relative;
+      display: flex;
+      border-radius: var(--radius-2xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border-light);
       margin-bottom: var(--space-8);
+      min-height: 340px;
     }
 
-    .plant-hero-banner {
-      height: 200px;
-      border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-      background:
-        radial-gradient(ellipse at 30% 40%, rgba(106, 158, 106, 0.3), transparent 60%),
-        radial-gradient(ellipse at 70% 60%, rgba(192, 106, 48, 0.15), transparent 60%),
-        linear-gradient(160deg, var(--color-primary-700) 0%, #2a4a2a 40%, #3a5a3a 100%);
+    /* Left panel: large plant image */
+    .plant-hero-image-panel {
+      flex: 0 0 42%;
       position: relative;
+      background:
+        radial-gradient(ellipse at 30% 25%, rgba(138, 186, 138, 0.35), transparent 55%),
+        radial-gradient(ellipse at 75% 70%, rgba(192, 106, 48, 0.18), transparent 50%),
+        radial-gradient(ellipse at 10% 80%, rgba(74, 124, 74, 0.2), transparent 45%),
+        linear-gradient(160deg, var(--color-primary-700) 0%, #233a23 45%, #3a5a3a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
     }
 
-    /* Botanical pattern overlay on banner */
-    .plant-hero-banner::after {
+    /* Subtle botanical leaf pattern on image panel */
+    .plant-hero-image-panel::before {
       content: '';
       position: absolute;
       inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10c-3 2-6 8-4 14 5-1 8-5 7-11' fill='white' opacity='0.03'/%3E%3C/svg%3E");
-      background-size: 80px 80px;
+      background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 15c-4 3-8 11-5 19 7-1.5 11-7 9-15' fill='white' opacity='0.04'/%3E%3Cpath d='M20 50c-2 2-3 6-1 9 3-1 4-4 3-7' fill='white' opacity='0.03'/%3E%3C/svg%3E");
+      background-size: 100px 100px;
+      pointer-events: none;
+    }
+
+    /* Vignette on the image panel edges */
+    .plant-hero-image-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, transparent 70%, rgba(255,255,255,0.07) 100%),
+        linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.15) 100%);
+      pointer-events: none;
+    }
+
+    .plant-image-display {
+      position: relative;
+      z-index: 1;
+      width: 65%;
+      max-width: 200px;
+      aspect-ratio: 1;
+      filter: drop-shadow(0 12px 32px rgba(0,0,0,0.35));
+    }
+
+    .plant-image-display svg {
+      width: 100%;
+      height: 100%;
     }
 
     .confidence-badge {
       position: absolute;
-      top: var(--space-4);
-      right: var(--space-4);
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(12px);
+      bottom: var(--space-4);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       color: white;
       font-family: var(--font-display);
       font-weight: var(--weight-semibold);
@@ -69,52 +106,36 @@
       align-items: center;
       gap: var(--space-2);
       z-index: 2;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.12);
     }
 
-    .confidence-badge svg { width: 16px; height: 16px; }
+    .confidence-badge svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    .plant-hero-content {
+    /* Right panel: plant info */
+    .plant-hero-info-panel {
+      flex: 1;
       background: var(--color-bg-card);
-      border: 1px solid var(--color-border-light);
-      border-top: none;
-      border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
       padding: var(--space-8);
-      position: relative;
-      box-shadow: var(--shadow-md);
-    }
-
-    /* Plant image overlapping the banner */
-    .plant-image-float {
-      position: absolute;
-      top: -70px;
-      left: var(--space-8);
-      width: 120px;
-      height: 120px;
-      border-radius: var(--radius-xl);
-      background:
-        radial-gradient(circle at 40% 40%, rgba(106, 158, 106, 0.2), transparent),
-        var(--color-bg-card);
-      border: 4px solid var(--color-bg-card);
-      box-shadow: var(--shadow-lg);
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
-      overflow: hidden;
     }
 
-    .plant-image-float svg {
-      width: 70%;
-      height: 70%;
-    }
-
-    .plant-hero-info {
-      padding-top: var(--space-10);
-    }
-
-    @media (min-width: 640px) {
-      .plant-hero-info {
-        padding-top: 0;
-        padding-left: 156px;
+    /* Mobile: stack vertically */
+    @media (max-width: 640px) {
+      .plant-hero {
+        flex-direction: column;
+        min-height: unset;
+      }
+      .plant-hero-image-panel {
+        flex: none;
+        height: 240px;
+        width: 100%;
+      }
+      .plant-image-display {
+        width: 50%;
+        max-width: 150px;
       }
     }
 
@@ -691,51 +712,70 @@
         Nuova analisi
       </a>
 
-      <!-- Plant Hero -->
+      <!-- Plant Hero — split card -->
       <div class="plant-hero animate-scale-in delay-1">
-        <div class="plant-hero-banner">
+
+        <!-- Left: large plant image panel -->
+        <div class="plant-hero-image-panel">
+          <div class="plant-image-display">
+            <svg viewBox="0 0 100 115" fill="none">
+              <!-- Pot -->
+              <path d="M30 72 L34 100 L66 100 L70 72Z" fill="#c06a30"/>
+              <path d="M32 72 L34 80 L66 80 L68 72Z" fill="#d4864e"/>
+              <!-- Rim highlight -->
+              <rect x="28" y="69" width="44" height="6" rx="3" fill="#e8a87a"/>
+              <!-- Main stem -->
+              <path d="M50 72 V44" stroke="#3d6e3d" stroke-width="3" stroke-linecap="round"/>
+              <!-- Large left leaf -->
+              <path d="M50 52 C42 44 32 42 28 52 C36 58 46 56 50 52Z" fill="#5a8f5a"/>
+              <path d="M50 52 C44 46 36 44 32 50" stroke="#4a7c4a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+              <!-- Large right leaf -->
+              <path d="M50 52 C58 44 68 42 72 52 C64 58 54 56 50 52Z" fill="#6a9e6a"/>
+              <path d="M50 52 C56 46 64 44 68 50" stroke="#5a8a5a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+              <!-- Upper left leaf -->
+              <path d="M50 44 C43 38 34 36 31 44 C38 49 47 47 50 44Z" fill="#7ab07a"/>
+              <!-- Upper right leaf -->
+              <path d="M50 44 C57 38 66 36 69 44 C62 49 53 47 50 44Z" fill="#8eba8e"/>
+              <!-- Top leaf -->
+              <path d="M50 44 C46 34 44 26 50 20 C56 26 54 34 50 44Z" fill="#9ecf9e"/>
+              <path d="M50 44 V22" stroke="#7ab07a" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+              <!-- Soil -->
+              <ellipse cx="50" cy="72" rx="20" ry="4" fill="#8a6040" opacity="0.6"/>
+            </svg>
+          </div>
           <span class="confidence-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
             Confidenza: 92%
           </span>
         </div>
-        <div class="plant-hero-content">
-          <div class="plant-image-float">
-            <svg viewBox="0 0 80 90" fill="none">
-              <path d="M25 58 L28 80 L52 80 L55 58Z" fill="#c06a30"/>
-              <path d="M27 58 L28 63 L52 63 L53 58Z" fill="#d4864e"/>
-              <path d="M40 58 V38" stroke="#4a7c4a" stroke-width="2.5" stroke-linecap="round"/>
-              <path d="M40 42c-4-1-8-5-7-11 5.5 0.5 8 4 8 8.5" fill="#6a9e6a"/>
-              <path d="M40 42c4-1.5 8-1.5 10 2-4 2-8 1-9-1.5" fill="#8eba8e"/>
-              <path d="M40 48c-3-0.5-6-3-5-7 3.5 0 5.5 2 5.5 5.5" fill="#8eba8e" opacity="0.7"/>
-            </svg>
-          </div>
-          <div class="plant-hero-info">
-            <h1 class="plant-common-name">Pothos</h1>
-            <p class="plant-scientific-name">Epipremnum aureum</p>
-            <p class="plant-description">
-              Pianta tropicale rampicante amatissima per gli interni. Resistente e adattabile, è perfetta per chi è alle prime armi con le piante da appartamento.
-            </p>
-            <div class="plant-tags">
-              <span class="plant-tag">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                Da interno
-              </span>
-              <span class="plant-tag">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9a4 4 0 1 0 0 8m0-8V3m0 0h3m-3 0H9"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                Tropicale
-              </span>
-              <span class="plant-tag">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22c5 0 8-3 8-8s-8-12-8-12S4 9 4 14s3 8 8 8z"/></svg>
-                Facile
-              </span>
-              <span class="plant-tag">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22V12"/><path d="M12 14c-3-1-6-4.5-5-9 4.5.5 7 3.5 7 7"/></svg>
-                Sempreverde
-              </span>
-            </div>
+
+        <!-- Right: plant info panel -->
+        <div class="plant-hero-info-panel">
+          <h1 class="plant-common-name">Pothos</h1>
+          <p class="plant-scientific-name">Epipremnum aureum</p>
+          <p class="plant-description">
+            Pianta tropicale rampicante amatissima per gli interni. Resistente e adattabile, è perfetta per chi è alle prime armi con le piante da appartamento.
+          </p>
+          <div class="plant-tags">
+            <span class="plant-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Da interno
+            </span>
+            <span class="plant-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9a4 4 0 1 0 0 8m0-8V3m0 0h3m-3 0H9"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Tropicale
+            </span>
+            <span class="plant-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22c5 0 8-3 8-8s-8-12-8-12S4 9 4 14s3 8 8 8z"/></svg>
+              Facile
+            </span>
+            <span class="plant-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22V12"/><path d="M12 14c-3-1-6-4.5-5-9 4.5.5 7 3.5 7 7"/></svg>
+              Sempreverde
+            </span>
           </div>
         </div>
+
       </div>
 
       <!-- Quick Info -->
