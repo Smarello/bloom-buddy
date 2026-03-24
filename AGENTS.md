@@ -6,4 +6,4 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Regole
 
-- Non includere mai la riga "Co authored by Claude Code" nelle descrizioni delle commit
+- **IMPORTANTE** Non includere mai la riga "Co-Authored-By: {model name} <noreply@anthropic.com>" nelle descrizioni delle commit!

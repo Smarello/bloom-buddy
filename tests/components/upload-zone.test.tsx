@@ -5,6 +5,23 @@ vi.mock("@/hooks/useImageUpload", () => ({
   useImageUpload: vi.fn(),
 }));
 
+vi.mock("@/hooks/useAnalysis", () => ({
+  useAnalysis: vi.fn(() => ({
+    stato: "idle",
+    errore: null,
+    avviaAnalisi: vi.fn(),
+    resetta: vi.fn(),
+  })),
+  CHIAVE_SESSION_STORAGE: "bloombuddy-analisi-corrente",
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  })),
+}));
+
 import { UploadZone } from "@/components/upload-zone";
 import { useImageUpload } from "@/hooks/useImageUpload";
 

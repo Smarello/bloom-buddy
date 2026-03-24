@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useAnalysis } from "@/hooks/useAnalysis";
 import { STRINGA_ACCEPT_INPUT } from "@/lib/image/costanti-validazione";
 
 function formattaDimensioneFile(byte: number): string {
@@ -22,6 +24,15 @@ export function UploadZone() {
     gestisciSelezioneFile,
     rimuoviFile,
   } = useImageUpload();
+
+  const {
+    stato: statoAnalisi,
+    errore: erroreAnalisi,
+    avviaAnalisi,
+    resetta: resettaAnalisi,
+  } = useAnalysis();
+
+  const router = useRouter();
 
   const inputGalleriaRef = useRef<HTMLInputElement>(null);
   const inputFotocameraRef = useRef<HTMLInputElement>(null);
@@ -61,6 +72,13 @@ export function UploadZone() {
     evento.preventDefault();
     evento.stopPropagation();
   }, []);
+
+  const gestisciAnalisi = useCallback(async () => {
+    if (!fileCompresso || !urlAnteprima) return;
+
+    await avviaAnalisi(fileCompresso, urlAnteprima);
+    router.push("/analysis");
+  }, [fileCompresso, urlAnteprima, avviaAnalisi, router]);
 
   const isIdle = statoProcessamento === "idle";
   const isCompressione = statoProcessamento === "compressione";
@@ -289,15 +307,50 @@ export function UploadZone() {
                   </button>
                   <button
                     type="button"
-                    className="flex-1 relative inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-6 py-3 rounded-full text-white bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_4px_15px_rgba(74,124,74,0.3)] transition-all duration-[var(--transition-base)] hover:from-primary-400 hover:to-primary-500 hover:shadow-[0_6px_22px_rgba(74,124,74,0.38)] hover:-translate-y-0.5 active:scale-[0.97]"
+                    onClick={gestisciAnalisi}
+                    disabled={statoAnalisi === "caricamento"}
+                    aria-busy={statoAnalisi === "caricamento"}
+                    className="flex-1 relative inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-6 py-3 rounded-full text-white bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_4px_15px_rgba(74,124,74,0.3)] transition-all duration-[var(--transition-base)] hover:from-primary-400 hover:to-primary-500 hover:shadow-[0_6px_22px_rgba(74,124,74,0.38)] hover:-translate-y-0.5 active:scale-[0.97] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                      <circle cx="11" cy="11" r="8" />
-                      <path d="M21 21l-4.35-4.35" />
-                    </svg>
-                    Analizza ora
+                    {statoAnalisi === "caricamento" ? (
+                      <>
+                        <div
+                          className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full"
+                          style={{ animation: "spin-slow 0.8s linear infinite" }}
+                          aria-hidden="true"
+                        />
+                        Analisi in corso...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                          <circle cx="11" cy="11" r="8" />
+                          <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                        Analizza ora
+                      </>
+                    )}
                   </button>
                 </div>
+
+                {/* Errore analisi inline */}
+                {erroreAnalisi && (
+                  <div
+                    role="alert"
+                    className="mt-4 flex items-start gap-3 px-4 py-3 rounded-lg border text-sm text-left"
+                    style={{
+                      background: "rgba(224, 96, 96, 0.06)",
+                      borderColor: "rgba(224, 96, 96, 0.2)",
+                      color: "var(--color-accent-600)",
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                    <span>{erroreAnalisi.messaggio}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
