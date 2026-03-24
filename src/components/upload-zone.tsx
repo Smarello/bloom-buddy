@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAnalysis } from "@/hooks/useAnalysis";
@@ -35,6 +35,12 @@ export function UploadZone() {
   } = useAnalysis();
 
   const router = useRouter();
+
+  useEffect(() => {
+    if (statoAnalisi === "successo") {
+      router.push("/analysis");
+    }
+  }, [statoAnalisi, router]);
 
   const inputGalleriaRef = useRef<HTMLInputElement>(null);
   const inputFotocameraRef = useRef<HTMLInputElement>(null);
@@ -99,8 +105,7 @@ export function UploadZone() {
     if (!fileCompresso || !urlAnteprima) return;
 
     await avviaAnalisi(fileCompresso, urlAnteprima);
-    router.push("/analysis");
-  }, [fileCompresso, urlAnteprima, avviaAnalisi, router]);
+  }, [fileCompresso, urlAnteprima, avviaAnalisi]);
 
   const isIdle = statoProcessamento === "idle";
   const isCompressione = statoProcessamento === "compressione";

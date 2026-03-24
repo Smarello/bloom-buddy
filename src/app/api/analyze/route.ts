@@ -96,6 +96,22 @@ export async function POST(request: NextRequest) {
       return Response.json({ errore: errore.message, tipo: errore.tipo }, { status: statusCode });
     }
 
+    // Quota Gemini esaurita (429)
+    if (
+      errore instanceof Error &&
+      "status" in errore &&
+      (errore as { status: number }).status === 429
+    ) {
+      return Response.json(
+        {
+          errore:
+            "Quota API Gemini esaurita. Il servizio ha raggiunto il limite giornaliero di richieste. Riprova domani o verifica il piano di fatturazione su ai.dev/rate-limit.",
+          tipo: "quota-esaurita",
+        },
+        { status: 429 },
+      );
+    }
+
     console.error("Errore API Gemini:", errore);
 
     return Response.json(

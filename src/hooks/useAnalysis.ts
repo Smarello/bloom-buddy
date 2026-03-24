@@ -7,7 +7,7 @@ export type StatoAnalisi = "idle" | "caricamento" | "successo" | "errore";
 
 export interface ErroreAnalisiHook {
   messaggio: string;
-  tipo?: "pianta-non-riconosciuta" | "confidenza-bassa" | "risposta-malformata" | "errore-api" | "rete";
+  tipo?: "pianta-non-riconosciuta" | "confidenza-bassa" | "risposta-malformata" | "errore-api" | "rete" | "quota-esaurita";
 }
 
 export interface StatoUseAnalysis {

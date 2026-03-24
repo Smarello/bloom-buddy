@@ -11,7 +11,7 @@ export interface ConfigurazioneMessaggioErrore {
 }
 
 export const MESSAGGI_ERRORE_ANALISI: Record<
-  "confidenza-bassa" | "pianta-non-riconosciuta" | "errore-api" | "risposta-malformata" | "rete",
+  "confidenza-bassa" | "pianta-non-riconosciuta" | "errore-api" | "risposta-malformata" | "rete" | "quota-esaurita",
   ConfigurazioneMessaggioErrore
 > = {
   "confidenza-bassa": {
@@ -53,6 +53,14 @@ export const MESSAGGI_ERRORE_ANALISI: Record<
     suggerimento:
       "Verifica la tua connessione internet e riprova.",
     testoBottone: "Riprova",
+  },
+  "quota-esaurita": {
+    titolo: "Limite giornaliero raggiunto",
+    messaggio:
+      "Il servizio di analisi ha esaurito il numero di richieste disponibili per oggi.",
+    suggerimento:
+      "Il limite si rinnova ogni giorno. Riprova domani oppure contatta il supporto se il problema persiste.",
+    testoBottone: "Capito",
   },
 } as const;
 
