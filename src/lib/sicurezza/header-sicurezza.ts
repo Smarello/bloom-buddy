@@ -43,6 +43,8 @@ export function ottieniHeaderSicurezza(): HeaderHttp[] {
         "frame-ancestors 'none'",
         // Form action: solo il proprio dominio
         "form-action 'self'",
+        // Web Worker: stesso dominio e blob URL (usati da alcune librerie per worker inline)
+        "worker-src 'self' blob:",
         // Risorse base: solo il proprio dominio
         "base-uri 'self'",
       ].join("; "),

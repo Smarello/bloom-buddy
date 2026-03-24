@@ -1,0 +1,21 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// In Prisma 7 la stringa di connessione è configurata in prisma.config.ts
+// tramite `datasource.url: process.env["DATABASE_URL"]`.
+// Imposta DATABASE_URL nel file .env (vedi .env.example per il formato).
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}

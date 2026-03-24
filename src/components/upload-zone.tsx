@@ -351,28 +351,13 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={gestisciAnalisi}
-                    disabled={statoAnalisi === "caricamento"}
-                    aria-busy={statoAnalisi === "caricamento"}
-                    className="flex-1 relative inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-6 py-3 rounded-full text-white bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_4px_15px_rgba(74,124,74,0.3)] transition-all duration-[var(--transition-base)] hover:from-primary-400 hover:to-primary-500 hover:shadow-[0_6px_22px_rgba(74,124,74,0.38)] hover:-translate-y-0.5 active:scale-[0.97] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    className="flex-1 relative inline-flex items-center justify-center gap-2 font-[family-name:var(--font-display)] font-semibold text-base px-6 py-3 rounded-full text-white bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_4px_15px_rgba(74,124,74,0.3)] transition-all duration-[var(--transition-base)] hover:from-primary-400 hover:to-primary-500 hover:shadow-[0_6px_22px_rgba(74,124,74,0.38)] hover:-translate-y-0.5 active:scale-[0.97]"
                   >
-                    {statoAnalisi === "caricamento" ? (
-                      <>
-                        <div
-                          className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full"
-                          style={{ animation: "spin-slow 0.8s linear infinite" }}
-                          aria-hidden="true"
-                        />
-                        Analisi in corso...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                          <circle cx="11" cy="11" r="8" />
-                          <path d="M21 21l-4.35-4.35" />
-                        </svg>
-                        Analizza ora
-                      </>
-                    )}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="M21 21l-4.35-4.35" />
+                    </svg>
+                    Analizza ora
                   </button>
                 </div>
 
