@@ -40,9 +40,12 @@ export function Navbar() {
           </span>
           Bloom Buddy
         </Link>
-        <span className="hidden sm:block font-[family-name:var(--font-body)] text-sm font-normal text-[var(--color-text-muted)]">
-          La tua guida verde personale
-        </span>
+        <Link
+          href="/registrazione"
+          className="font-[family-name:var(--font-display)] text-sm font-semibold text-[var(--color-primary-600)] border border-[var(--color-primary-200)] bg-[var(--color-primary-50)] px-4 py-2 rounded-full transition-colors hover:bg-[var(--color-primary-100)] hover:border-[var(--color-primary-300)]"
+        >
+          Registrati
+        </Link>
       </div>
     </nav>
   );
