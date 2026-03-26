@@ -15,6 +15,7 @@ export default function PaginaAnalisi() {
   const router = useRouter();
   const [dati, setDati] = useState<DatiAnalisi | null>(null);
   const [isCaricamento, setIsCaricamento] = useState(true);
+  const [utenteAutenticato, setUtenteAutenticato] = useState<boolean>(false);
   const refTitoloPrincipale = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -34,6 +35,17 @@ export default function PaginaAnalisi() {
       setIsCaricamento(false);
     }
   }, [router]);
+
+  useEffect(() => {
+    fetch("/api/auth/sessione")
+      .then((risposta) => risposta.json())
+      .then((datiSessione) => {
+        if (datiSessione.autenticato) {
+          setUtenteAutenticato(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isCaricamento && dati && refTitoloPrincipale.current) {
@@ -104,6 +116,7 @@ export default function PaginaAnalisi() {
           analisi={dati.analisi}
           urlAnteprima={dati.urlAnteprima}
           onNuovaAnalisi={gestisciNuovaAnalisi}
+          utenteAutenticato={utenteAutenticato}
         />
       </div>
     </section>

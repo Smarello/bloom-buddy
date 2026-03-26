@@ -3,12 +3,14 @@ import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import type { PlantAnalysis } from "@/types/analysis";
 
 const mockRouterReplace = vi.fn();
+const mockRouterPush = vi.fn();
+const mockRouter = {
+  push: mockRouterPush,
+  replace: mockRouterReplace,
+};
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: mockRouterReplace,
-  }),
+  useRouter: () => mockRouter,
 }));
 
 vi.mock("@/components/analysis-result", () => ({
@@ -69,10 +71,15 @@ beforeEach(() => {
   sessionStorageMock.clear();
   sessionStorageMock.getItem.mockReset();
   mockRouterReplace.mockReset();
+  mockRouterPush.mockReset();
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(JSON.stringify({ autenticato: false }), { status: 200 }),
+  );
 });
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("PaginaAnalisi — accessibilità focus management", () => {

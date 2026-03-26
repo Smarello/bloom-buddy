@@ -7,10 +7,13 @@ import { HealthIndicator } from "./health-indicator";
 import { CareTipsList } from "./care-tips-list";
 import { CareInfoGrid } from "./care-info-grid";
 
+type StatoSalvataggio = "idle" | "saving" | "saved" | "duplicate";
+
 interface PropsAnalysisResult {
   analisi: PlantAnalysis;
   urlAnteprima: string;
   onNuovaAnalisi: () => void;
+  utenteAutenticato: boolean;
 }
 
 const TESTO_INCORAGGIAMENTO: Record<
@@ -110,8 +113,10 @@ export function AnalysisResult({
   analisi,
   urlAnteprima,
   onNuovaAnalisi,
+  utenteAutenticato,
 }: PropsAnalysisResult) {
   const [popupAperto, setPopupAperto] = useState(false);
+  const [statoSalvataggio, setStatoSalvataggio] = useState<StatoSalvataggio>("idle");
   const [zoomLevel, setZoomLevel] = useState(1);
   const [traslazione, setTraslazione] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -171,6 +176,38 @@ export function AnalysisResult({
 
   const percentualeConfidenza = Math.round(analisi.livelloConfidenza * 100);
   const incoraggiamento = TESTO_INCORAGGIAMENTO[analisi.statoSalute];
+
+  const salvaNellaCollezione = async () => {
+    if (statoSalvataggio !== "idle") return;
+    setStatoSalvataggio("saving");
+    try {
+      // Converte il data URL (base64) in File senza fetch, compatibile con tutti i browser
+      const [intestazione, base64] = urlAnteprima.split(",");
+      const mimeType = intestazione.match(/:(.*?);/)?.[1] ?? "image/jpeg";
+      const byteString = atob(base64);
+      const arrayBuffer = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        arrayBuffer[i] = byteString.charCodeAt(i);
+      }
+      const fileImmagine = new File([arrayBuffer], "foto-pianta.jpg", { type: mimeType });
+
+      const datiForm = new FormData();
+      datiForm.append("foto", fileImmagine);
+      datiForm.append("datiAnalisi", JSON.stringify(analisi));
+
+      const risposta = await fetch("/api/collezione", { method: "POST", body: datiForm });
+      if (risposta.status === 409) {
+        setStatoSalvataggio("duplicate");
+      } else if (risposta.ok) {
+        setStatoSalvataggio("saved");
+      } else {
+        setStatoSalvataggio("idle");
+      }
+    } catch (errore) {
+      console.error("Errore salvataggio nella collezione:", errore);
+      setStatoSalvataggio("idle");
+    }
+  };
 
   // Azione immediata: primo consiglio ad alta priorità
   const azioneImmediata = analisi.consigliCura.find((c) => c.priorita === "alta");
@@ -365,7 +402,171 @@ export function AnalysisResult({
         </div>
       </div>
 
-      {/* 5. CARE SECTION */}
+      {/* 5. SALVA NELLA COLLEZIONE */}
+      <div
+        className="mb-0"
+        style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 350ms both" }}
+      >
+        {!utenteAutenticato ? (
+          /* Hint per utente non autenticato */
+          <div
+            className="flex items-center gap-3 p-4 px-5 rounded-xl"
+            style={{
+              background: "linear-gradient(135deg, rgba(192, 106, 48, 0.06), rgba(192, 106, 48, 0.02))",
+              border: "1px solid rgba(192, 106, 48, 0.18)",
+            }}
+          >
+            <div
+              className="w-9 h-9 shrink-0 rounded-[var(--radius-md)] flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, var(--color-secondary-200), var(--color-secondary-100))" }}
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-secondary-600)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div>
+              <h5 className="font-[family-name:var(--font-display)] font-bold text-sm text-[var(--color-secondary-700)]">
+                Vuoi salvare questa analisi?
+              </h5>
+              <p className="text-xs text-[var(--color-text-muted)] mt-px">
+                <a href="/login" className="font-semibold text-[var(--color-secondary-500)] underline underline-offset-2 hover:text-[var(--color-secondary-600)]">Accedi</a>
+                {" "}o{" "}
+                <a href="/registrazione" className="font-semibold text-[var(--color-secondary-500)] underline underline-offset-2 hover:text-[var(--color-secondary-600)]">crea un account</a>
+                {" "}per salvare le piante nella tua collezione personale.
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* Bottone salva e toast */
+          <div>
+            <button
+              type="button"
+              disabled={statoSalvataggio !== "idle"}
+              onClick={salvaNellaCollezione}
+              className={`
+                group relative w-full inline-flex items-center justify-center gap-3
+                font-[family-name:var(--font-display)] font-bold text-base
+                py-4 px-8 rounded-xl border-2 overflow-hidden
+                transition-all duration-[var(--transition-base)]
+                ${statoSalvataggio === "idle"
+                  ? "border-[var(--color-primary-300)] text-[var(--color-primary-600)] cursor-pointer hover:-translate-y-0.5 hover:border-[var(--color-primary-400)] hover:shadow-[0_4px_20px_rgba(74,124,74,0.18),var(--shadow-glow)] active:scale-[0.98]"
+                  : statoSalvataggio === "saving"
+                    ? "border-[var(--color-primary-300)] opacity-85 pointer-events-none"
+                    : "border-[var(--color-primary-200)] bg-[var(--color-primary-50)] pointer-events-none"
+                }
+              `}
+              style={statoSalvataggio === "idle" ? {
+                background: "linear-gradient(135deg, rgba(74, 124, 74, 0.06), rgba(74, 124, 74, 0.02))",
+              } : undefined}
+            >
+              {/* Hover fill overlay (only for idle state) */}
+              {statoSalvataggio === "idle" && (
+                <span
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--transition-base)]"
+                  style={{ background: "linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))" }}
+                  aria-hidden="true"
+                />
+              )}
+
+              {/* Icon */}
+              <span className={`relative z-10 flex items-center justify-center transition-colors duration-[var(--transition-base)] ${statoSalvataggio === "idle" ? "group-hover:text-white" : ""}`}>
+                {statoSalvataggio === "saving" ? (
+                  <svg viewBox="0 0 24 24" fill="none" className="w-[22px] h-[22px]" style={{ animation: "spin-slow 1s linear infinite" }}>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--color-primary-400)" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--color-primary-400)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="15 47" />
+                  </svg>
+                ) : statoSalvataggio === "saved" || statoSalvataggio === "duplicate" ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[22px] h-[22px]">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[22px] h-[22px] group-hover:stroke-white transition-[stroke] duration-[var(--transition-base)]">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
+                  </svg>
+                )}
+              </span>
+
+              {/* Label */}
+              <span className={`relative z-10 transition-colors duration-[var(--transition-base)] ${statoSalvataggio === "idle" ? "group-hover:text-white" : ""} ${(statoSalvataggio === "saved" || statoSalvataggio === "duplicate") ? "text-[var(--color-primary-600)]" : statoSalvataggio === "saving" ? "text-[var(--color-text-muted)]" : ""}`}>
+                {statoSalvataggio === "saving"
+                  ? "Salvataggio in corso..."
+                  : statoSalvataggio === "saved"
+                    ? "Salvata nella collezione"
+                    : statoSalvataggio === "duplicate"
+                      ? "Già nella tua collezione"
+                      : (
+                        <>
+                          Salva nella collezione
+                          <span className={`block font-normal text-xs text-[var(--color-text-muted)] mt-px transition-colors duration-[var(--transition-base)] ${statoSalvataggio === "idle" ? "group-hover:text-white/75" : ""}`}>
+                            Consultala quando vuoi, senza rifare la foto
+                          </span>
+                        </>
+                      )
+                }
+              </span>
+
+              {/* Decorative leaf */}
+              {statoSalvataggio === "idle" && (
+                <svg
+                  className="absolute bottom-[-6px] right-[-4px] w-[60px] h-[60px] opacity-[0.08] -rotate-[25deg] pointer-events-none transition-all duration-[var(--transition-slow)] group-hover:opacity-[0.15] group-hover:-rotate-[18deg] group-hover:-translate-x-1 group-hover:-translate-y-1"
+                  viewBox="0 0 60 60"
+                  fill="var(--color-primary-500)"
+                  aria-hidden="true"
+                >
+                  <path d="M50 5C30 10 10 30 8 52c15-2 30-15 38-30 2-5 4-12 4-17z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Inline toast — successo */}
+            {statoSalvataggio === "saved" && (
+              <div
+                className="relative flex items-center gap-3 mt-3 p-4 px-5 rounded-xl"
+                style={{
+                  background: "linear-gradient(135deg, rgba(74, 158, 74, 0.08), rgba(74, 124, 74, 0.04))",
+                  border: "1px solid rgba(74, 158, 74, 0.2)",
+                  animation: "toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both",
+                }}
+              >
+                <div
+                  className="w-9 h-9 shrink-0 rounded-[var(--radius-md)] flex items-center justify-center shadow-[0_2px_8px_rgba(74,124,74,0.25)]"
+                  style={{ background: "linear-gradient(135deg, var(--color-primary-400), var(--color-primary-500))" }}
+                  aria-hidden="true"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]">
+                    <path d="M20 6L9 17l-5-5" style={{ strokeDasharray: 24, strokeDashoffset: 24, animation: "drawCheck 0.4s ease 0.3s forwards" }} />
+                  </svg>
+                </div>
+                <div>
+                  <h5 className="font-[family-name:var(--font-display)] font-bold text-sm text-[var(--color-primary-700)]">
+                    Fantastico, pianta salvata!
+                  </h5>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-px">
+                    La tua {analisi.nomeComune} ti aspetta nella collezione
+                  </p>
+                </div>
+                {/* Sparkle */}
+                <svg
+                  className="absolute right-4 top-1/2 -translate-y-1/2"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{ width: 20, height: 20, opacity: 0, animation: "sparkleIn 0.6s ease 0.5s forwards" }}
+                  aria-hidden="true"
+                >
+                  <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z" fill="var(--color-primary-400)" opacity="0.5" />
+                  <path d="M19 13l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5L15 16l2.5-1z" fill="var(--color-secondary-400)" opacity="0.4" />
+                </svg>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 6. CARE SECTION */}
       <section
         aria-labelledby="titolo-cura"
         style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 400ms both" }}
@@ -594,7 +795,7 @@ export function AnalysisResult({
         </div>
       )}
 
-      {/* 6. NEW ANALYSIS CTA */}
+      {/* 7. NEW ANALYSIS CTA */}
       <div
         className="text-center py-10"
         style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms both" }}

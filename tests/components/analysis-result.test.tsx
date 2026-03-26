@@ -48,11 +48,18 @@ function creaAnalisiTest(statoSalute: PlantAnalysis["statoSalute"] = "fair"): Pl
         priorita: "media",
       },
     ],
+    descrizione: "Pianta tropicale rampicante molto resistente e adattabile.",
     informazioniGenerali: {
       annaffiatura: "Ogni 7-10 giorni",
       luce: "Luce indiretta brillante",
       temperatura: "15-30 °C",
       umidita: "Media (40-60%)",
+    },
+    informazioniRapide: {
+      annaffiatura: "Moderata",
+      luce: "Indiretta",
+      temperatura: "18-25 °C",
+      umidita: "Media",
     },
   };
 }
@@ -75,6 +82,7 @@ describe("AnalysisResult", () => {
           analisi={creaAnalisiTest()}
           urlAnteprima={URL_ANTEPRIMA_FINTO}
           onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
         />
       );
 
@@ -88,10 +96,11 @@ describe("AnalysisResult", () => {
           analisi={creaAnalisiTest()}
           urlAnteprima={URL_ANTEPRIMA_FINTO}
           onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
         />
       );
 
-      expect(screen.getByText(/92% confidenza/)).toBeInTheDocument();
+      expect(screen.getByText(/Confidenza:.*92%/)).toBeInTheDocument();
     });
 
     it("mostra la foto della pianta con l'alt text corretto", () => {
@@ -100,6 +109,7 @@ describe("AnalysisResult", () => {
           analisi={creaAnalisiTest()}
           urlAnteprima={URL_ANTEPRIMA_FINTO}
           onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
         />
       );
 
@@ -113,6 +123,7 @@ describe("AnalysisResult", () => {
           analisi={creaAnalisiTest()}
           urlAnteprima={URL_ANTEPRIMA_FINTO}
           onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
         />
       );
 
@@ -126,6 +137,7 @@ describe("AnalysisResult", () => {
           analisi={creaAnalisiTest()}
           urlAnteprima={URL_ANTEPRIMA_FINTO}
           onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
         />
       );
 
@@ -138,10 +150,10 @@ describe("AnalysisResult", () => {
 
   describe("stati di salute", () => {
     it.each([
-      ["excellent", "Ottima salute"],
-      ["good", "Buona salute"],
-      ["fair", "Condizioni discrete"],
-      ["poor", "Ha bisogno di cure"],
+      ["excellent", "La tua pianta è in splendida forma!"],
+      ["good", "La tua pianta sta abbastanza bene!"],
+      ["fair", "La tua pianta ha bisogno di attenzione."],
+      ["poor", "La tua pianta ha bisogno di cure urgenti."],
     ] as const)(
       "mostra l'etichetta corretta per lo stato '%s'",
       (stato, etichettaAttesa) => {
@@ -150,6 +162,7 @@ describe("AnalysisResult", () => {
             analisi={creaAnalisiTest(stato)}
             urlAnteprima={URL_ANTEPRIMA_FINTO}
             onNuovaAnalisi={vi.fn()}
+            utenteAutenticato={false}
           />
         );
 
@@ -168,10 +181,11 @@ describe("AnalysisResult", () => {
           analisi={creaAnalisiTest()}
           urlAnteprima={URL_ANTEPRIMA_FINTO}
           onNuovaAnalisi={mockOnNuovaAnalisi}
+          utenteAutenticato={false}
         />
       );
 
-      const pulsante = screen.getByRole("button", { name: /nuova analisi/i });
+      const pulsante = screen.getByRole("button", { name: /analizza un.*altra pianta/i });
       await user.click(pulsante);
 
       expect(mockOnNuovaAnalisi).toHaveBeenCalledOnce();
