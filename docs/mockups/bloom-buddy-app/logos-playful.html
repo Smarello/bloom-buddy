@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloom Buddy — Proposte Playful</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: #f0ece4;
+      color: #1a1a18;
+      padding: 3rem 2rem 6rem;
+    }
+
+    .page-title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #4a7c4a;
+      margin-bottom: 0.35rem;
+    }
+    .page-headline {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #1a1a18;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+    .page-subtitle {
+      font-size: 0.95rem;
+      color: #777;
+      margin-bottom: 4.5rem;
+      font-weight: 500;
+    }
+
+    /* ── Proposta ── */
+    .proposal { margin-bottom: 5rem; }
+
+    .proposal-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #4a7c4a;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .proposal-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1a1a18;
+    }
+    .proposal-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #e0eddc;
+      color: #4a7c4a;
+      padding: 0.2rem 0.7rem;
+      border-radius: 99px;
+    }
+
+    .variants {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .box {
+      border-radius: 20px;
+      padding: 3.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      min-height: 180px;
+    }
+    .box-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.35;
+    }
+
+    .meta {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .swatches { display: flex; gap: 0.35rem; flex-shrink: 0; }
+    .sw {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.07);
+    }
+    .note {
+      flex: 1;
+      font-size: 0.85rem;
+      line-height: 1.65;
+      color: #555;
+      background: white;
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      font-weight: 500;
+    }
+    .note strong { color: #222; }
+
+    /* Background variants */
+    .l1 { background: #f5faf2; border: 1.5px solid #d4e8cc; }
+    .d1 { background: #14221a; }
+    .l2 { background: #fffbf4; border: 1.5px solid #f0e4cc; }
+    .d2 { background: #201c14; }
+    .l3 { background: #f4f8ff; border: 1.5px solid #d0dff5; }
+    .d3 { background: #101828; }
+    .l4 { background: #fff4f2; border: 1.5px solid #f5d8d0; }
+    .d4 { background: #211610; }
+    .l5 { background: #f8f5ff; border: 1.5px solid #e0d4f8; }
+    .d5 { background: #160f24; }
+  </style>
+</head>
+<body>
+
+  <p class="page-title">Bloom Buddy · Logo Exploration</p>
+  <h1 class="page-headline">Direzione Playful</h1>
+  <p class="page-subtitle">Font Quicksand, stile amichevole — 5 icone alternative</p>
+
+
+  <!-- ══════════════════════════════════
+       A — GERMOGLIO
+       ══════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <div class="num">A</div>
+      <span class="proposal-name">Germoglio</span>
+      <span class="proposal-tag">sprout icon</span>
+    </div>
+    <div class="variants">
+
+      <div class="box l1">
+        <svg width="200" height="56" viewBox="0 0 200 56" fill="none">
+          <!-- Sprout: stelo + due foglie arrotondate -->
+          <line x1="20" y1="50" x2="20" y2="28" stroke="#4a7c4a" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- foglia sinistra -->
+          <path d="M20 36 C14 32 8 24 14 18 C18 14 22 20 20 36Z" fill="#6aab6a"/>
+          <!-- foglia destra -->
+          <path d="M20 30 C26 26 34 18 28 12 C24 8 18 16 20 30Z" fill="#4a7c4a"/>
+          <!-- pallino terra -->
+          <ellipse cx="20" cy="51" rx="7" ry="3" fill="#c06a30" opacity="0.35"/>
+
+          <!-- wordmark -->
+          <text x="42" y="28" font-family="Quicksand, sans-serif" font-size="24" font-weight="700" fill="#2f4f2f" letter-spacing="-0.3">bloom</text>
+          <text x="42" y="50" font-family="Quicksand, sans-serif" font-size="17" font-weight="500" fill="#6a9e6a" letter-spacing="0.5">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#4a7c4a">chiaro</span>
+      </div>
+
+      <div class="box d1">
+        <svg width="200" height="56" viewBox="0 0 200 56" fill="none">
+          <line x1="20" y1="50" x2="20" y2="28" stroke="#7cb97c" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M20 36 C14 32 8 24 14 18 C18 14 22 20 20 36Z" fill="#5d9a5d"/>
+          <path d="M20 30 C26 26 34 18 28 12 C24 8 18 16 20 30Z" fill="#7cb97c"/>
+          <ellipse cx="20" cy="51" rx="7" ry="3" fill="#e8a87a" opacity="0.4"/>
+
+          <text x="42" y="28" font-family="Quicksand, sans-serif" font-size="24" font-weight="700" fill="#c8e8c0" letter-spacing="-0.3">bloom</text>
+          <text x="42" y="50" font-family="Quicksand, sans-serif" font-size="17" font-weight="500" fill="#5d9a5d" letter-spacing="0.5">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#5d9a5d">scuro</span>
+      </div>
+
+    </div>
+    <div class="meta">
+      <div>
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:0.4rem">palette</div>
+        <div class="swatches">
+          <div class="sw" style="background:#2f4f2f"></div>
+          <div class="sw" style="background:#6aab6a"></div>
+          <div class="sw" style="background:#c06a30"></div>
+          <div class="sw" style="background:#c8e8c0"></div>
+          <div class="sw" style="background:#14221a"></div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Due foglie asimmetriche</strong> che si incrociano sul gambo — semplice, riconoscibile, scalabile. La piccola ellisse terracotta ai piedi suggerisce il terreno senza disegnarlo. Zero dettagli superflui.
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       B — LENTE + FOGLIA
+       ══════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <div class="num">B</div>
+      <span class="proposal-name">Lente + Foglia</span>
+      <span class="proposal-tag">analysis metaphor</span>
+    </div>
+    <div class="variants">
+
+      <div class="box l2">
+        <svg width="210" height="58" viewBox="0 0 210 58" fill="none">
+          <!-- Lente d'ingrandimento con foglia dentro -->
+          <circle cx="24" cy="24" r="17" stroke="#4a7c4a" stroke-width="2.2" fill="#e8f4e0"/>
+          <!-- maniglia -->
+          <line x1="36" y1="36" x2="45" y2="47" stroke="#4a7c4a" stroke-width="2.8" stroke-linecap="round"/>
+          <!-- foglia nella lente -->
+          <path d="M24 33 C24 33 24 26 24 22" stroke="#4a7c4a" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M24 22 C20 16 14 14 17 9 C20 5 26 9 24 22Z" fill="#4a7c4a"/>
+          <path d="M24 22 C28 16 34 14 31 9 C28 5 22 9 24 22Z" fill="#6aab6a"/>
+
+          <!-- wordmark -->
+          <text x="58" y="27" font-family="Quicksand, sans-serif" font-size="24" font-weight="700" fill="#2f4f2f" letter-spacing="-0.3">bloom</text>
+          <text x="58" y="50" font-family="Quicksand, sans-serif" font-size="17" font-weight="500" fill="#c06a30" letter-spacing="0.5">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#4a7c4a">chiaro</span>
+      </div>
+
+      <div class="box d2">
+        <svg width="210" height="58" viewBox="0 0 210 58" fill="none">
+          <circle cx="24" cy="24" r="17" stroke="#7cb97c" stroke-width="2.2" fill="#1c3020"/>
+          <line x1="36" y1="36" x2="45" y2="47" stroke="#7cb97c" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M24 33 C24 33 24 26 24 22" stroke="#7cb97c" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M24 22 C20 16 14 14 17 9 C20 5 26 9 24 22Z" fill="#5d9a5d"/>
+          <path d="M24 22 C28 16 34 14 31 9 C28 5 22 9 24 22Z" fill="#7cb97c"/>
+
+          <text x="58" y="27" font-family="Quicksand, sans-serif" font-size="24" font-weight="700" fill="#d8f0c8" letter-spacing="-0.3">bloom</text>
+          <text x="58" y="50" font-family="Quicksand, sans-serif" font-size="17" font-weight="500" fill="#e8a87a" letter-spacing="0.5">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#6a9a6a">scuro</span>
+      </div>
+
+    </div>
+    <div class="meta">
+      <div>
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:0.4rem">palette</div>
+        <div class="swatches">
+          <div class="sw" style="background:#2f4f2f"></div>
+          <div class="sw" style="background:#4a7c4a"></div>
+          <div class="sw" style="background:#e8f4e0"></div>
+          <div class="sw" style="background:#c06a30"></div>
+          <div class="sw" style="background:#201c14"></div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>La lente comunica l'analisi</strong>, la foglia dentro comunica le piante — due concetti in un glifo solo. La maniglia arrotondata è spessa e friendly. "buddy" in arancio terracotta contrasta caldo/freddo con il verde di "bloom".
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       C — DROP FOGLIA
+       ══════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <div class="num">C</div>
+      <span class="proposal-name">Drop Foglia</span>
+      <span class="proposal-tag">organic shape</span>
+    </div>
+    <div class="variants">
+
+      <div class="box l3">
+        <svg width="200" height="60" viewBox="0 0 200 60" fill="none">
+          <!-- Drop/blob arrotondato come foglia-goccia -->
+          <path d="M22 52 C10 52 4 44 4 34 C4 20 14 8 22 4 C30 8 40 20 40 34 C40 44 34 52 22 52Z" fill="#4a7c4a"/>
+          <!-- nervatura centrale -->
+          <path d="M22 48 C22 48 22 20 22 12" stroke="#6aab6a" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+          <!-- nervature laterali -->
+          <path d="M22 38 C17 34 10 32 10 28" stroke="#6aab6a" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <path d="M22 38 C27 34 34 32 34 28" stroke="#6aab6a" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <path d="M22 28 C18 24 13 22 14 18" stroke="#6aab6a" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <path d="M22 28 C26 24 31 22 30 18" stroke="#6aab6a" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <!-- puntino accent caldo -->
+          <circle cx="22" cy="10" r="3.5" fill="#e8a87a"/>
+
+          <!-- wordmark stacked -->
+          <text x="52" y="27" font-family="Quicksand, sans-serif" font-size="25" font-weight="700" fill="#1a3520" letter-spacing="-0.4">bloom</text>
+          <text x="52" y="50" font-family="Quicksand, sans-serif" font-size="18" font-weight="500" fill="#5a8a7a" letter-spacing="0.3">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#4a7c4a">chiaro</span>
+      </div>
+
+      <div class="box d3">
+        <svg width="200" height="60" viewBox="0 0 200 60" fill="none">
+          <path d="M22 52 C10 52 4 44 4 34 C4 20 14 8 22 4 C30 8 40 20 40 34 C40 44 34 52 22 52Z" fill="#2d5e3a"/>
+          <path d="M22 48 C22 48 22 20 22 12" stroke="#7cb97c" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+          <path d="M22 38 C17 34 10 32 10 28" stroke="#7cb97c" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <path d="M22 38 C27 34 34 32 34 28" stroke="#7cb97c" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <path d="M22 28 C18 24 13 22 14 18" stroke="#7cb97c" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <path d="M22 28 C26 24 31 22 30 18" stroke="#7cb97c" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <circle cx="22" cy="10" r="3.5" fill="#f4a460"/>
+
+          <text x="52" y="27" font-family="Quicksand, sans-serif" font-size="25" font-weight="700" fill="#c0ecd0" letter-spacing="-0.4">bloom</text>
+          <text x="52" y="50" font-family="Quicksand, sans-serif" font-size="18" font-weight="500" fill="#7cb99a" letter-spacing="0.3">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#5d9a6a">scuro</span>
+      </div>
+
+    </div>
+    <div class="meta">
+      <div>
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:0.4rem">palette</div>
+        <div class="swatches">
+          <div class="sw" style="background:#1a3520"></div>
+          <div class="sw" style="background:#4a7c4a"></div>
+          <div class="sw" style="background:#7cb97c"></div>
+          <div class="sw" style="background:#e8a87a"></div>
+          <div class="sw" style="background:#101828"></div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Goccia-foglia piena</strong> con nervature incise — la forma è organica ma solida, funziona bene come icona app a piccole dimensioni. Il punto arancio in cima è coerente con il design system. Vibe: app di benessere premium ma accogliente.
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       D — SORRISO PIANTA
+       ══════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <div class="num">D</div>
+      <span class="proposal-name">Sorriso Pianta</span>
+      <span class="proposal-tag">character · friendly</span>
+    </div>
+    <div class="variants">
+
+      <div class="box l4">
+        <svg width="215" height="60" viewBox="0 0 215 60" fill="none">
+          <!-- Vaso semplice -->
+          <path d="M10 42 L14 54 L30 54 L34 42Z" fill="#c06a30"/>
+          <rect x="8" y="38" width="28" height="6" rx="3" fill="#d4864e"/>
+          <!-- pianta con sorriso -->
+          <circle cx="22" cy="26" r="16" fill="#4a7c4a"/>
+          <!-- occhietti -->
+          <circle cx="17" cy="23" r="2" fill="#fafaf8"/>
+          <circle cx="27" cy="23" r="2" fill="#fafaf8"/>
+          <circle cx="17.7" cy="23.7" r="1" fill="#1a2b1a"/>
+          <circle cx="27.7" cy="23.7" r="1" fill="#1a2b1a"/>
+          <!-- sorriso -->
+          <path d="M16 30 Q22 35 28 30" stroke="#fafaf8" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <!-- fogliolina in testa -->
+          <path d="M22 10 C19 6 13 6 15 2 C17 -1 22 3 22 10Z" fill="#6aab6a"/>
+          <path d="M22 10 C25 6 31 6 29 2 C27 -1 22 3 22 10Z" fill="#5d9a5d"/>
+
+          <!-- wordmark -->
+          <text x="50" y="28" font-family="Quicksand, sans-serif" font-size="24" font-weight="700" fill="#2f4f2f" letter-spacing="-0.3">bloom</text>
+          <text x="50" y="50" font-family="Quicksand, sans-serif" font-size="17" font-weight="500" fill="#c06a30" letter-spacing="0.5">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#c06a30">chiaro</span>
+      </div>
+
+      <div class="box d4">
+        <svg width="215" height="60" viewBox="0 0 215 60" fill="none">
+          <path d="M10 42 L14 54 L30 54 L34 42Z" fill="#8a4820"/>
+          <rect x="8" y="38" width="28" height="6" rx="3" fill="#a05530"/>
+          <circle cx="22" cy="26" r="16" fill="#2d5e3a"/>
+          <circle cx="17" cy="23" r="2" fill="#c8e8c0"/>
+          <circle cx="27" cy="23" r="2" fill="#c8e8c0"/>
+          <circle cx="17.7" cy="23.7" r="1" fill="#0a1c10"/>
+          <circle cx="27.7" cy="23.7" r="1" fill="#0a1c10"/>
+          <path d="M16 30 Q22 35 28 30" stroke="#c8e8c0" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <path d="M22 10 C19 6 13 6 15 2 C17 -1 22 3 22 10Z" fill="#5d9a5d"/>
+          <path d="M22 10 C25 6 31 6 29 2 C27 -1 22 3 22 10Z" fill="#7cb97c"/>
+
+          <text x="50" y="28" font-family="Quicksand, sans-serif" font-size="24" font-weight="700" fill="#c8e8c0" letter-spacing="-0.3">bloom</text>
+          <text x="50" y="50" font-family="Quicksand, sans-serif" font-size="17" font-weight="500" fill="#e8a87a" letter-spacing="0.5">buddy</text>
+        </svg>
+        <span class="box-label" style="color:#8a6a5a">scuro</span>
+      </div>
+
+    </div>
+    <div class="meta">
+      <div>
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:0.4rem">palette</div>
+        <div class="swatches">
+          <div class="sw" style="background:#2f4f2f"></div>
+          <div class="sw" style="background:#4a7c4a"></div>
+          <div class="sw" style="background:#c06a30"></div>
+          <div class="sw" style="background:#fafaf8"></div>
+          <div class="sw" style="background:#211610"></div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Personaggio-pianta</strong> nel vaso con occhietti e sorriso — massima espressività playful. Il vaso in terracotta usa i colori secondari del design system. Può diventare una mascotte. Attenzione: funziona bene a medie dimensioni, meno come favicon piccola.
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       E — CERCHIO FOGLIA BOLD
+       ══════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <div class="num">E</div>
+      <span class="proposal-name">Cerchio Foglia Bold</span>
+      <span class="proposal-tag">icon-first · app icon</span>
+    </div>
+    <div class="variants">
+
+      <div class="box l5">
+        <svg width="215" height="58" viewBox="0 0 215 58" fill="none">
+          <!-- Cerchio pieno grande — ottimo come icona app -->
+          <circle cx="28" cy="29" r="26" fill="#4a7c4a"/>
+          <!-- foglia grande semplice, bianca, centrata -->
+          <path d="M28 46 C28 46 28 30 28 24" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <!-- foglia sinistra -->
+          <path d="M28 34 C22 28 14 22 18 14 C21 8 28 14 28 34Z" fill="white" opacity="0.95"/>
+          <!-- foglia destra, leggermente più scura -->
+          <path d="M28 28 C34 22 42 16 38 8 C35 2 28 10 28 28Z" fill="white" opacity="0.7"/>
+          <!-- puntino accent fuori cerchio -->
+          <circle cx="50" cy="8" r="5" fill="#e8a87a"/>
+
+          <!-- wordmark — layout compatto, tutto alla stessa altezza del cerchio -->
+          <text x="65" y="24" font-family="Quicksand, sans-serif" font-size="23" font-weight="700" fill="#2f4f2f" letter-spacing="-0.3">bloom</text>
+          <text x="65" y="47" font-family="Quicksand, sans-serif" font-size="16" font-weight="600" fill="#4a7c4a" letter-spacing="1.2">buddy</text>
+          <!-- sottolineatura accent -->
+          <rect x="65" y="50" width="76" height="2.5" rx="2" fill="#e8a87a"/>
+        </svg>
+        <span class="box-label" style="color:#4a7c4a">chiaro</span>
+      </div>
+
+      <div class="box d5">
+        <svg width="215" height="58" viewBox="0 0 215 58" fill="none">
+          <circle cx="28" cy="29" r="26" fill="#5d9a5d"/>
+          <path d="M28 46 C28 46 28 30 28 24" stroke="#0d2010" stroke-width="2" stroke-linecap="round"/>
+          <path d="M28 34 C22 28 14 22 18 14 C21 8 28 14 28 34Z" fill="#0d2010" opacity="0.8"/>
+          <path d="M28 28 C34 22 42 16 38 8 C35 2 28 10 28 28Z" fill="#0d2010" opacity="0.55"/>
+          <circle cx="50" cy="8" r="5" fill="#f4a460"/>
+
+          <text x="65" y="24" font-family="Quicksand, sans-serif" font-size="23" font-weight="700" fill="#c8ecc0" letter-spacing="-0.3">bloom</text>
+          <text x="65" y="47" font-family="Quicksand, sans-serif" font-size="16" font-weight="600" fill="#7cb97c" letter-spacing="1.2">buddy</text>
+          <rect x="65" y="50" width="76" height="2.5" rx="2" fill="#f4a460"/>
+        </svg>
+        <span class="box-label" style="color:#7cb97c">scuro</span>
+      </div>
+
+    </div>
+    <div class="meta">
+      <div>
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:0.4rem">palette</div>
+        <div class="swatches">
+          <div class="sw" style="background:#2f4f2f"></div>
+          <div class="sw" style="background:#4a7c4a"></div>
+          <div class="sw" style="background:#7cb97c"></div>
+          <div class="sw" style="background:#e8a87a"></div>
+          <div class="sw" style="background:#160f24"></div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Cerchio pieno con foglia in negativo</strong> — il più scalabile di tutti: funziona perfettamente come icona app 512×512 e come favicon 16×16. Il pallino arancio fuori dal cerchio rompe la geometria in modo giocoso. La sottolineatura accent sotto "buddy" ripete il calore terracotta.
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 import { getIronSession, type IronSession, type SessionOptions } from "iron-session";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export interface DatiSessione {
   utenteId?: string;
@@ -24,9 +25,15 @@ const OPZIONI_SESSIONE: SessionOptions = {
   },
 };
 
+export { OPZIONI_SESSIONE };
+
 export async function ottieniSessione(
   request: NextRequest,
   response: NextResponse,
 ): Promise<IronSession<DatiSessione>> {
   return getIronSession<DatiSessione>(request, response, OPZIONI_SESSIONE);
+}
+
+export async function ottieniSessioneServer(): Promise<IronSession<DatiSessione>> {
+  return getIronSession<DatiSessione>(await cookies(), OPZIONI_SESSIONE);
 }

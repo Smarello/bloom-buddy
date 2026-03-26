@@ -15,78 +15,7 @@ import {
 
 type StatoForm = "idle" | "submitting" | "error";
 
-type LivellForza = "debole" | "media" | "forte";
-
-// ─── Logica forza password ────────────────────────────────────────────────────
-
-function calcolaForzaPassword(valore: string): LivellForza | null {
-  if (!valore) return null;
-  let punteggio = 0;
-  if (valore.length >= 8) punteggio++;
-  if (valore.length >= 12) punteggio++;
-  if (/[A-Z]/.test(valore)) punteggio++;
-  if (/[0-9]/.test(valore)) punteggio++;
-  if (/[^A-Za-z0-9]/.test(valore)) punteggio++;
-  if (punteggio <= 2) return "debole";
-  if (punteggio <= 3) return "media";
-  return "forte";
-}
-
-const ETICHETTE_FORZA: Record<LivellForza, string> = {
-  debole: "Password debole",
-  media: "Password discreta",
-  forte: "Password sicura",
-};
-
-const COLORI_FORZA: Record<LivellForza, string> = {
-  debole: "var(--color-accent-500)",
-  media: "var(--color-secondary-400)",
-  forte: "var(--color-health-excellent)",
-};
-
-const LARGHEZZA_FORZA: Record<LivellForza, string> = {
-  debole: "33%",
-  media: "66%",
-  forte: "100%",
-};
-
 // ─── Icone SVG (solo quelle specifiche di questa pagina) ─────────────────────
-
-function IconaFoglia() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 1 C5 1, 2 3.5, 2.5 7.5 C2.7 9.2, 3.8 10.5, 5.5 11.2 L5.5 12.8 C5.5 13.2 5.8 13.5 6.2 13.5 L7.8 13.5 C8.2 13.5 8.5 13.2 8.5 12.8 L8.5 11.2 C10.2 10.5, 11.3 9.2, 11.5 7.5 C12 3.5, 9 1, 7 1Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function IconaLucchettoSpunta() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      style={{ width: "1rem", height: "1rem" }}
-    >
-      <path d="M9 12l2 2 4-4" />
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
 
 function IconaScudo() {
   return (
@@ -94,11 +23,11 @@ function IconaScudo() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      style={{ width: "1rem", height: "1rem", flexShrink: 0, marginTop: "1px" }}
+      style={{ width: "14px", height: "14px" }}
     >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
@@ -107,7 +36,7 @@ function IconaScudo() {
 
 // ─── Componente principale ───────────────────────────────────────────────────
 
-export default function PaginaRegistrazione() {
+export default function PaginaAccesso() {
   const router = useRouter();
 
   // Stato form
@@ -117,18 +46,9 @@ export default function PaginaRegistrazione() {
   // Valori campi
   const [emailUtente, setEmailUtente] = useState("");
   const [passwordUtente, setPasswordUtente] = useState("");
-  const [confermaPassword, setConfermaPassword] = useState("");
-
-  // Errori inline dei campi
-  const [erroreEmail, setErroreEmail] = useState("");
-  const [errorePassword, setErrorePassword] = useState("");
-  const [erroreConferma, setErroreConferma] = useState("");
 
   // Visibilità password
   const [passwordVisibile, setPasswordVisibile] = useState(false);
-
-  // Forza password
-  const forzaPassword = calcolaForzaPassword(passwordUtente);
 
   // Overlay successo
   const [successo, setSuccesso] = useState(false);
@@ -143,7 +63,7 @@ export default function PaginaRegistrazione() {
       setContoAllaRovescia(contatore);
       if (contatore <= 0) {
         clearInterval(intervallo);
-        setTimeout(() => router.push("/"), 200);
+        setTimeout(() => { window.location.href = "/"; }, 200);
       }
     }, 1000);
     return () => clearInterval(intervallo);
@@ -152,43 +72,16 @@ export default function PaginaRegistrazione() {
   // ID accessibilità
   const idEmail = useId();
   const idPassword = useId();
-  const idConferma = useId();
-
-  // ─── Validazione client ─────────────────────────────────────────────────────
-
-  function validaForm(): boolean {
-    let valido = true;
-
-    if (!emailUtente || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailUtente)) {
-      setErroreEmail("Inserisci un indirizzo email valido.");
-      valido = false;
-    }
-
-    if (!passwordUtente || passwordUtente.length < 8) {
-      setErrorePassword("La password deve essere di almeno 8 caratteri.");
-      valido = false;
-    }
-
-    if (confermaPassword !== passwordUtente) {
-      setErroreConferma("Le password non corrispondono.");
-      valido = false;
-    }
-
-    return valido;
-  }
 
   // ─── Submit ─────────────────────────────────────────────────────────────────
 
   async function gestisciSubmit(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setMessaggioErrore("");
-
-    if (!validaForm()) return;
-
     setStato("submitting");
 
     try {
-      const risposta = await fetch("/api/auth/registrazione", {
+      const risposta = await fetch("/api/auth/accesso", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailUtente, password: passwordUtente }),
@@ -202,9 +95,10 @@ export default function PaginaRegistrazione() {
 
       const corpo = await risposta.json().catch(() => ({}));
 
-      if (risposta.status === 409) {
+      if (risposta.status === 401) {
         setMessaggioErrore(
-          corpo?.errore ?? "Questa email è già associata a un account."
+          corpo?.errore ??
+            "Email o password non corrispondono. Nessun problema, riprova con calma!"
         );
       } else {
         setMessaggioErrore(
@@ -224,7 +118,7 @@ export default function PaginaRegistrazione() {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
-  const isSubmitting = stato === "submitting";
+  const staInviando = stato === "submitting";
 
   return (
     <>
@@ -297,7 +191,7 @@ export default function PaginaRegistrazione() {
               margin: 0,
             }}
           >
-            Benvenuto/a!
+            Bentornato!
           </h2>
 
           <p
@@ -309,8 +203,7 @@ export default function PaginaRegistrazione() {
               margin: 0,
             }}
           >
-            Il tuo account è pronto. Ora puoi salvare le tue piante e
-            ritrovarle sempre con te.
+            Le tue piante non vedevano l&apos;ora di rivederti.
           </p>
 
           <p
@@ -345,17 +238,18 @@ export default function PaginaRegistrazione() {
         }}
       >
         <div
-          style={{ width: "100%", maxWidth: "480px" }}
+          style={{ width: "100%", maxWidth: "440px" }}
           className="animate-fade-in-up"
         >
-          {/* Eyebrow pill */}
+          {/* Eyebrow pill — secondary/terracotta tones with shield icon */}
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "0.375rem",
-              backgroundColor: "var(--color-primary-100)",
-              color: "var(--color-primary-700)",
+              backgroundColor: "var(--color-secondary-50)",
+              color: "var(--color-secondary-600)",
+              border: "1px solid var(--color-secondary-200)",
               borderRadius: "999px",
               padding: "0.3rem 0.875rem",
               fontSize: "0.75rem",
@@ -366,28 +260,26 @@ export default function PaginaRegistrazione() {
               marginBottom: "1.25rem",
             }}
           >
-            <IconaFoglia />
-            Nuovo account
+            <IconaScudo />
+            Bentornato nel tuo giardino
           </div>
 
-          {/* Heading */}
+          {/* Heading — gradient primary-700 to primary-400 */}
           <h1
             style={{
               fontFamily: "var(--font-display)",
               fontSize: "clamp(2rem, 5vw, 2.75rem)",
               fontWeight: 800,
               lineHeight: 1.1,
-              marginBottom: "0.75rem",
+              marginBottom: "0.5rem",
               background:
-                "linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-400) 100%)",
+                "linear-gradient(135deg, var(--color-primary-700) 10%, var(--color-primary-400) 90%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
             }}
           >
-            Il tuo giardino
-            <br />
-            ti aspetta.
+            Accedi al tuo account
           </h1>
 
           {/* Subheading */}
@@ -399,19 +291,22 @@ export default function PaginaRegistrazione() {
               marginBottom: "2rem",
             }}
           >
-            Crea il tuo spazio personale per tenere traccia di ogni pianta,
-            annaffiatura e momento speciale.
+            Le tue piante ti aspettano. Riprendi da dove avevi lasciato.
           </p>
 
-          {/* Card */}
+          {/* Card — gradient accent line terracotta-to-green */}
           <div
             style={{
               backgroundColor: "var(--color-bg-card)",
               borderRadius: "var(--radius-xl)",
               boxShadow: "var(--shadow-lg)",
               border: "1px solid var(--color-border-light)",
-              borderTop: "3px solid var(--color-primary-400)",
+              borderTop:
+                "3px solid transparent",
+              borderImage:
+                "linear-gradient(90deg, transparent 0%, var(--color-secondary-300) 25%, var(--color-primary-400) 50%, var(--color-secondary-300) 75%, transparent 100%) 1",
               padding: "2rem",
+              position: "relative",
             }}
           >
             {/* Error banner */}
@@ -423,30 +318,57 @@ export default function PaginaRegistrazione() {
                   display: "flex",
                   alignItems: "flex-start",
                   gap: "0.75rem",
-                  backgroundColor: "#fff5f5",
-                  border: "1px solid #fca5a5",
+                  backgroundColor: "rgba(224, 96, 96, 0.06)",
+                  border: "1px solid rgba(224, 96, 96, 0.2)",
                   borderRadius: "var(--radius-md)",
                   padding: "0.875rem 1rem",
                   marginBottom: "1.5rem",
-                  color: "#b91c1c",
-                  fontSize: "0.875rem",
-                  lineHeight: 1.5,
                   animation: "fadeIn 0.25s ease both",
                 }}
               >
-                <IconaAvviso />
+                {/* Icona circolare avviso */}
+                <div
+                  style={{
+                    flexShrink: 0,
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "999px",
+                    backgroundColor: "rgba(224, 96, 96, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--color-accent-500)",
+                  }}
+                >
+                  <IconaAvviso />
+                </div>
                 <div>
-                  <div style={{ fontWeight: 700, marginBottom: "0.125rem" }}>
-                    Si è verificato un problema
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontFamily: "var(--font-display)",
+                      fontSize: "0.875rem",
+                      color: "var(--color-accent-600)",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    Ops, qualcosa non torna
                   </div>
-                  <div>{messaggioErrore}</div>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "var(--color-text-secondary)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {messaggioErrore}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Form */}
             <form onSubmit={gestisciSubmit} noValidate>
-
               {/* Campo email */}
               <div style={{ marginBottom: "1.25rem" }}>
                 <label
@@ -460,10 +382,9 @@ export default function PaginaRegistrazione() {
                     fontFamily: "var(--font-display)",
                   }}
                 >
-                  Indirizzo email
+                  Email
                 </label>
                 <div style={{ position: "relative" }}>
-                  {/* Icona sinistra */}
                   <span
                     aria-hidden="true"
                     style={{
@@ -471,9 +392,7 @@ export default function PaginaRegistrazione() {
                       left: "0.875rem",
                       top: "50%",
                       transform: "translateY(-50%)",
-                      color: erroreEmail
-                        ? "var(--color-accent-500)"
-                        : "var(--color-text-muted)",
+                      color: "var(--color-text-muted)",
                       pointerEvents: "none",
                       display: "flex",
                     }}
@@ -487,30 +406,23 @@ export default function PaginaRegistrazione() {
                     value={emailUtente}
                     onChange={(e) => {
                       setEmailUtente(e.target.value);
-                      setErroreEmail("");
                       if (stato === "error") {
                         setMessaggioErrore("");
                         setStato("idle");
                       }
                     }}
-                    placeholder="nome@esempio.it"
+                    placeholder="giulia@example.com"
                     autoComplete="email"
                     inputMode="email"
                     required
-                    aria-invalid={erroreEmail ? "true" : "false"}
-                    aria-describedby={
-                      erroreEmail ? `${idEmail}-errore` : undefined
-                    }
                     style={{
                       width: "100%",
                       padding: "0.7rem 1rem 0.7rem 2.6rem",
                       fontSize: "0.9375rem",
                       fontFamily: "var(--font-body)",
                       color: "var(--color-text-primary)",
-                      backgroundColor: erroreEmail
-                        ? "#fff5f5"
-                        : "var(--color-primary-50)",
-                      border: `1.5px solid ${erroreEmail ? "var(--color-accent-500)" : "var(--color-border)"}`,
+                      backgroundColor: "var(--color-primary-50)",
+                      border: "1.5px solid var(--color-border)",
                       borderRadius: "var(--radius-md)",
                       outline: "none",
                       boxSizing: "border-box",
@@ -524,47 +436,15 @@ export default function PaginaRegistrazione() {
                         "0 0 0 3px rgba(106, 158, 106, 0.15)";
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = erroreEmail
-                        ? "var(--color-accent-500)"
-                        : "var(--color-border)";
+                      e.currentTarget.style.borderColor = "var(--color-border)";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   />
                 </div>
-                {erroreEmail && (
-                  <p
-                    id={`${idEmail}-errore`}
-                    role="alert"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.3rem",
-                      fontSize: "0.8125rem",
-                      color: "var(--color-accent-600)",
-                      marginTop: "0.35rem",
-                      animation: "fadeIn 0.2s ease both",
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      aria-hidden="true"
-                      style={{ width: "0.875rem", height: "0.875rem", flexShrink: 0 }}
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    {erroreEmail}
-                  </p>
-                )}
               </div>
 
               {/* Campo password */}
-              <div style={{ marginBottom: "1.25rem" }}>
+              <div style={{ marginBottom: "1.5rem" }}>
                 <label
                   htmlFor={idPassword}
                   style={{
@@ -579,7 +459,6 @@ export default function PaginaRegistrazione() {
                   Password
                 </label>
                 <div style={{ position: "relative" }}>
-                  {/* Icona lucchetto sinistra */}
                   <span
                     aria-hidden="true"
                     style={{
@@ -587,9 +466,7 @@ export default function PaginaRegistrazione() {
                       left: "0.875rem",
                       top: "50%",
                       transform: "translateY(-50%)",
-                      color: errorePassword
-                        ? "var(--color-accent-500)"
-                        : "var(--color-text-muted)",
+                      color: "var(--color-text-muted)",
                       pointerEvents: "none",
                       display: "flex",
                     }}
@@ -603,25 +480,22 @@ export default function PaginaRegistrazione() {
                     value={passwordUtente}
                     onChange={(e) => {
                       setPasswordUtente(e.target.value);
-                      setErrorePassword("");
+                      if (stato === "error") {
+                        setMessaggioErrore("");
+                        setStato("idle");
+                      }
                     }}
-                    placeholder="Almeno 8 caratteri"
-                    autoComplete="new-password"
+                    placeholder="La tua password"
+                    autoComplete="current-password"
                     required
-                    aria-invalid={errorePassword ? "true" : "false"}
-                    aria-describedby={
-                      errorePassword ? `${idPassword}-errore` : undefined
-                    }
                     style={{
                       width: "100%",
                       padding: "0.7rem 3rem 0.7rem 2.6rem",
                       fontSize: "0.9375rem",
                       fontFamily: "var(--font-body)",
                       color: "var(--color-text-primary)",
-                      backgroundColor: errorePassword
-                        ? "#fff5f5"
-                        : "var(--color-primary-50)",
-                      border: `1.5px solid ${errorePassword ? "var(--color-accent-500)" : "var(--color-border)"}`,
+                      backgroundColor: "var(--color-primary-50)",
+                      border: "1.5px solid var(--color-border)",
                       borderRadius: "var(--radius-md)",
                       outline: "none",
                       boxSizing: "border-box",
@@ -635,9 +509,7 @@ export default function PaginaRegistrazione() {
                         "0 0 0 3px rgba(106, 158, 106, 0.15)";
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = errorePassword
-                        ? "var(--color-accent-500)"
-                        : "var(--color-border)";
+                      e.currentTarget.style.borderColor = "var(--color-border)";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   />
@@ -691,240 +563,12 @@ export default function PaginaRegistrazione() {
                     </svg>
                   </button>
                 </div>
-
-                {/* Indicatore forza password */}
-                {passwordUtente && forzaPassword && (
-                  <div
-                    style={{
-                      marginTop: "0.5rem",
-                      animation: "fadeIn 0.25s ease both",
-                    }}
-                  >
-                    {/* Barra */}
-                    <div
-                      style={{
-                        height: "4px",
-                        backgroundColor: "var(--color-border)",
-                        borderRadius: "999px",
-                        overflow: "hidden",
-                        marginBottom: "0.3rem",
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: "100%",
-                          width: LARGHEZZA_FORZA[forzaPassword],
-                          backgroundColor: COLORI_FORZA[forzaPassword],
-                          borderRadius: "999px",
-                          transition:
-                            "width var(--transition-base), background-color var(--transition-base)",
-                        }}
-                      />
-                    </div>
-                    {/* Etichetta */}
-                    <span
-                      style={{
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        color: COLORI_FORZA[forzaPassword],
-                      }}
-                    >
-                      {ETICHETTE_FORZA[forzaPassword]}
-                    </span>
-                  </div>
-                )}
-
-                {errorePassword && (
-                  <p
-                    id={`${idPassword}-errore`}
-                    role="alert"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.3rem",
-                      fontSize: "0.8125rem",
-                      color: "var(--color-accent-600)",
-                      marginTop: "0.35rem",
-                      animation: "fadeIn 0.2s ease both",
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      aria-hidden="true"
-                      style={{ width: "0.875rem", height: "0.875rem", flexShrink: 0 }}
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    {errorePassword}
-                  </p>
-                )}
-              </div>
-
-              {/* Campo conferma password */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  htmlFor={idConferma}
-                  style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    color: "var(--color-text-primary)",
-                    marginBottom: "0.4rem",
-                    fontFamily: "var(--font-display)",
-                  }}
-                >
-                  Conferma password
-                </label>
-                <div style={{ position: "relative" }}>
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      position: "absolute",
-                      left: "0.875rem",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      color: erroreConferma
-                        ? "var(--color-accent-500)"
-                        : "var(--color-text-muted)",
-                      pointerEvents: "none",
-                      display: "flex",
-                    }}
-                  >
-                    <IconaLucchettoSpunta />
-                  </span>
-                  <input
-                    id={idConferma}
-                    type="password"
-                    name="confermaPassword"
-                    value={confermaPassword}
-                    onChange={(e) => {
-                      setConfermaPassword(e.target.value);
-                      setErroreConferma("");
-                    }}
-                    placeholder="Ripeti la password"
-                    autoComplete="new-password"
-                    required
-                    aria-invalid={erroreConferma ? "true" : "false"}
-                    aria-describedby={
-                      erroreConferma ? `${idConferma}-errore` : undefined
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "0.7rem 1rem 0.7rem 2.6rem",
-                      fontSize: "0.9375rem",
-                      fontFamily: "var(--font-body)",
-                      color: "var(--color-text-primary)",
-                      backgroundColor: erroreConferma
-                        ? "#fff5f5"
-                        : "var(--color-primary-50)",
-                      border: `1.5px solid ${erroreConferma ? "var(--color-accent-500)" : "var(--color-border)"}`,
-                      borderRadius: "var(--radius-md)",
-                      outline: "none",
-                      boxSizing: "border-box",
-                      transition:
-                        "border-color var(--transition-fast), box-shadow var(--transition-fast)",
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor =
-                        "var(--color-primary-400)";
-                      e.currentTarget.style.boxShadow =
-                        "0 0 0 3px rgba(106, 158, 106, 0.15)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = erroreConferma
-                        ? "var(--color-accent-500)"
-                        : "var(--color-border)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  />
-                </div>
-                {erroreConferma && (
-                  <p
-                    id={`${idConferma}-errore`}
-                    role="alert"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.3rem",
-                      fontSize: "0.8125rem",
-                      color: "var(--color-accent-600)",
-                      marginTop: "0.35rem",
-                      animation: "fadeIn 0.2s ease both",
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      aria-hidden="true"
-                      style={{ width: "0.875rem", height: "0.875rem", flexShrink: 0 }}
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    {erroreConferma}
-                  </p>
-                )}
-              </div>
-
-              {/* Nota privacy */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "0.6rem",
-                  backgroundColor: "var(--color-primary-50)",
-                  border: "1px solid var(--color-primary-100)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "0.75rem",
-                  marginBottom: "1.5rem",
-                  color: "var(--color-text-secondary)",
-                  fontSize: "0.8125rem",
-                  lineHeight: 1.55,
-                }}
-              >
-                <IconaScudo />
-                <p style={{ margin: 0 }}>
-                  La tua password è cifrata e non viene mai salvata in chiaro.
-                  Creando un account accetti i nostri{" "}
-                  <Link
-                    href="/termini"
-                    style={{
-                      color: "var(--color-primary-600)",
-                      fontWeight: 600,
-                      textDecoration: "underline",
-                    }}
-                  >
-                    Termini di servizio
-                  </Link>{" "}
-                  e la{" "}
-                  <Link
-                    href="/privacy"
-                    style={{
-                      color: "var(--color-primary-600)",
-                      fontWeight: 600,
-                      textDecoration: "underline",
-                    }}
-                  >
-                    Privacy Policy
-                  </Link>
-                  .
-                </p>
               </div>
 
               {/* Pulsante submit */}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={staInviando}
                 style={{
                   width: "100%",
                   padding: "0.875rem 1.5rem",
@@ -932,37 +576,36 @@ export default function PaginaRegistrazione() {
                   fontWeight: 700,
                   fontFamily: "var(--font-display)",
                   color: "var(--color-text-on-primary)",
-                  background: isSubmitting
+                  background: staInviando
                     ? "var(--color-primary-400)"
                     : "linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%)",
                   border: "none",
                   borderRadius: "var(--radius-lg)",
-                  cursor: isSubmitting ? "not-allowed" : "pointer",
+                  cursor: staInviando ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "0.5rem",
-                  boxShadow: isSubmitting ? "none" : "var(--shadow-md)",
+                  boxShadow: staInviando ? "none" : "var(--shadow-md)",
                   transition:
                     "transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast)",
-                  opacity: isSubmitting ? 0.85 : 1,
+                  opacity: staInviando ? 0.85 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (!isSubmitting) {
+                  if (!staInviando) {
                     e.currentTarget.style.transform = "translateY(-1px)";
                     e.currentTarget.style.boxShadow = "var(--shadow-lg)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isSubmitting) {
+                  if (!staInviando) {
                     e.currentTarget.style.transform = "translateY(0)";
                     e.currentTarget.style.boxShadow = "var(--shadow-md)";
                   }
                 }}
               >
-                {isSubmitting ? (
+                {staInviando ? (
                   <>
-                    {/* Tre pallini animati */}
                     <span
                       aria-hidden="true"
                       style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}
@@ -981,10 +624,10 @@ export default function PaginaRegistrazione() {
                         />
                       ))}
                     </span>
-                    <span className="sr-only">Creazione account in corso…</span>
+                    <span className="sr-only">Accesso in corso…</span>
                   </>
                 ) : (
-                  "Crea account"
+                  "Accedi"
                 )}
               </button>
             </form>
@@ -1007,13 +650,16 @@ export default function PaginaRegistrazione() {
               />
               <span
                 style={{
-                  fontSize: "0.8125rem",
+                  fontSize: "0.75rem",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 600,
                   color: "var(--color-text-muted)",
-                  fontFamily: "var(--font-body)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
                   whiteSpace: "nowrap",
                 }}
               >
-                hai già un account?
+                oppure
               </span>
               <span
                 style={{
@@ -1024,38 +670,27 @@ export default function PaginaRegistrazione() {
               />
             </div>
 
-            {/* Link login */}
-            <div style={{ textAlign: "center" }}>
+            {/* Link registrazione */}
+            <p
+              style={{
+                textAlign: "center",
+                fontSize: "0.875rem",
+                color: "var(--color-text-secondary)",
+                margin: 0,
+              }}
+            >
+              Non hai ancora un account?{" "}
               <Link
-                href="/login"
+                href="/registrazione"
                 style={{
-                  fontFamily: "var(--font-display)",
                   fontWeight: 700,
-                  fontSize: "0.9375rem",
                   color: "var(--color-primary-600)",
                   textDecoration: "none",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "var(--radius-md)",
-                  border: "1.5px solid var(--color-primary-200)",
-                  display: "inline-block",
-                  transition:
-                    "background-color var(--transition-fast), border-color var(--transition-fast)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "var(--color-primary-50)";
-                  e.currentTarget.style.borderColor =
-                    "var(--color-primary-400)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.borderColor =
-                    "var(--color-primary-200)";
                 }}
               >
-                Accedi
+                Creane uno gratis
               </Link>
-            </div>
+            </p>
           </div>
         </div>
       </main>

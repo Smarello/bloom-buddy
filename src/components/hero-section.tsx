@@ -1,10 +1,15 @@
-export function HeroSection() {
+interface HeroSectionProps {
+  autenticato?: boolean;
+}
+
+export function HeroSection({ autenticato = false }: HeroSectionProps) {
   return (
     <section className="relative py-16 pb-12 overflow-hidden max-md:py-10 max-md:pb-8">
       <div className="max-w-[var(--container-max)] mx-auto px-[var(--container-padding)]">
         <div className="grid grid-cols-2 gap-12 items-center max-md:grid-cols-1 max-md:text-center">
           {/* Text content */}
           <div>
+            {!autenticato && (
             <span className="inline-flex items-center gap-2 font-[family-name:var(--font-display)] font-semibold text-sm text-primary-500 bg-primary-50 border border-primary-200 px-4 py-2 rounded-full mb-5 animate-fade-in-up">
               <svg
                 width="16"
@@ -21,6 +26,7 @@ export function HeroSection() {
               </svg>
               Nessuna registrazione richiesta
             </span>
+            )}
 
             <h1 className="mb-5 text-5xl max-md:text-3xl font-bold font-[family-name:var(--font-display)] leading-tight bg-gradient-to-br from-primary-700 from-20% to-primary-500 to-80% bg-clip-text text-transparent animate-fade-in-up delay-1">
               Scatta una foto,

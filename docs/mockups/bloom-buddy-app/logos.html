@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloom Buddy — Proposte Logo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@300;500;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sage-50: #f0f5f0;
+      --sage-200: #b8d4b8;
+      --sage-400: #6a9e6a;
+      --sage-500: #4a7c4a;
+      --sage-700: #2f4f2f;
+      --terra-300: #e8a87a;
+      --terra-500: #c06a30;
+      --cream: #faf7f2;
+      --dark: #1a1a18;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #f2ede6;
+      color: #1a1a18;
+      padding: 3rem 2rem;
+    }
+
+    h1.page-title {
+      font-family: 'Fraunces', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--sage-700);
+      margin-bottom: 0.5rem;
+    }
+    .page-subtitle {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 4rem;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Layout per proposta ── */
+    .proposal {
+      margin-bottom: 5rem;
+    }
+    .proposal-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #d0cbc3;
+      padding-bottom: 0.75rem;
+    }
+    .proposal-number {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #999;
+    }
+    .proposal-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1a1a18;
+    }
+    .proposal-desc {
+      font-size: 0.85rem;
+      color: #666;
+      font-style: italic;
+      margin-left: auto;
+    }
+
+    .variants {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .variant-box {
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      min-height: 200px;
+    }
+    .variant-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      opacity: 0.45;
+      margin-top: 0.5rem;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+    .palette-section { flex: 0 0 auto; }
+    .palette-section h4 {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #999;
+      margin-bottom: 0.5rem;
+    }
+    .palette-swatches {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.06);
+    }
+    .rationale {
+      flex: 1;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #555;
+      background: white;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+    .rationale strong { color: #222; }
+
+    /* ════════════════════════════════════════
+       PROPOSTA 1 — BOTANICO MINIMALISTA
+       ════════════════════════════════════════ */
+    .p1-light {
+      background: #fafaf8;
+      border: 1px solid #e0ddd6;
+    }
+    .p1-dark {
+      background: #1c2b1c;
+    }
+
+    /* ════════════════════════════════════════
+       PROPOSTA 2 — PLAYFUL & MODERNO
+       ════════════════════════════════════════ */
+    .p2-light {
+      background: #fffbf5;
+      border: 1px solid #f0e4cc;
+    }
+    .p2-dark {
+      background: #1f1035;
+    }
+
+    /* ════════════════════════════════════════
+       PROPOSTA 3 — LUXURY / PREMIUM
+       ════════════════════════════════════════ */
+    .p3-light {
+      background: #fdfbf7;
+      border: 1px solid #e8e0d0;
+    }
+    .p3-dark {
+      background: #141210;
+    }
+
+    /* ════════════════════════════════════════
+       PROPOSTA 4 — GEO-NATURE
+       ════════════════════════════════════════ */
+    .p4-light {
+      background: #f4f7f0;
+      border: 1px solid #d4ddc8;
+    }
+    .p4-dark {
+      background: #0d1f1a;
+    }
+
+    /* ════════════════════════════════════════
+       PROPOSTA 5 — BRUTALIST / BOLD
+       ════════════════════════════════════════ */
+    .p5-light {
+      background: #f5f5f0;
+      border: 2px solid #111;
+    }
+    .p5-dark {
+      background: #111111;
+      border: 2px solid #4aff6a;
+    }
+
+    @media (max-width: 640px) {
+      .variants { grid-template-columns: 1fr; }
+      .meta-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="page-title">Bloom Buddy</h1>
+  <p class="page-subtitle">Proposte logo — 5 direzioni visive alternative</p>
+
+  <!-- ══════════════════════════════════════════════════
+       PROPOSTA 1 — BOTANICO MINIMALISTA
+       ══════════════════════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <span class="proposal-number">01</span>
+      <span class="proposal-name">Botanico Minimalista</span>
+      <span class="proposal-desc">Illustrazione scientifica, tratto fine, geometria organica</span>
+    </div>
+
+    <div class="variants">
+      <!-- LIGHT -->
+      <div class="variant-box p1-light">
+        <svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Icona: foglia stilizzata da singolo tratto continuo -->
+          <g transform="translate(2, 4)">
+            <!-- Stelo -->
+            <path d="M26 50 C26 50 26 32 26 28" stroke="#4a7c4a" stroke-width="1.4" stroke-linecap="round"/>
+            <!-- Foglia sinistra -->
+            <path d="M26 28 C20 22 12 16 16 8 C20 0 28 4 26 28" stroke="#4a7c4a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <!-- Nervatura foglia sinistra -->
+            <path d="M26 28 C22 20 17 14 17 8" stroke="#4a7c4a" stroke-width="0.6" stroke-dasharray="1.5 2" opacity="0.6"/>
+            <!-- Foglia destra -->
+            <path d="M26 28 C32 22 40 16 36 8 C32 0 24 4 26 28" stroke="#4a7c4a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <!-- Nervatura foglia destra -->
+            <path d="M26 28 C30 20 35 14 35 8" stroke="#4a7c4a" stroke-width="0.6" stroke-dasharray="1.5 2" opacity="0.6"/>
+            <!-- Fiore puntino -->
+            <circle cx="26" cy="5" r="2" stroke="#c06a30" stroke-width="1" fill="none"/>
+            <circle cx="26" cy="5" r="0.8" fill="#c06a30"/>
+          </g>
+          <!-- Wordmark -->
+          <text x="62" y="26" font-family="Fraunces, serif" font-size="21" font-weight="300" fill="#2f4f2f" letter-spacing="-0.3">Bloom</text>
+          <text x="62" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="300" fill="#6a9e6a" letter-spacing="4">BUDDY</text>
+          <!-- Linea separatrice sottile -->
+          <line x1="56" y1="10" x2="56" y2="54" stroke="#b8d4b8" stroke-width="0.8"/>
+        </svg>
+        <span class="variant-label" style="color:#6a9e6a">Chiaro</span>
+      </div>
+
+      <!-- DARK -->
+      <div class="variant-box p1-dark">
+        <svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(2, 4)">
+            <path d="M26 50 C26 50 26 32 26 28" stroke="#8eba8e" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M26 28 C20 22 12 16 16 8 C20 0 28 4 26 28" stroke="#8eba8e" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M26 28 C22 20 17 14 17 8" stroke="#8eba8e" stroke-width="0.6" stroke-dasharray="1.5 2" opacity="0.5"/>
+            <path d="M26 28 C32 22 40 16 36 8 C32 0 24 4 26 28" stroke="#8eba8e" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M26 28 C30 20 35 14 35 8" stroke="#8eba8e" stroke-width="0.6" stroke-dasharray="1.5 2" opacity="0.5"/>
+            <circle cx="26" cy="5" r="2" stroke="#e8a87a" stroke-width="1" fill="none"/>
+            <circle cx="26" cy="5" r="0.8" fill="#e8a87a"/>
+          </g>
+          <text x="62" y="26" font-family="Fraunces, serif" font-size="21" font-weight="300" fill="#dae8da" letter-spacing="-0.3">Bloom</text>
+          <text x="62" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="300" fill="#6a9e6a" letter-spacing="4">BUDDY</text>
+          <line x1="56" y1="10" x2="56" y2="54" stroke="#3d663d" stroke-width="0.8"/>
+        </svg>
+        <span class="variant-label" style="color:#4a7c4a">Scuro</span>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="palette-section">
+        <h4>Palette</h4>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#2f4f2f" title="#2f4f2f"></div>
+          <div class="swatch" style="background:#4a7c4a" title="#4a7c4a"></div>
+          <div class="swatch" style="background:#8eba8e" title="#8eba8e"></div>
+          <div class="swatch" style="background:#c06a30" title="#c06a30"></div>
+          <div class="swatch" style="background:#fafaf8" title="#fafaf8"></div>
+        </div>
+      </div>
+      <div class="rationale">
+        <strong>Rationale.</strong> Un tratto continuo genera la forma della foglia come se fosse un disegno botanico da erbario. Il font Fraunces in light per "Bloom" richiama l'eleganza dell'illustrazione scientifica ottocentesca; "BUDDY" in Space Grotesk condensato aggiunge modernità senza rompere il registro. Il punto arancio sul fiore è l'unico accento di calore — minimo, preciso.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════
+       PROPOSTA 2 — PLAYFUL & MODERNO
+       ══════════════════════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <span class="proposal-number">02</span>
+      <span class="proposal-name">Playful & Moderno</span>
+      <span class="proposal-desc">Forme arrotondate, carattere amichevole, energia positiva</span>
+    </div>
+
+    <div class="variants">
+      <!-- LIGHT -->
+      <div class="variant-box p2-light">
+        <svg width="240" height="68" viewBox="0 0 240 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Badge arrotondato con foglie stilizzate pill -->
+          <rect x="2" y="10" width="50" height="50" rx="18" fill="#4a7c4a"/>
+          <!-- Fiore stilizzato nel badge -->
+          <!-- Petali -->
+          <ellipse cx="27" cy="20" rx="5" ry="8" fill="#7cb97c" transform="rotate(0 27 27)"/>
+          <ellipse cx="27" cy="34" rx="5" ry="8" fill="#7cb97c" transform="rotate(180 27 27)"/>
+          <ellipse cx="20" cy="27" rx="8" ry="5" fill="#7cb97c" transform="rotate(0 27 27)"/>
+          <ellipse cx="34" cy="27" rx="8" ry="5" fill="#7cb97c" transform="rotate(0 27 27)"/>
+          <!-- Centro fiore -->
+          <circle cx="27" cy="27" r="7" fill="#f0f5f0"/>
+          <circle cx="27" cy="27" r="4" fill="#e8a87a"/>
+          <circle cx="27" cy="27" r="1.5" fill="#c06a30"/>
+          <!-- Foglioline angoli -->
+          <path d="M10 13 C10 8 16 8 14 14" fill="#5d9a5d" opacity="0.7"/>
+          <path d="M46 13 C48 8 54 9 50 14" fill="#5d9a5d" opacity="0.7"/>
+
+          <!-- Wordmark -->
+          <text x="64" y="34" font-family="Quicksand, sans-serif" font-size="26" font-weight="700" fill="#2f4f2f" letter-spacing="-0.5">bloom</text>
+          <text x="64" y="56" font-family="Quicksand, sans-serif" font-size="18" font-weight="600" fill="#c06a30" letter-spacing="0.5">buddy</text>
+          <!-- Punto decorativo -->
+          <circle cx="172" cy="51" r="3" fill="#e8a87a"/>
+          <circle cx="181" cy="51" r="3" fill="#b8d4b8"/>
+        </svg>
+        <span class="variant-label" style="color:#4a7c4a">Chiaro</span>
+      </div>
+
+      <!-- DARK -->
+      <div class="variant-box p2-dark">
+        <svg width="240" height="68" viewBox="0 0 240 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="10" width="50" height="50" rx="18" fill="#5d9a5d"/>
+          <ellipse cx="27" cy="20" rx="5" ry="8" fill="#7cb97c"/>
+          <ellipse cx="27" cy="34" rx="5" ry="8" fill="#7cb97c" transform="rotate(180 27 27)"/>
+          <ellipse cx="20" cy="27" rx="8" ry="5" fill="#7cb97c"/>
+          <ellipse cx="34" cy="27" rx="8" ry="5" fill="#7cb97c"/>
+          <circle cx="27" cy="27" r="7" fill="#1f1035"/>
+          <circle cx="27" cy="27" r="4" fill="#f4a460"/>
+          <circle cx="27" cy="27" r="1.5" fill="#ff7a45"/>
+          <path d="M10 13 C10 8 16 8 14 14" fill="#4a7c4a" opacity="0.9"/>
+          <path d="M46 13 C48 8 54 9 50 14" fill="#4a7c4a" opacity="0.9"/>
+
+          <text x="64" y="34" font-family="Quicksand, sans-serif" font-size="26" font-weight="700" fill="#e8f5e8" letter-spacing="-0.5">bloom</text>
+          <text x="64" y="56" font-family="Quicksand, sans-serif" font-size="18" font-weight="600" fill="#f4a460" letter-spacing="0.5">buddy</text>
+          <circle cx="172" cy="51" r="3" fill="#f4a460"/>
+          <circle cx="181" cy="51" r="3" fill="#7cb97c"/>
+        </svg>
+        <span class="variant-label" style="color:#7cb97c">Scuro</span>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="palette-section">
+        <h4>Palette</h4>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#4a7c4a"></div>
+          <div class="swatch" style="background:#7cb97c"></div>
+          <div class="swatch" style="background:#e8a87a"></div>
+          <div class="swatch" style="background:#c06a30"></div>
+          <div class="swatch" style="background:#1f1035"></div>
+        </div>
+      </div>
+      <div class="rationale">
+        <strong>Rationale.</strong> Il badge arrotondato con fiore geometrico è immediatamente leggibile come icona app. Quicksand tutto minuscolo trasmette accessibilità e calore — è il font dell'app attuale, qui usato in modo espressivo. I pallini decorativi dopo "buddy" sono un tocco giocoso e riconoscibile. Funziona bene su icona app store.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════
+       PROPOSTA 3 — LUXURY / PREMIUM
+       ══════════════════════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <span class="proposal-number">03</span>
+      <span class="proposal-name">Luxury / Premium</span>
+      <span class="proposal-desc">Elegante, sofisticato, palette neutro–dorato</span>
+    </div>
+
+    <div class="variants">
+      <!-- LIGHT -->
+      <div class="variant-box p3-light">
+        <svg width="230" height="72" viewBox="0 0 230 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Monogramma BB in cerchio dorato -->
+          <circle cx="34" cy="36" r="28" stroke="#b89a5a" stroke-width="0.8" fill="none"/>
+          <circle cx="34" cy="36" r="24" stroke="#b89a5a" stroke-width="0.3" fill="none" stroke-dasharray="2 3"/>
+          <!-- Ramoscello decorativo superiore -->
+          <path d="M22 14 C28 10 34 9 34 9 C34 9 40 10 46 14" stroke="#b89a5a" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <circle cx="34" cy="9" r="1.5" fill="#b89a5a"/>
+          <ellipse cx="26" cy="12" rx="3" ry="1.8" fill="none" stroke="#b89a5a" stroke-width="0.7" transform="rotate(-30 26 12)"/>
+          <ellipse cx="42" cy="12" rx="3" ry="1.8" fill="none" stroke="#b89a5a" stroke-width="0.7" transform="rotate(30 42 12)"/>
+          <!-- Ramoscello decorativo inferiore -->
+          <path d="M22 58 C28 62 34 63 34 63 C34 63 40 62 46 58" stroke="#b89a5a" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <circle cx="34" cy="63" r="1.5" fill="#b89a5a"/>
+          <!-- Monogramma -->
+          <text x="24" y="42" font-family="Instrument Serif, serif" font-size="22" font-weight="400" fill="#6b5a3a" letter-spacing="1">BB</text>
+
+          <!-- Wordmark -->
+          <line x1="74" y1="18" x2="74" y2="54" stroke="#d4c4a0" stroke-width="0.6"/>
+          <text x="84" y="32" font-family="Instrument Serif, serif" font-size="16" font-weight="400" fill="#4a3c28" letter-spacing="3">BLOOM</text>
+          <text x="84" y="50" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="300" fill="#9a8a68" letter-spacing="5.5">BUDDY</text>
+          <!-- Linea ornamentale -->
+          <line x1="84" y1="36" x2="200" y2="36" stroke="#d4c4a0" stroke-width="0.4"/>
+        </svg>
+        <span class="variant-label" style="color:#9a8a68">Chiaro</span>
+      </div>
+
+      <!-- DARK -->
+      <div class="variant-box p3-dark">
+        <svg width="230" height="72" viewBox="0 0 230 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="34" cy="36" r="28" stroke="#c8a96a" stroke-width="0.8" fill="none"/>
+          <circle cx="34" cy="36" r="24" stroke="#c8a96a" stroke-width="0.3" fill="none" stroke-dasharray="2 3"/>
+          <path d="M22 14 C28 10 34 9 34 9 C34 9 40 10 46 14" stroke="#c8a96a" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <circle cx="34" cy="9" r="1.5" fill="#c8a96a"/>
+          <ellipse cx="26" cy="12" rx="3" ry="1.8" fill="none" stroke="#c8a96a" stroke-width="0.7" transform="rotate(-30 26 12)"/>
+          <ellipse cx="42" cy="12" rx="3" ry="1.8" fill="none" stroke="#c8a96a" stroke-width="0.7" transform="rotate(30 42 12)"/>
+          <path d="M22 58 C28 62 34 63 34 63 C34 63 40 62 46 58" stroke="#c8a96a" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <circle cx="34" cy="63" r="1.5" fill="#c8a96a"/>
+          <text x="24" y="42" font-family="Instrument Serif, serif" font-size="22" font-weight="400" fill="#c8a96a" letter-spacing="1">BB</text>
+
+          <line x1="74" y1="18" x2="74" y2="54" stroke="#3a3020" stroke-width="0.6"/>
+          <text x="84" y="32" font-family="Instrument Serif, serif" font-size="16" font-weight="400" fill="#e8d8b0" letter-spacing="3">BLOOM</text>
+          <text x="84" y="50" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="300" fill="#8a7a58" letter-spacing="5.5">BUDDY</text>
+          <line x1="84" y1="36" x2="200" y2="36" stroke="#3a3020" stroke-width="0.4"/>
+        </svg>
+        <span class="variant-label" style="color:#8a7a58">Scuro</span>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="palette-section">
+        <h4>Palette</h4>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#4a3c28"></div>
+          <div class="swatch" style="background:#b89a5a"></div>
+          <div class="swatch" style="background:#c8a96a"></div>
+          <div class="swatch" style="background:#d4c4a0"></div>
+          <div class="swatch" style="background:#141210"></div>
+        </div>
+      </div>
+      <div class="rationale">
+        <strong>Rationale.</strong> Il monogramma BB in cerchio con ornamenti vegetali si ispira ai marchi botanici di lusso (profumeria, erboristeria premium). Instrument Serif è elegante senza essere pomposo. Il dorato caldo (#b89a5a) è diverso dal giallo generico — è sabbia, ambra, carta antica. Ottimo per branding premium o versione Pro dell'app.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════
+       PROPOSTA 4 — GEO-NATURE
+       ══════════════════════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <span class="proposal-number">04</span>
+      <span class="proposal-name">Geo-Nature</span>
+      <span class="proposal-desc">Esagono, pattern geometrici ispirati alla natura</span>
+    </div>
+
+    <div class="variants">
+      <!-- LIGHT -->
+      <div class="variant-box p4-light">
+        <svg width="240" height="66" viewBox="0 0 240 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Esagono outer -->
+          <polygon points="33,4 55,17 55,43 33,56 11,43 11,17" fill="none" stroke="#4a7c4a" stroke-width="1.5"/>
+          <!-- Esagono inner -->
+          <polygon points="33,12 47,20 47,36 33,44 19,36 19,20" fill="#dae8da" stroke="none"/>
+          <!-- Foglia geometrica al centro -->
+          <path d="M33 40 L33 28" stroke="#4a7c4a" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M33 28 L26 22 L33 22 L40 22 L33 28" fill="#4a7c4a"/>
+          <path d="M33 34 L27 30" stroke="#4a7c4a" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M33 34 L39 30" stroke="#4a7c4a" stroke-width="0.8" stroke-linecap="round"/>
+          <!-- Punto accent -->
+          <circle cx="33" cy="22" r="2.5" fill="#c06a30"/>
+
+          <!-- Wordmark -->
+          <text x="68" y="29" font-family="Space Grotesk, sans-serif" font-size="22" font-weight="500" fill="#2f4f2f" letter-spacing="-0.5">Bloom</text>
+          <text x="68" y="52" font-family="Space Grotesk, sans-serif" font-size="17" font-weight="300" fill="#6a9e6a" letter-spacing="2">Buddy</text>
+          <!-- Accent bar -->
+          <rect x="68" y="34" width="60" height="1.5" fill="#4a7c4a" rx="1"/>
+          <rect x="68" y="34" width="20" height="1.5" fill="#c06a30" rx="1"/>
+        </svg>
+        <span class="variant-label" style="color:#4a7c4a">Chiaro</span>
+      </div>
+
+      <!-- DARK -->
+      <div class="variant-box p4-dark">
+        <svg width="240" height="66" viewBox="0 0 240 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="33,4 55,17 55,43 33,56 11,43 11,17" fill="none" stroke="#5d9a5d" stroke-width="1.5"/>
+          <polygon points="33,12 47,20 47,36 33,44 19,36 19,20" fill="#1a3020" stroke="none"/>
+          <path d="M33 40 L33 28" stroke="#7cb97c" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M33 28 L26 22 L33 22 L40 22 L33 28" fill="#7cb97c"/>
+          <path d="M33 34 L27 30" stroke="#5d9a5d" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M33 34 L39 30" stroke="#5d9a5d" stroke-width="0.8" stroke-linecap="round"/>
+          <circle cx="33" cy="22" r="2.5" fill="#e8a87a"/>
+
+          <text x="68" y="29" font-family="Space Grotesk, sans-serif" font-size="22" font-weight="500" fill="#c8e8c8" letter-spacing="-0.5">Bloom</text>
+          <text x="68" y="52" font-family="Space Grotesk, sans-serif" font-size="17" font-weight="300" fill="#5d9a5d" letter-spacing="2">Buddy</text>
+          <rect x="68" y="34" width="60" height="1.5" fill="#5d9a5d" rx="1"/>
+          <rect x="68" y="34" width="20" height="1.5" fill="#e8a87a" rx="1"/>
+        </svg>
+        <span class="variant-label" style="color:#5d9a5d">Scuro</span>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="palette-section">
+        <h4>Palette</h4>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#2f4f2f"></div>
+          <div class="swatch" style="background:#4a7c4a"></div>
+          <div class="swatch" style="background:#dae8da"></div>
+          <div class="swatch" style="background:#c06a30"></div>
+          <div class="swatch" style="background:#0d1f1a"></div>
+        </div>
+      </div>
+      <div class="rationale">
+        <strong>Rationale.</strong> L'esagono richiama sia le celle vegetali viste al microscopio sia le strutture a nido d'ape — un ponte tra natura e geometria. La freccia-foglia interna è immediatamente iconica e scalabile come favicon. La barra colorata a due tonalità sotto il nome è un dettaglio di design che rompe la simmetria in modo controllato. Funziona bene come icona tecnica/scientifica.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════
+       PROPOSTA 5 — BRUTALIST / BOLD
+       ══════════════════════════════════════════════════ -->
+  <section class="proposal">
+    <div class="proposal-header">
+      <span class="proposal-number">05</span>
+      <span class="proposal-name">Brutalist / Bold</span>
+      <span class="proposal-desc">Tipografia dominante, contrasto netto, approccio editoriale</span>
+    </div>
+
+    <div class="variants">
+      <!-- LIGHT -->
+      <div class="variant-box p5-light">
+        <svg width="260" height="76" viewBox="0 0 260 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Blocco verde pieno come background del primo carattere -->
+          <rect x="0" y="4" width="52" height="68" fill="#2f4f2f" rx="0"/>
+          <!-- B grande invertita -->
+          <text x="8" y="56" font-family="Fraunces, serif" font-size="54" font-weight="700" fill="#f0f5f0">B</text>
+          <!-- Accento foglia minima sul B -->
+          <path d="M40 10 C42 6 48 7 44 12" fill="#7cb97c"/>
+
+          <!-- Testo LOOM + piccola B -->
+          <text x="56" y="38" font-family="Fraunces, serif" font-size="36" font-weight="700" fill="#1a1a18" letter-spacing="-1">LOOM</text>
+          <!-- Linea orizzontale netta -->
+          <rect x="56" y="43" width="160" height="2" fill="#2f4f2f"/>
+          <!-- BUDDY riga sotto -->
+          <text x="56" y="66" font-family="Space Grotesk, sans-serif" font-size="18" font-weight="300" fill="#4a7c4a" letter-spacing="8">BUDDY</text>
+          <!-- Punto arancio decorativo -->
+          <circle cx="242" cy="57" r="4" fill="#c06a30"/>
+        </svg>
+        <span class="variant-label" style="color:#2f4f2f">Chiaro</span>
+      </div>
+
+      <!-- DARK -->
+      <div class="variant-box p5-dark">
+        <svg width="260" height="76" viewBox="0 0 260 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Blocco accent -->
+          <rect x="0" y="4" width="52" height="68" fill="#4aff6a" rx="0"/>
+          <text x="8" y="56" font-family="Fraunces, serif" font-size="54" font-weight="700" fill="#111111">B</text>
+          <path d="M40 10 C42 6 48 7 44 12" fill="#2f4f2f"/>
+
+          <text x="56" y="38" font-family="Fraunces, serif" font-size="36" font-weight="700" fill="#f5f5f0" letter-spacing="-1">LOOM</text>
+          <rect x="56" y="43" width="160" height="2" fill="#4aff6a"/>
+          <text x="56" y="66" font-family="Space Grotesk, sans-serif" font-size="18" font-weight="300" fill="#4aff6a" letter-spacing="8">BUDDY</text>
+          <circle cx="242" cy="57" r="4" fill="#ff6a30"/>
+        </svg>
+        <span class="variant-label" style="color:#4aff6a">Scuro</span>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="palette-section">
+        <h4>Palette</h4>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#111111"></div>
+          <div class="swatch" style="background:#2f4f2f"></div>
+          <div class="swatch" style="background:#4aff6a"></div>
+          <div class="swatch" style="background:#c06a30"></div>
+          <div class="swatch" style="background:#f5f5f0"></div>
+        </div>
+      </div>
+      <div class="rationale">
+        <strong>Rationale.</strong> La "B" isolata su blocco pieno è un marchio-sigla: la blocchettatura brutale rompe con il cliché del logo verde con foglia. "LOOM" a 36px bold in Fraunces ha potenza editoriale. Il verde acido (#4aff6a) nella versione scura è provocatorio — cita i display sci-fi senza essere cliché. Per un prodotto tech che vuole distinguersi nettamente dalla concorrenza wellness-gentle.
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>
