@@ -13,34 +13,72 @@ export class ErroreAnalisi extends Error {
 const STATI_SALUTE_VALIDI: HealthStatus[] = ["excellent", "good", "fair", "poor"];
 const PRIORITA_VALIDE = ["alta", "media", "bassa"] as const;
 const SOGLIA_CONFIDENZA_MINIMA = 0.4;
-function eDiagnosiDettagliata(valore: unknown): valore is DiagnosiDettagliata {
-  if (typeof valore !== "object" || valore === null) return false;
-  const obj = valore as Record<string, unknown>;
-  return (
-    (obj.categoria === "critico" || obj.categoria === "attenzione") &&
-    typeof obj.titolo === "string" && obj.titolo.trim() !== "" &&
-    typeof obj.cosaVedo === "string" && obj.cosaVedo.trim() !== "" &&
-    typeof obj.cosaSignifica === "string" && obj.cosaSignifica.trim() !== "" &&
-    typeof obj.cosaFare === "string" && obj.cosaFare.trim() !== "" &&
-    typeof obj.cosaAspettarsi === "string" && obj.cosaAspettarsi.trim() !== ""
-  );
+const CATEGORIE_DIAGNOSI_VALIDE = ["critico", "attenzione"] as const;
+const CATEGORIE_OTTIMIZZAZIONE_VALIDE = ["ottimizzazione"] as const;
+
+const FALLBACK_DIAGNOSI_DETTAGLIATA = {
+  cosaVedo: "Osservazione visiva non disponibile",
+  cosaSignifica: "Significato non disponibile",
+  cosaFare: "Consulta un esperto per maggiori dettagli",
+  cosaAspettarsi: "Monitorare l'evoluzione nel tempo",
+} as const;
+
+function stringaConFallback(valore: unknown, fallback: string): string {
+  return typeof valore === "string" && valore.trim() !== "" ? valore.trim() : fallback;
 }
 
-function eOttimizzazione(valore: unknown): valore is Ottimizzazione {
-  if (typeof valore !== "object" || valore === null) return false;
-  const obj = valore as Record<string, unknown>;
-  return (
-    obj.categoria === "ottimizzazione" &&
-    typeof obj.titolo === "string" && obj.titolo.trim() !== "" &&
-    typeof obj.descrizione === "string" && obj.descrizione.trim() !== ""
-  );
+function normalizzaDiagnosiDettagliata(obj: Record<string, unknown>): DiagnosiDettagliata | null {
+  const titolo = stringaConFallback(obj.titolo, "");
+  if (!titolo) return null;
+
+  const categoriaGrezza = typeof obj.categoria === "string" ? obj.categoria : "";
+  const categoria = CATEGORIE_DIAGNOSI_VALIDE.includes(categoriaGrezza as "critico" | "attenzione")
+    ? (categoriaGrezza as "critico" | "attenzione")
+    : "attenzione";
+
+  return {
+    categoria,
+    titolo,
+    cosaVedo: stringaConFallback(obj.cosaVedo, FALLBACK_DIAGNOSI_DETTAGLIATA.cosaVedo),
+    cosaSignifica: stringaConFallback(obj.cosaSignifica, FALLBACK_DIAGNOSI_DETTAGLIATA.cosaSignifica),
+    cosaFare: stringaConFallback(obj.cosaFare, FALLBACK_DIAGNOSI_DETTAGLIATA.cosaFare),
+    cosaAspettarsi: stringaConFallback(obj.cosaAspettarsi, FALLBACK_DIAGNOSI_DETTAGLIATA.cosaAspettarsi),
+  };
+}
+
+function normalizzaOttimizzazione(obj: Record<string, unknown>): Ottimizzazione | null {
+  const titolo = typeof obj.titolo === "string" && obj.titolo.trim() !== "" ? obj.titolo.trim() : null;
+  const descrizione = typeof obj.descrizione === "string" && obj.descrizione.trim() !== "" ? obj.descrizione.trim() : null;
+  if (!titolo || !descrizione) return null;
+
+  const categoriaGrezza = typeof obj.categoria === "string" ? obj.categoria : "";
+  const categoria = CATEGORIE_OTTIMIZZAZIONE_VALIDE.includes(categoriaGrezza as "ottimizzazione")
+    ? (categoriaGrezza as "ottimizzazione")
+    : "ottimizzazione";
+
+  return { categoria, titolo, descrizione };
 }
 
 function parseDiagnosi(datiGrezzi: unknown[]): RisultatoDiagnosi[] {
-  return datiGrezzi.filter(
-    (item): item is RisultatoDiagnosi =>
-      typeof item === "object" && item !== null && (eDiagnosiDettagliata(item) || eOttimizzazione(item)),
-  );
+  const risultati: RisultatoDiagnosi[] = [];
+
+  for (const item of datiGrezzi) {
+    if (typeof item !== "object" || item === null) continue;
+    const obj = item as Record<string, unknown>;
+
+    const haStrutturaOttimizzazione = typeof obj.descrizione === "string" && !("cosaVedo" in obj);
+    const haStrutturaDiagnosi = "cosaVedo" in obj || "cosaSignifica" in obj || "cosaFare" in obj || "cosaAspettarsi" in obj;
+
+    if (obj.categoria === "ottimizzazione" || (haStrutturaOttimizzazione && !haStrutturaDiagnosi)) {
+      const ottimizzazione = normalizzaOttimizzazione(obj);
+      if (ottimizzazione) risultati.push(ottimizzazione);
+    } else {
+      const diagnosi = normalizzaDiagnosiDettagliata(obj);
+      if (diagnosi) risultati.push(diagnosi);
+    }
+  }
+
+  return risultati;
 }
 
 function eStatoSaluteValido(valore: unknown): valore is HealthStatus {

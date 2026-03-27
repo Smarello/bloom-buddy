@@ -33,6 +33,12 @@ function creaRispostaValida(): string {
       temperatura: "15-30 °C",
       umidita: "Media (40-60%)",
     },
+    informazioniRapide: {
+      annaffiatura: "Moderata",
+      luce: "Indiretta",
+      temperatura: "18-25°C",
+      umidita: "40-60%",
+    },
   };
   return JSON.stringify(analisi);
 }
@@ -88,12 +94,10 @@ describe("parseRispostaGemini", () => {
     it("lancia ErroreAnalisi con tipo risposta-malformata se il JSON è invalido", () => {
       expect(() => parseRispostaGemini("questo non è JSON")).toThrow(ErroreAnalisi);
 
-      try {
-        parseRispostaGemini("questo non è JSON");
-      } catch (errore) {
-        expect(errore).toBeInstanceOf(ErroreAnalisi);
-        expect((errore as ErroreAnalisi).tipo).toBe("risposta-malformata");
-      }
+      const errore = (() => {
+        try { parseRispostaGemini("questo non è JSON"); } catch (e) { return e; }
+      })() as ErroreAnalisi;
+      expect(errore.tipo).toBe("risposta-malformata");
     });
 
     it("lancia ErroreAnalisi con tipo risposta-malformata se il JSON non è un oggetto", () => {
@@ -288,7 +292,7 @@ describe("parseRispostaGemini", () => {
   });
 
   describe("diagnosi malformate e retrocompatibilità", () => {
-    it("ignora diagnosi con campi mancanti", () => {
+    it("normalizza diagnosi con campi mancanti applicando fallback", () => {
       const dati = JSON.parse(creaRispostaValida());
       dati.diagnosi = [
         {
@@ -303,10 +307,12 @@ describe("parseRispostaGemini", () => {
 
       const risultato = parseRispostaGemini(JSON.stringify(dati));
 
-      expect(risultato.diagnosi).toBeUndefined();
+      expect(risultato.diagnosi).toHaveLength(1);
+      const diagnosi = risultato.diagnosi![0] as { cosaFare: string };
+      expect(diagnosi.cosaFare).toBe("Consulta un esperto per maggiori dettagli");
     });
 
-    it("ignora diagnosi con categoria non valida", () => {
+    it("reclassifica diagnosi con categoria non valida ad attenzione", () => {
       const dati = JSON.parse(creaRispostaValida());
       dati.diagnosi = [
         {
@@ -321,7 +327,8 @@ describe("parseRispostaGemini", () => {
 
       const risultato = parseRispostaGemini(JSON.stringify(dati));
 
-      expect(risultato.diagnosi).toBeUndefined();
+      expect(risultato.diagnosi).toHaveLength(1);
+      expect(risultato.diagnosi![0].categoria).toBe("attenzione");
     });
 
     it("restituisce undefined per array diagnosi vuoto", () => {
@@ -340,6 +347,83 @@ describe("parseRispostaGemini", () => {
       const risultato = parseRispostaGemini(JSON.stringify(dati));
 
       expect(risultato.diagnosi).toBeUndefined();
+    });
+
+    it("applica fallback per 3 campi mancanti nella diagnosi dettagliata", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "critico",
+          titolo: "Problema grave",
+          cosaFare: "Intervieni subito",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      const diagnosi = risultato.diagnosi![0] as import("@/types/analysis").DiagnosiDettagliata;
+      expect(diagnosi.cosaVedo).toBe("Osservazione visiva non disponibile");
+      expect(diagnosi.cosaSignifica).toBe("Significato non disponibile");
+      expect(diagnosi.cosaFare).toBe("Intervieni subito");
+      expect(diagnosi.cosaAspettarsi).toBe("Monitorare l'evoluzione nel tempo");
+    });
+
+    it("reclassifica categoria 'warning' ad 'attenzione'", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "warning",
+          titolo: "Foglie secche",
+          cosaVedo: "Punte secche",
+          cosaSignifica: "Aria troppo secca",
+          cosaFare: "Aumentare umidità",
+          cosaAspettarsi: "Miglioramento graduale",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      expect(risultato.diagnosi![0].categoria).toBe("attenzione");
+    });
+
+    it("reclassifica ottimizzazione con categoria invalida a 'ottimizzazione'", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "suggerimento",
+          titolo: "Concimazione",
+          descrizione: "Aggiungi fertilizzante in primavera",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      expect(risultato.diagnosi![0].categoria).toBe("ottimizzazione");
+    });
+
+    it("scarta elementi non-oggetto nell'array diagnosi", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        42,
+        "stringa",
+        null,
+        {
+          categoria: "critico",
+          titolo: "Unica diagnosi valida",
+          cosaVedo: "Test",
+          cosaSignifica: "Test",
+          cosaFare: "Test",
+          cosaAspettarsi: "Test",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      expect(risultato.diagnosi![0].titolo).toBe("Unica diagnosi valida");
     });
 
     it("i campi legacy restano popolati anche con diagnosi presente", () => {
