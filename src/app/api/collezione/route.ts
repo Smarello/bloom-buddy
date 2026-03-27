@@ -95,20 +95,39 @@ export async function POST(request: NextRequest) {
   const percorsoBlob = `collezione/${utenteId}/${hashFoto}.jpg`;
   const blobRisultato = await put(percorsoBlob, bytesFoto, { access: "public" });
 
-  let analisiCreata;
+  const nomeComune = (datiAnalisiOggetto.nomeComune as string).trim();
+  const nomeScientifico = (datiAnalisiOggetto.nomeScientifico as string).trim();
+
+  let risultato: { analisi: { id: string; urlFoto: string; createdAt: Date }; collezioneId: string };
   try {
-    analisiCreata = await prisma.analisi.create({
-      data: {
-        urlFoto: blobRisultato.url,
-        datiAnalisi: datiAnalisi as object,
-        hashFoto,
-        utenteId,
-      },
-      select: { id: true, urlFoto: true, createdAt: true },
+    risultato = await prisma.$transaction(async (tx) => {
+      const nuovaCollezione = await tx.collezione.create({
+        data: {
+          nome: nomeComune,
+          nomeScientifico,
+          utenteId,
+        },
+        select: { id: true },
+      });
+
+      const analisiCreata = await tx.analisi.create({
+        data: {
+          urlFoto: blobRisultato.url,
+          datiAnalisi: datiAnalisi as object,
+          hashFoto,
+          utenteId,
+          collezioneId: nuovaCollezione.id,
+        },
+        select: { id: true, urlFoto: true, createdAt: true },
+      });
+
+      return { analisi: analisiCreata, collezioneId: nuovaCollezione.id };
     });
   } catch (errore) {
     // Pulizia blob orfano in caso di fallimento del salvataggio su DB
-    await del(blobRisultato.url).catch(() => {});
+    await del(blobRisultato.url).catch((erroreBlob) => {
+      console.error("Blob orfano non rimosso:", blobRisultato.url, erroreBlob);
+    });
 
     if (
       errore instanceof Error &&
@@ -127,7 +146,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(
     {
       messaggio: "Analisi salvata nella tua collezione!",
-      analisi: analisiCreata,
+      analisi: risultato.analisi,
+      collezioneId: risultato.collezioneId,
     },
     { status: 201 },
   );

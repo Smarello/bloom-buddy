@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { ottieniSessioneServer } from "@/lib/auth/sessione";
+import { prisma } from "@/lib/db/client";
 import type { PlantAnalysis, HealthStatus } from "@/types/analysis";
 import Link from "next/link";
 import Image from "next/image";
-import { isPlantAnalysis, recuperaAnalisiPerPianta } from "@/lib/collezione/recuperaAnalisiPerPianta";
+import { isPlantAnalysis } from "@/lib/collezione/validazione";
 
 const COLORI_SALUTE: Record<HealthStatus, { bg: string; testo: string; etichetta: string }> = {
   excellent: { bg: "bg-[var(--color-primary-50)]", testo: "text-[var(--color-primary-700)]", etichetta: "Ottima" },
@@ -12,10 +13,10 @@ const COLORI_SALUTE: Record<HealthStatus, { bg: string; testo: string; etichetta
   poor: { bg: "bg-red-100", testo: "text-red-700", etichetta: "Critica" },
 };
 
-export default async function PaginaAnalisiPianta({
+export default async function PaginaDettaglioCollezione({
   params,
 }: {
-  params: Promise<{ nomePianta: string }>;
+  params: Promise<{ idCollezione: string }>;
 }) {
   const sessione = await ottieniSessioneServer();
 
@@ -23,23 +24,23 @@ export default async function PaginaAnalisiPianta({
     redirect("/accesso");
   }
 
-  const { nomePianta } = await params;
-  const nomePiantaDecodificato = decodeURIComponent(nomePianta);
+  const { idCollezione } = await params;
 
-  let analisiPianta: Awaited<ReturnType<typeof recuperaAnalisiPerPianta>> = [];
-  try {
-    analisiPianta = await recuperaAnalisiPerPianta(sessione.utenteId, nomePiantaDecodificato);
-  } catch {
-    analisiPianta = [];
+  const collezione = await prisma.collezione.findUnique({
+    where: { id: idCollezione },
+    include: {
+      analisi: {
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  if (!collezione || collezione.utenteId !== sessione.utenteId) {
+    notFound();
   }
 
-  // Determina il nome comune e scientifico dalla prima analisi
-  const datiPianta = analisiPianta.length > 0
-    ? analisiPianta[0].datiAnalisi as unknown as PlantAnalysis
-    : null;
-
   const etichettaTotaleAnalisi =
-    analisiPianta.length === 1 ? "1 analisi" : `${analisiPianta.length} analisi`;
+    collezione.analisi.length === 1 ? "1 analisi" : `${collezione.analisi.length} analisi`;
 
   return (
     <section className="py-8 pb-20">
@@ -70,11 +71,11 @@ export default async function PaginaAnalisiPianta({
         {/* Intestazione pagina */}
         <div className="mb-8">
           <h1 className="font-[family-name:var(--font-display)] font-bold text-2xl text-[var(--color-text)] leading-tight mb-1">
-            {datiPianta?.nomeComune ?? nomePiantaDecodificato}
+            {collezione.nome}
           </h1>
-          {datiPianta?.nomeScientifico && (
+          {collezione.nomeScientifico && (
             <p className="text-base text-[var(--color-text-muted)] italic mb-3">
-              {datiPianta.nomeScientifico}
+              {collezione.nomeScientifico}
             </p>
           )}
           <span className="text-sm font-medium text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-3 py-1 rounded-full">
@@ -82,18 +83,18 @@ export default async function PaginaAnalisiPianta({
           </span>
         </div>
 
-        {analisiPianta.length === 0 ? (
+        {collezione.analisi.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-20 gap-4">
             <p className="font-[family-name:var(--font-display)] font-semibold text-lg text-[var(--color-text)]">
-              Nessuna analisi trovata per questa pianta
+              Nessuna analisi in questa collezione
             </p>
             <p className="text-[var(--color-text-muted)] max-w-sm mx-auto">
-              Non sono state trovate analisi salvate per &ldquo;{nomePiantaDecodificato}&rdquo;.
+              Questa collezione non ha ancora analisi salvate.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {analisiPianta.map((analisi) => {
+            {collezione.analisi.map((analisi) => {
               if (!isPlantAnalysis(analisi.datiAnalisi)) return null;
 
               const datiValidati: PlantAnalysis = analisi.datiAnalisi;

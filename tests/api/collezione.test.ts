@@ -5,11 +5,11 @@ vi.mock("@/lib/auth/sessione", () => ({
   ottieniSessione: vi.fn(),
 }));
 
+const transactionCallback = vi.fn();
+
 vi.mock("@/lib/db/client", () => ({
   prisma: {
-    analisi: {
-      create: vi.fn(),
-    },
+    $transaction: (callback: (tx: unknown) => Promise<unknown>) => transactionCallback(callback),
   },
 }));
 
@@ -20,14 +20,26 @@ vi.mock("@vercel/blob", () => ({
 
 
 import { ottieniSessione } from "@/lib/auth/sessione";
-import { prisma } from "@/lib/db/client";
 import { put, del } from "@vercel/blob";
 import { POST } from "@/app/api/collezione/route";
 
 const ottieniSessioneMock = vi.mocked(ottieniSessione);
-const createMock = vi.mocked(prisma.analisi.create);
 const putMock = vi.mocked(put);
 const delMock = vi.mocked(del);
+
+// Mock transaction executor: simula il tx passato alla callback di $transaction
+const collezioneCreateMock = vi.fn();
+const analisiCreateMock = vi.fn();
+const fakeTx = {
+  collezione: { create: collezioneCreateMock },
+  analisi: { create: analisiCreateMock },
+};
+
+function setupTransaction() {
+  transactionCallback.mockImplementation(async (callback: (tx: typeof fakeTx) => Promise<unknown>) => {
+    return callback(fakeTx);
+  });
+}
 
 const DATI_ANALISI_VALIDI = JSON.stringify({
   nomeComune: "Rosa",
@@ -74,7 +86,9 @@ describe("POST /api/collezione", () => {
       urlFoto: "https://blob.vercel-storage.com/collezione/utente-123/abc.jpg",
       createdAt: new Date().toISOString(),
     };
-    createMock.mockResolvedValue(analisiAttesa as any);
+    collezioneCreateMock.mockResolvedValue({ id: "collezione-1" });
+    analisiCreateMock.mockResolvedValue(analisiAttesa as any);
+    setupTransaction();
 
     const foto = new File([new Uint8Array([0xff, 0xd8, 0xff])], "test.jpg", {
       type: "image/jpeg",
@@ -87,8 +101,21 @@ describe("POST /api/collezione", () => {
     expect(risposta.status).toBe(201);
     expect(corpo.messaggio).toBe("Analisi salvata nella tua collezione!");
     expect(corpo.analisi).toEqual(analisiAttesa);
+    expect(corpo.collezioneId).toBe("collezione-1");
     expect(putMock).toHaveBeenCalledOnce();
-    expect(createMock).toHaveBeenCalledOnce();
+    expect(collezioneCreateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        nome: "Rosa",
+        nomeScientifico: "Rosa gallica",
+        utenteId: "utente-123",
+      }),
+    }));
+    expect(analisiCreateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        collezioneId: "collezione-1",
+        utenteId: "utente-123",
+      }),
+    }));
   });
 
   it("rifiuto utente non autenticato (401)", async () => {
@@ -122,7 +149,7 @@ describe("POST /api/collezione", () => {
       code: "P2002",
       name: "PrismaClientKnownRequestError",
     });
-    createMock.mockRejectedValue(erroreUniqueViolation);
+    transactionCallback.mockRejectedValue(erroreUniqueViolation);
 
     const foto = new File([new Uint8Array([0xff, 0xd8])], "test.jpg", {
       type: "image/jpeg",
