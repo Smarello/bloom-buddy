@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import type { HealthStatus, PlantAnalysis } from "@/types/analysis";
 import type { CareInfo } from "@/types/analysis";
 import { HealthIndicator } from "./health-indicator";
@@ -15,6 +16,7 @@ interface PropsAnalysisResult {
   onNuovaAnalisi: () => void;
   utenteAutenticato: boolean;
   giaSalvata?: boolean;
+  collezioneId?: string;
 }
 
 const TESTO_INCORAGGIAMENTO: Record<
@@ -116,7 +118,9 @@ export function AnalysisResult({
   onNuovaAnalisi,
   utenteAutenticato,
   giaSalvata = false,
+  collezioneId,
 }: PropsAnalysisResult) {
+  const router = useRouter();
   const [popupAperto, setPopupAperto] = useState(false);
   const [statoSalvataggio, setStatoSalvataggio] = useState<StatoSalvataggio>("idle");
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -196,12 +200,18 @@ export function AnalysisResult({
       const datiForm = new FormData();
       datiForm.append("foto", fileImmagine);
       datiForm.append("datiAnalisi", JSON.stringify(analisi));
+      if (collezioneId) {
+        datiForm.append("collezioneId", collezioneId);
+      }
 
       const risposta = await fetch("/api/collezione", { method: "POST", body: datiForm });
       if (risposta.status === 409) {
         setStatoSalvataggio("duplicate");
       } else if (risposta.ok) {
         setStatoSalvataggio("saved");
+        if (collezioneId) {
+          router.push(`/collezione/${collezioneId}`);
+        }
       } else {
         setStatoSalvataggio("idle");
       }

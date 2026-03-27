@@ -9,6 +9,7 @@ import type { PlantAnalysis } from "@/types/analysis";
 interface DatiAnalisi {
   analisi: PlantAnalysis;
   urlAnteprima: string;
+  collezioneId?: string;
 }
 
 export default function PaginaAnalisi() {
@@ -170,6 +171,7 @@ function ContenutoPaginaAnalisi() {
           onNuovaAnalisi={gestisciNuovaAnalisi}
           utenteAutenticato={utenteAutenticato}
           giaSalvata={giaSalvata}
+          collezioneId={dati.collezioneId}
         />
       </div>
     </section>

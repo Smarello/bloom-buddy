@@ -31,7 +31,7 @@ function leggiFileComDataUrl(file: File): Promise<string> {
   });
 }
 
-export function useAnalysis(): StatoUseAnalysis & AzioniUseAnalysis {
+export function useAnalysis(collezioneId?: string): StatoUseAnalysis & AzioniUseAnalysis {
   const [stato, setStato] = useState<StatoAnalisi>("idle");
   const [errore, setErrore] = useState<ErroreAnalisiHook | null>(null);
 
@@ -73,6 +73,7 @@ export function useAnalysis(): StatoUseAnalysis & AzioniUseAnalysis {
         const datoCompleto = {
           analisi: dati as PlantAnalysis,
           urlAnteprima: dataUrlAnteprima,
+          ...(collezioneId != null && { collezioneId }),
         };
         sessionStorage.setItem(CHIAVE_SESSION_STORAGE, JSON.stringify(datoCompleto));
 
@@ -86,8 +87,7 @@ export function useAnalysis(): StatoUseAnalysis & AzioniUseAnalysis {
         });
       }
     },
-    // Nessuna dipendenza: la funzione usa solo setStato/setErrore (stabili per referenza) e sessionStorage
-    [],
+    [collezioneId],
   );
 
   return {

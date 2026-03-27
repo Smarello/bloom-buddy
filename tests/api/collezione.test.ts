@@ -7,9 +7,12 @@ vi.mock("@/lib/auth/sessione", () => ({
 
 const transactionCallback = vi.fn();
 
+const collezioneFindUniqueMock = vi.fn();
+
 vi.mock("@/lib/db/client", () => ({
   prisma: {
     $transaction: (callback: (tx: unknown) => Promise<unknown>) => transactionCallback(callback),
+    collezione: { findUnique: (...args: unknown[]) => collezioneFindUniqueMock(...args) },
   },
 }));
 
@@ -195,5 +198,95 @@ describe("POST /api/collezione", () => {
 
     expect(risposta.status).toBe(400);
     expect(corpo.errore).toContain("Campi mancanti");
+  });
+
+  describe("con collezioneId esistente", () => {
+    const sessioneAutenticata = {
+      utenteId: "utente-123",
+      email: "mario@example.com",
+    };
+
+    const foto = () =>
+      new File([new Uint8Array([0xff, 0xd8, 0xff])], "test.jpg", {
+        type: "image/jpeg",
+      });
+
+    beforeEach(() => {
+      ottieniSessioneMock.mockResolvedValue(sessioneAutenticata as any);
+      putMock.mockResolvedValue({
+        url: "https://blob.vercel-storage.com/collezione/utente-123/abc.jpg",
+      } as any);
+    });
+
+    it("collezioneId valido appartenente all'utente (201)", async () => {
+      collezioneFindUniqueMock.mockResolvedValue({
+        id: "collezione-esistente",
+        utenteId: "utente-123",
+      });
+
+      const analisiAttesa = {
+        id: "analisi-2",
+        urlFoto: "https://blob.vercel-storage.com/collezione/utente-123/abc.jpg",
+        createdAt: new Date().toISOString(),
+      };
+      analisiCreateMock.mockResolvedValue(analisiAttesa as any);
+      setupTransaction();
+
+      const richiesta = creaRichiestaConFormData({
+        foto: foto(),
+        datiAnalisi: DATI_ANALISI_VALIDI,
+        collezioneId: "collezione-esistente",
+      });
+      const risposta = await POST(richiesta);
+      const corpo = await risposta.json();
+
+      expect(risposta.status).toBe(201);
+      expect(corpo.messaggio).toBe("Analisi salvata nella tua collezione!");
+      expect(corpo.collezioneId).toBe("collezione-esistente");
+      expect(collezioneCreateMock).not.toHaveBeenCalled();
+      expect(analisiCreateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            collezioneId: "collezione-esistente",
+            utenteId: "utente-123",
+          }),
+        }),
+      );
+    });
+
+    it("collezioneId appartenente a un altro utente (403)", async () => {
+      collezioneFindUniqueMock.mockResolvedValue({
+        id: "collezione-altrui",
+        utenteId: "utente-altro",
+      });
+
+      const richiesta = creaRichiestaConFormData({
+        foto: foto(),
+        datiAnalisi: DATI_ANALISI_VALIDI,
+        collezioneId: "collezione-altrui",
+      });
+      const risposta = await POST(richiesta);
+      const corpo = await risposta.json();
+
+      expect(risposta.status).toBe(403);
+      expect(corpo.errore).toBe("Non autorizzato");
+      expect(delMock).toHaveBeenCalledOnce();
+    });
+
+    it("collezioneId inesistente (404)", async () => {
+      collezioneFindUniqueMock.mockResolvedValue(null);
+
+      const richiesta = creaRichiestaConFormData({
+        foto: foto(),
+        datiAnalisi: DATI_ANALISI_VALIDI,
+        collezioneId: "collezione-fantasma",
+      });
+      const risposta = await POST(richiesta);
+      const corpo = await risposta.json();
+
+      expect(risposta.status).toBe(404);
+      expect(corpo.errore).toBe("Collezione non trovata");
+      expect(delMock).toHaveBeenCalledOnce();
+    });
   });
 });

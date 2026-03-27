@@ -191,4 +191,77 @@ describe("AnalysisResult", () => {
       expect(mockOnNuovaAnalisi).toHaveBeenCalledOnce();
     });
   });
+
+  describe("salvataggio con collezioneId", () => {
+    const URL_DATA_FINTO = "data:image/jpeg;base64,dGVzdA==";
+    let fetchSpia: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchSpia = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+      global.fetch = fetchSpia;
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("include collezioneId nel FormData quando è presente come prop", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+          collezioneId="col-123"
+        />
+      );
+
+      const pulsante = screen.getByRole("button", { name: /salva nella collezione/i });
+      await user.click(pulsante);
+
+      expect(fetchSpia).toHaveBeenCalledOnce();
+      const formDataInviato: FormData = fetchSpia.mock.calls[0][1].body;
+      expect(formDataInviato.get("collezioneId")).toBe("col-123");
+    });
+
+    it("reindirizza alla pagina della collezione dopo il salvataggio quando collezioneId è presente", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+          collezioneId="col-456"
+        />
+      );
+
+      const pulsante = screen.getByRole("button", { name: /salva nella collezione/i });
+      await user.click(pulsante);
+
+      expect(mockRouterPush).toHaveBeenCalledWith("/collezione/col-456");
+    });
+
+    it("non reindirizza alla collezione dopo il salvataggio quando collezioneId non è presente", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+        />
+      );
+
+      const pulsante = screen.getByRole("button", { name: /salva nella collezione/i });
+      await user.click(pulsante);
+
+      expect(fetchSpia).toHaveBeenCalledOnce();
+      expect(mockRouterPush).not.toHaveBeenCalled();
+    });
+  });
 });

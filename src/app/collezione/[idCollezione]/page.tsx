@@ -69,18 +69,39 @@ export default async function PaginaDettaglioCollezione({
         </Link>
 
         {/* Intestazione pagina */}
-        <div className="mb-8">
-          <h1 className="font-[family-name:var(--font-display)] font-bold text-2xl text-[var(--color-text)] leading-tight mb-1">
-            {collezione.nome}
-          </h1>
-          {collezione.nomeScientifico && (
-            <p className="text-base text-[var(--color-text-muted)] italic mb-3">
-              {collezione.nomeScientifico}
-            </p>
-          )}
-          <span className="text-sm font-medium text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-3 py-1 rounded-full">
-            {etichettaTotaleAnalisi}
-          </span>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-[family-name:var(--font-display)] font-bold text-2xl text-[var(--color-text)] leading-tight mb-1">
+              {collezione.nome}
+            </h1>
+            {collezione.nomeScientifico && (
+              <p className="text-base text-[var(--color-text-muted)] italic mb-3">
+                {collezione.nomeScientifico}
+              </p>
+            )}
+            <span className="text-sm font-medium text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-3 py-1 rounded-full">
+              {etichettaTotaleAnalisi}
+            </span>
+          </div>
+          <Link
+            href={`/?collezioneId=${idCollezione}`}
+            className="inline-flex items-center gap-2 font-[family-name:var(--font-display)] font-semibold text-sm text-white bg-[var(--color-primary-600)] px-6 py-3 rounded-full transition-colors hover:bg-[var(--color-primary-500)] shrink-0"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4"
+              aria-hidden="true"
+            >
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            Nuova analisi
+          </Link>
         </div>
 
         {collezione.analisi.length === 0 ? (

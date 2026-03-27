@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { IndicatoreAnalisi } from "@/components/indicatore-analisi";
@@ -28,14 +28,16 @@ export function UploadZone() {
     rimuoviFile,
   } = useImageUpload();
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const collezioneId = searchParams.get("collezioneId") ?? undefined;
+
   const {
     stato: statoAnalisi,
     errore: erroreAnalisi,
     avviaAnalisi,
     resetta: resettaAnalisi,
-  } = useAnalysis();
-
-  const router = useRouter();
+  } = useAnalysis(collezioneId);
 
   useEffect(() => {
     if (statoAnalisi === "successo") {

@@ -190,6 +190,21 @@ describe("PaginaDettaglioCollezione", () => {
     expect(linkAnalisiXyz).toHaveAttribute("href", "/analysis?id=analisi-xyz");
   });
 
+  it("mostra il link 'Nuova analisi' che punta alla home con collezioneId", async () => {
+    ottieniSessioneServerMock.mockResolvedValue({ utenteId: "utente-123" });
+    findUniqueMock.mockResolvedValue(
+      creaCollezioneCompleta([
+        { id: "a1", datiAnalisi: creaAnalisiTest(), createdAt: new Date("2024-08-01") },
+      ]),
+    );
+
+    render(await PaginaDettaglioCollezione({ params: creaParams("col-123") }));
+
+    const linkNuovaAnalisi = screen.getByRole("link", { name: /nuova analisi/i });
+    expect(linkNuovaAnalisi).toBeInTheDocument();
+    expect(linkNuovaAnalisi).toHaveAttribute("href", "/?collezioneId=col-123");
+  });
+
   it("mostra il messaggio di stato vuoto quando la collezione non ha analisi", async () => {
     ottieniSessioneServerMock.mockResolvedValue({ utenteId: "utente-123" });
     findUniqueMock.mockResolvedValue({

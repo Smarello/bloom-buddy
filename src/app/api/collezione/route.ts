@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
 
   const foto = formData.get("foto");
   const datiAnalisiGrezzi = formData.get("datiAnalisi");
+  const collezioneIdRicevuto = formData.get("collezioneId");
 
   if (!(foto instanceof File)) {
     return NextResponse.json(
@@ -98,17 +99,56 @@ export async function POST(request: NextRequest) {
   const nomeComune = (datiAnalisiOggetto.nomeComune as string).trim();
   const nomeScientifico = (datiAnalisiOggetto.nomeScientifico as string).trim();
 
+  // Validazione collezioneId se fornito
+  if (collezioneIdRicevuto !== null && typeof collezioneIdRicevuto === "string" && collezioneIdRicevuto.trim()) {
+    const collezioneEsistente = await prisma.collezione.findUnique({
+      where: { id: collezioneIdRicevuto.trim() },
+      select: { id: true, utenteId: true },
+    });
+
+    if (!collezioneEsistente) {
+      await del(blobRisultato.url).catch((erroreBlob) => {
+        console.error("Blob orfano non rimosso:", blobRisultato.url, erroreBlob);
+      });
+      return NextResponse.json(
+        { errore: "Collezione non trovata" },
+        { status: 404 },
+      );
+    }
+
+    if (collezioneEsistente.utenteId !== utenteId) {
+      await del(blobRisultato.url).catch((erroreBlob) => {
+        console.error("Blob orfano non rimosso:", blobRisultato.url, erroreBlob);
+      });
+      return NextResponse.json(
+        { errore: "Non autorizzato" },
+        { status: 403 },
+      );
+    }
+  }
+
+  const collezioneIdDaUsare = (typeof collezioneIdRicevuto === "string" && collezioneIdRicevuto.trim())
+    ? collezioneIdRicevuto.trim()
+    : null;
+
   let risultato: { analisi: { id: string; urlFoto: string; createdAt: Date }; collezioneId: string };
   try {
     risultato = await prisma.$transaction(async (tx) => {
-      const nuovaCollezione = await tx.collezione.create({
-        data: {
-          nome: nomeComune,
-          nomeScientifico,
-          utenteId,
-        },
-        select: { id: true },
-      });
+      let collezioneId: string;
+
+      if (collezioneIdDaUsare) {
+        collezioneId = collezioneIdDaUsare;
+      } else {
+        const nuovaCollezione = await tx.collezione.create({
+          data: {
+            nome: nomeComune,
+            nomeScientifico,
+            utenteId,
+          },
+          select: { id: true },
+        });
+        collezioneId = nuovaCollezione.id;
+      }
 
       const analisiCreata = await tx.analisi.create({
         data: {
@@ -116,12 +156,12 @@ export async function POST(request: NextRequest) {
           datiAnalisi: datiAnalisi as object,
           hashFoto,
           utenteId,
-          collezioneId: nuovaCollezione.id,
+          collezioneId,
         },
         select: { id: true, urlFoto: true, createdAt: true },
       });
 
-      return { analisi: analisiCreata, collezioneId: nuovaCollezione.id };
+      return { analisi: analisiCreata, collezioneId };
     });
   } catch (errore) {
     // Pulizia blob orfano in caso di fallimento del salvataggio su DB
@@ -131,13 +171,23 @@ export async function POST(request: NextRequest) {
 
     if (
       errore instanceof Error &&
-      "code" in errore &&
-      (errore as { code: string }).code === "P2002"
+      "code" in errore
     ) {
-      return NextResponse.json(
-        { errore: "Questa foto è già presente nella tua collezione." },
-        { status: 409 },
-      );
+      const codicePrisma = (errore as { code: string }).code;
+
+      if (codicePrisma === "P2002") {
+        return NextResponse.json(
+          { errore: "Questa foto è già presente nella tua collezione." },
+          { status: 409 },
+        );
+      }
+
+      if (codicePrisma === "P2003") {
+        return NextResponse.json(
+          { errore: "Collezione non trovata" },
+          { status: 404 },
+        );
+      }
     }
 
     throw errore;
