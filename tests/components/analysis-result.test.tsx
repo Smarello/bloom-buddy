@@ -264,4 +264,83 @@ describe("AnalysisResult", () => {
       expect(mockRouterPush).not.toHaveBeenCalled();
     });
   });
+
+  describe("sezione diagnosi", () => {
+    it("mostra le card diagnosi quando presenti con categoria critico o attenzione", () => {
+      const analisiConDiagnosi = creaAnalisiTest();
+      analisiConDiagnosi.diagnosi = [
+        {
+          categoria: "critico",
+          titolo: "Marciume radicale avanzato",
+          cosaVedo: "Radici scure e molli, odore sgradevole dal terreno.",
+          cosaSignifica: "Le radici non riescono più ad assorbire acqua e nutrienti.",
+          cosaFare: "Rimuovi le radici marce con forbici sterilizzate\nRinvasa in terriccio asciutto",
+          cosaAspettarsi: "Ripresa visibile in 3-4 settimane",
+        },
+        {
+          categoria: "attenzione",
+          titolo: "Foglie ingiallite alla base",
+          cosaVedo: "Le foglie inferiori diventano gialle e cadono.",
+          cosaSignifica: "Possibile eccesso di annaffiatura.",
+          cosaFare: "Riduci la frequenza di annaffiatura",
+          cosaAspettarsi: "Miglioramento entro 2 settimane",
+        },
+      ];
+
+      render(
+        <AnalysisResult
+          analisi={analisiConDiagnosi}
+          urlAnteprima={URL_ANTEPRIMA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
+        />
+      );
+
+      expect(screen.getByTestId("sezione-diagnosi")).toBeInTheDocument();
+      const cardDiagnosi = screen.getAllByTestId("card-diagnosi-dettagliata");
+      expect(cardDiagnosi).toHaveLength(2);
+    });
+
+    it("non mostra la sezione quando diagnosi è assente", () => {
+      const analisiSenzaDiagnosi = creaAnalisiTest();
+
+      render(
+        <AnalysisResult
+          analisi={analisiSenzaDiagnosi}
+          urlAnteprima={URL_ANTEPRIMA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
+        />
+      );
+
+      expect(screen.queryByTestId("sezione-diagnosi")).not.toBeInTheDocument();
+    });
+
+    it("non mostra la sezione quando ci sono solo ottimizzazioni", () => {
+      const analisiSoloOttimizzazioni = creaAnalisiTest();
+      analisiSoloOttimizzazioni.diagnosi = [
+        {
+          categoria: "ottimizzazione",
+          titolo: "Concimazione periodica",
+          descrizione: "Aggiungi fertilizzante liquido ogni 2 settimane durante la crescita.",
+        },
+        {
+          categoria: "ottimizzazione",
+          titolo: "Rotazione vaso",
+          descrizione: "Ruota il vaso di un quarto di giro ogni settimana per crescita uniforme.",
+        },
+      ];
+
+      render(
+        <AnalysisResult
+          analisi={analisiSoloOttimizzazioni}
+          urlAnteprima={URL_ANTEPRIMA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
+        />
+      );
+
+      expect(screen.queryByTestId("sezione-diagnosi")).not.toBeInTheDocument();
+    });
+  });
 });

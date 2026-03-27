@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>US-034 — Card Diagnosi Dettagliata | Bloom Buddy</title>
+  <link rel="stylesheet" href="../bloom-buddy-app/shared.css">
+  <style>
+    /* === PAGE LAYOUT === */
+    .showcase {
+      padding: var(--space-8) 0 var(--space-16);
+    }
+
+    .showcase-intro {
+      text-align: center;
+      margin-bottom: var(--space-10);
+    }
+    .showcase-intro h1 {
+      font-size: var(--text-3xl);
+      margin-bottom: var(--space-2);
+    }
+    .showcase-intro p {
+      font-size: var(--text-base);
+      color: var(--color-text-muted);
+      max-width: 520px;
+      margin-inline: auto;
+    }
+
+    .showcase-label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-4);
+      padding: var(--space-1) var(--space-3);
+      background: var(--color-cream-100);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border-light);
+    }
+    .showcase-label svg { width: 14px; height: 14px; }
+
+    /* === DIAGNOSI DETTAGLIATA CARD === */
+    .diagnosi-card {
+      position: relative;
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      margin-bottom: var(--space-8);
+      overflow: hidden;
+      border: 2px solid transparent;
+      animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* Bordo laterale sinistro */
+    .diagnosi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    }
+
+    /* Decorazione angolo top-right */
+    .diagnosi-card::after {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      opacity: 0.06;
+      pointer-events: none;
+    }
+
+    /* --- Variante CRITICO --- */
+    .diagnosi-card.critico {
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(224, 96, 96, 0.07), transparent 50%),
+        radial-gradient(ellipse at 0% 100%, rgba(224, 96, 96, 0.03), transparent 40%),
+        linear-gradient(135deg, #fef5f5, #fff8f6, #fffafa);
+      border-color: rgba(224, 96, 96, 0.35);
+      box-shadow: 0 4px 24px rgba(224, 96, 96, 0.08);
+    }
+    .diagnosi-card.critico::before {
+      background: linear-gradient(180deg, var(--color-accent-400), var(--color-accent-600));
+    }
+    .diagnosi-card.critico::after {
+      background: radial-gradient(circle, var(--color-accent-500), transparent 70%);
+    }
+
+    /* --- Variante ATTENZIONE --- */
+    .diagnosi-card.attenzione {
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(192, 106, 48, 0.07), transparent 50%),
+        radial-gradient(ellipse at 0% 100%, rgba(192, 106, 48, 0.03), transparent 40%),
+        linear-gradient(135deg, var(--color-secondary-50), #fff8f3, #fffcf8);
+      border-color: var(--color-secondary-300);
+      box-shadow: 0 4px 24px rgba(192, 106, 48, 0.08);
+    }
+    .diagnosi-card.attenzione::before {
+      background: linear-gradient(180deg, var(--color-secondary-400), var(--color-secondary-500));
+    }
+    .diagnosi-card.attenzione::after {
+      background: radial-gradient(circle, var(--color-secondary-500), transparent 70%);
+    }
+
+    /* === CARD HEADER === */
+    .diagnosi-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .diagnosi-icon {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .diagnosi-icon svg { width: 32px; height: 32px; position: relative; z-index: 1; }
+
+    .diagnosi-card.critico .diagnosi-icon {
+      background: linear-gradient(145deg, rgba(224, 96, 96, 0.18), rgba(224, 96, 96, 0.06));
+      box-shadow: 0 4px 16px rgba(224, 96, 96, 0.12);
+    }
+    .diagnosi-card.attenzione .diagnosi-icon {
+      background: linear-gradient(145deg, var(--color-secondary-100), var(--color-secondary-50));
+      box-shadow: 0 4px 16px rgba(192, 106, 48, 0.12);
+    }
+
+    .diagnosi-card-title-area {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .diagnosi-card h3 {
+      font-size: var(--text-2xl);
+      margin-bottom: var(--space-2);
+      line-height: var(--leading-tight);
+    }
+    .diagnosi-card.critico h3 { color: var(--color-accent-600); }
+    .diagnosi-card.attenzione h3 { color: var(--color-secondary-700); }
+
+    /* --- Badge categoria --- */
+    .categoria-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+    }
+    .categoria-badge svg { width: 14px; height: 14px; }
+
+    .categoria-badge.critico {
+      color: var(--color-accent-600);
+      background: rgba(224, 96, 96, 0.14);
+    }
+    .categoria-badge.attenzione {
+      color: var(--color-secondary-600);
+      background: rgba(192, 106, 48, 0.14);
+    }
+
+    /* === GRIGLIA 4 SEZIONI === */
+    .diagnosi-sezioni {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+    @media (max-width: 768px) {
+      .diagnosi-sezioni { grid-template-columns: 1fr; }
+    }
+
+    .diagnosi-sezione {
+      padding: var(--space-5);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      transition: all var(--transition-base);
+      backdrop-filter: blur(4px);
+    }
+    .diagnosi-sezione:hover {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    /* Header sezione: numero + icona + titolo */
+    .sezione-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+
+    .sezione-numero {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-xs);
+      color: white;
+    }
+    .diagnosi-card.critico .sezione-numero { background: var(--color-accent-500); }
+    .diagnosi-card.attenzione .sezione-numero { background: var(--color-secondary-500); }
+
+    .sezione-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .diagnosi-card.critico .sezione-icon { color: var(--color-accent-500); }
+    .diagnosi-card.attenzione .sezione-icon { color: var(--color-secondary-500); }
+
+    .sezione-titolo {
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .diagnosi-card.critico .sezione-titolo { color: var(--color-accent-600); }
+    .diagnosi-card.attenzione .sezione-titolo { color: var(--color-secondary-600); }
+
+    .diagnosi-sezione p {
+      font-size: var(--text-sm);
+      line-height: var(--leading-relaxed);
+      color: var(--color-text-secondary);
+    }
+    .diagnosi-sezione p strong {
+      color: var(--color-text-primary);
+      font-weight: var(--weight-semibold);
+    }
+
+    /* === COSA FARE — Lista con bullet colorati === */
+    .azione-steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .azione-steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-relaxed);
+    }
+    .azione-step-dot {
+      width: 7px;
+      height: 7px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      margin-top: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.08);
+    }
+    .diagnosi-card.critico .azione-step-dot { background: var(--color-accent-500); }
+    .diagnosi-card.attenzione .azione-step-dot { background: var(--color-secondary-500); }
+
+    /* === COSA ASPETTARSI — Indicatore temporale === */
+    .aspettativa-timeline {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-top: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .aspettativa-timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 3px;
+      height: 100%;
+      border-radius: 3px;
+    }
+    .aspettativa-timeline svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .diagnosi-card.critico .aspettativa-timeline {
+      background: rgba(224, 96, 96, 0.06);
+      color: var(--color-accent-600);
+    }
+    .diagnosi-card.critico .aspettativa-timeline::before {
+      background: linear-gradient(180deg, var(--color-accent-400), var(--color-accent-600));
+    }
+    .diagnosi-card.attenzione .aspettativa-timeline {
+      background: rgba(192, 106, 48, 0.08);
+      color: var(--color-secondary-600);
+    }
+    .diagnosi-card.attenzione .aspettativa-timeline::before {
+      background: linear-gradient(180deg, var(--color-secondary-400), var(--color-secondary-500));
+    }
+
+    .aspettativa-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-relaxed);
+      margin-bottom: var(--space-1);
+    }
+
+    /* === STAGGER ANIMATIONS === */
+    .diagnosi-card:nth-child(2) { animation-delay: 200ms; }
+
+    .diagnosi-sezione {
+      animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .diagnosi-sezione:nth-child(1) { animation-delay: 150ms; }
+    .diagnosi-sezione:nth-child(2) { animation-delay: 250ms; }
+    .diagnosi-sezione:nth-child(3) { animation-delay: 350ms; }
+    .diagnosi-sezione:nth-child(4) { animation-delay: 450ms; }
+
+    /* === RESPONSIVE MOBILE === */
+    @media (max-width: 640px) {
+      .diagnosi-card {
+        padding: var(--space-5);
+        margin-bottom: var(--space-6);
+      }
+      .diagnosi-card-header { gap: var(--space-3); }
+      .diagnosi-icon { width: 48px; height: 48px; }
+      .diagnosi-icon svg { width: 24px; height: 24px; }
+      .diagnosi-card h3 { font-size: var(--text-xl); }
+      .diagnosi-sezione { padding: var(--space-4); }
+      .showcase-intro h1 { font-size: var(--text-2xl); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="../bloom-buddy-app/index.html" class="navbar-brand">
+        <span class="logo-icon">
+          <svg viewBox="0 0 40 40" fill="none">
+            <path d="M20 4C14 4 8 10 8 18c0 5 3 9 7 11v3c0 2.2 1.8 4 5 4s5-1.8 5-4v-3c4-2 7-6 7-11 0-8-6-14-12-14z" fill="#4a7c4a" opacity="0.85"/>
+            <path d="M20 6c-2 4-1 9 3 12 1-5 0-9-3-12z" fill="#6a9e6a" opacity="0.6"/>
+            <path d="M20 6c2 4 1 9-3 12-1-5 0-9 3-12z" fill="#8eba8e" opacity="0.5"/>
+            <circle cx="20" cy="16" r="3" fill="#f0f5f0" opacity="0.5"/>
+          </svg>
+        </span>
+        Bloom Buddy
+      </a>
+      <span class="navbar-tagline">La tua guida botanica intelligente</span>
+    </div>
+  </nav>
+
+  <main class="showcase container">
+
+    <!-- Intro -->
+    <div class="showcase-intro animate-fade-in-up">
+      <span class="showcase-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+        US-034 Mockup
+      </span>
+      <h1>Card Diagnosi Dettagliata</h1>
+      <p>Visualizzazione delle diagnosi critiche e di attenzione con le quattro sezioni informative: cosa vedo, cosa significa, cosa fare, cosa aspettarsi.</p>
+    </div>
+
+    <!-- ==============================
+         CARD CRITICO
+         ============================== -->
+    <div class="diagnosi-card critico">
+      <div class="diagnosi-card-header">
+        <div class="diagnosi-icon">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#c94a4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4L3 28h26L16 4z"/>
+            <path d="M16 13v7"/>
+            <circle cx="16" cy="24" r="1" fill="#c94a4a" stroke="none"/>
+          </svg>
+        </div>
+        <div class="diagnosi-card-title-area">
+          <span class="categoria-badge critico">
+            <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5"/></svg>
+            Critico
+          </span>
+          <h3>Marciume radicale avanzato</h3>
+        </div>
+      </div>
+
+      <div class="diagnosi-sezioni">
+
+        <!-- 1. Cosa vedo -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">1</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>
+            <span class="sezione-titolo">Cosa vedo</span>
+          </div>
+          <p>Le radici visibili sono <strong>scure e molli</strong>, con un odore sgradevole. Il fusto alla base mostra segni di <strong>annerimento</strong> e le foglie inferiori sono ingiallite e cadenti.</p>
+        </div>
+
+        <!-- 2. Cosa significa -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">2</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+            <span class="sezione-titolo">Cosa significa</span>
+          </div>
+          <p>Il <strong>ristagno idrico prolungato</strong> ha favorito lo sviluppo di funghi patogeni che stanno compromettendo l'apparato radicale. La pianta non riesce ad assorbire nutrienti e acqua correttamente.</p>
+        </div>
+
+        <!-- 3. Cosa fare -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">3</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91A6 6 0 016.3 2.53l3.77 3.77z"/></svg>
+            <span class="sezione-titolo">Cosa fare</span>
+          </div>
+          <ul class="azione-steps">
+            <li>
+              <span class="azione-step-dot"></span>
+              <span>Rimuovi la pianta dal vaso e taglia tutte le radici marce con cesoie sterilizzate</span>
+            </li>
+            <li>
+              <span class="azione-step-dot"></span>
+              <span>Tratta le radici sane con un fungicida a base di rame</span>
+            </li>
+            <li>
+              <span class="azione-step-dot"></span>
+              <span>Rinvasa in terriccio fresco e ben drenante con perlite</span>
+            </li>
+            <li>
+              <span class="azione-step-dot"></span>
+              <span>Riduci l'irrigazione a una volta ogni 10-14 giorni</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 4. Cosa aspettarsi -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">4</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="sezione-titolo">Cosa aspettarsi</span>
+          </div>
+          <p class="aspettativa-desc">Se intervieni subito, le nuove radici inizieranno a formarsi. Monitora ogni 3 giorni il colore delle foglie rimanenti.</p>
+          <div class="aspettativa-timeline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Recupero visibile in 3-4 settimane</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ==============================
+         CARD ATTENZIONE
+         ============================== -->
+    <div class="diagnosi-card attenzione">
+      <div class="diagnosi-card-header">
+        <div class="diagnosi-icon">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#a35628" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="16" cy="16" r="12"/>
+            <path d="M16 10v7"/>
+            <circle cx="16" cy="22" r="1" fill="#a35628" stroke="none"/>
+          </svg>
+        </div>
+        <div class="diagnosi-card-title-area">
+          <span class="categoria-badge attenzione">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l7 14H1L8 1z"/></svg>
+            Attenzione
+          </span>
+          <h3>Carenza di luce naturale</h3>
+        </div>
+      </div>
+
+      <div class="diagnosi-sezioni">
+
+        <!-- 1. Cosa vedo -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">1</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>
+            <span class="sezione-titolo">Cosa vedo</span>
+          </div>
+          <p>Gli steli sono <strong>allungati e sottili</strong> (eziolamento), con internodi più distanti del normale. Le foglie nuove sono <strong>più piccole e pallide</strong> rispetto alle precedenti e tendono a orientarsi verso la finestra.</p>
+        </div>
+
+        <!-- 2. Cosa significa -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">2</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+            <span class="sezione-titolo">Cosa significa</span>
+          </div>
+          <p>La pianta non riceve <strong>abbastanza luce</strong> per la fotosintesi ottimale. Si sta letteralmente "allungando" per cercare una fonte luminosa, sacrificando la crescita compatta e la salute fogliare.</p>
+        </div>
+
+        <!-- 3. Cosa fare -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">3</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91A6 6 0 016.3 2.53l3.77 3.77z"/></svg>
+            <span class="sezione-titolo">Cosa fare</span>
+          </div>
+          <ul class="azione-steps">
+            <li>
+              <span class="azione-step-dot"></span>
+              <span>Sposta la pianta in una posizione con luce indiretta brillante per almeno 6 ore al giorno</span>
+            </li>
+            <li>
+              <span class="azione-step-dot"></span>
+              <span>Ruota il vaso di un quarto di giro ogni settimana per una crescita uniforme</span>
+            </li>
+            <li>
+              <span class="azione-step-dot"></span>
+              <span>Valuta una lampada di crescita LED se la luce naturale non e sufficiente</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 4. Cosa aspettarsi -->
+        <div class="diagnosi-sezione">
+          <div class="sezione-header">
+            <span class="sezione-numero">4</span>
+            <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="sezione-titolo">Cosa aspettarsi</span>
+          </div>
+          <p class="aspettativa-desc">La crescita compatta riprende gradualmente. Le foglie esistenti non recupereranno la forma, ma le nuove saranno sane e proporzionate.</p>
+          <div class="aspettativa-timeline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Miglioramento in 2-3 settimane</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <span class="footer-brand">
+        <svg viewBox="0 0 40 40" fill="none"><path d="M20 4C14 4 8 10 8 18c0 5 3 9 7 11v3c0 2.2 1.8 4 5 4s5-1.8 5-4v-3c4-2 7-6 7-11 0-8-6-14-12-14z" fill="#4a7c4a" opacity="0.85"/></svg>
+        Bloom Buddy
+      </span>
+      <p>Mockup US-034 — Card diagnosi dettagliata</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { HealthStatus, PlantAnalysis } from "@/types/analysis";
 import type { CareInfo } from "@/types/analysis";
+import type { DiagnosiDettagliata } from "@/types/analysis";
 import { HealthIndicator } from "./health-indicator";
 import { CareTipsList } from "./care-tips-list";
 import { CareInfoGrid } from "./care-info-grid";
+import { CardDiagnosiDettagliata } from "./card-diagnosi-dettagliata";
 
 type StatoSalvataggio = "idle" | "saving" | "saved" | "duplicate";
 
@@ -225,6 +227,11 @@ export function AnalysisResult({
   const azioneImmediata = analisi.consigliCura.find((c) => c.priorita === "alta");
   const altriConsigli = analisi.consigliCura.filter((c) => c !== azioneImmediata);
 
+  // Diagnosi dettagliate (critico/attenzione), escluse le ottimizzazioni
+  const diagnosiDettagliate = analisi.diagnosi?.filter(
+    (d): d is DiagnosiDettagliata => d.categoria !== "ottimizzazione" && "cosaVedo" in d
+  ) ?? [];
+
   return (
     <div className="flex flex-col gap-8">
 
@@ -368,6 +375,56 @@ export function AnalysisResult({
           />
         </div>
       </section>
+
+      {/* 3b. DIAGNOSI DETTAGLIATE */}
+      {diagnosiDettagliate.length > 0 && (
+        <section
+          data-testid="sezione-diagnosi"
+          aria-labelledby="titolo-diagnosi"
+          style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 250ms both" }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(224, 96, 96, 0.15), rgba(224, 96, 96, 0.05))",
+              }}
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+                <path
+                  d="M12 2a4 4 0 0 0-4 4v2H7a2 2 0 0 0-2 2v1a7 7 0 0 0 14 0v-1a2 2 0 0 0-2-2h-1V6a4 4 0 0 0-4-4z"
+                  stroke="var(--color-accent-500)"
+                  strokeWidth="1.8"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M9 14l2 2 4-4"
+                  stroke="var(--color-accent-500)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <line x1="12" y1="18" x2="12" y2="22" stroke="var(--color-accent-500)" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h2
+              id="titolo-diagnosi"
+              className="font-[family-name:var(--font-display)] font-bold text-xl text-[var(--color-text-primary)]"
+            >
+              Diagnosi
+            </h2>
+          </div>
+          <div className="flex flex-col gap-5">
+            {diagnosiDettagliate.map((d, indice) => (
+              <CardDiagnosiDettagliata key={indice} diagnosi={d} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 4. ENCOURAGEMENT BOX */}
       <div
