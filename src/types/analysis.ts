@@ -23,6 +23,7 @@ export interface PlantAnalysis {
   consigliCura: CareTip[];
   informazioniGenerali: CareInfo;
   informazioniRapide: CareInfo;
+  diagnosi?: RisultatoDiagnosi[];
 }
 
 export interface DiagnosiDettagliata {

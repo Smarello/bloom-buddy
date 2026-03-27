@@ -145,6 +145,225 @@ describe("parseRispostaGemini", () => {
     });
   });
 
+  describe("diagnosi critiche e attenzione", () => {
+    it("parsa correttamente una diagnosi critica con tutte le sezioni", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "critico",
+          titolo: "Marciume radicale",
+          cosaVedo: "Radici scure e molli",
+          cosaSignifica: "Eccesso d'acqua prolungato",
+          cosaFare: "Rinvasare rimuovendo le radici marce",
+          cosaAspettarsi: "Recupero in 2-3 settimane",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      const diagnosi = risultato.diagnosi![0] as import("@/types/analysis").DiagnosiDettagliata;
+      expect(diagnosi.categoria).toBe("critico");
+      expect(diagnosi.titolo).toBe("Marciume radicale");
+      expect(diagnosi.cosaVedo).toBe("Radici scure e molli");
+      expect(diagnosi.cosaSignifica).toBe("Eccesso d'acqua prolungato");
+      expect(diagnosi.cosaFare).toBe("Rinvasare rimuovendo le radici marce");
+      expect(diagnosi.cosaAspettarsi).toBe("Recupero in 2-3 settimane");
+    });
+
+    it("parsa correttamente una diagnosi attenzione", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "attenzione",
+          titolo: "Foglie ingiallite",
+          cosaVedo: "Foglie basali gialle",
+          cosaSignifica: "Possibile carenza di azoto",
+          cosaFare: "Concimare con fertilizzante bilanciato",
+          cosaAspettarsi: "Miglioramento in 1-2 settimane",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      expect(risultato.diagnosi![0].categoria).toBe("attenzione");
+    });
+
+    it("parsa un mix di diagnosi critica e attenzione", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "critico",
+          titolo: "Marciume radicale",
+          cosaVedo: "Radici scure",
+          cosaSignifica: "Eccesso d'acqua",
+          cosaFare: "Rinvasare",
+          cosaAspettarsi: "Recupero lento",
+        },
+        {
+          categoria: "attenzione",
+          titolo: "Foglie pallide",
+          cosaVedo: "Foglie scolorite",
+          cosaSignifica: "Poca luce",
+          cosaFare: "Spostare vicino alla finestra",
+          cosaAspettarsi: "Colore più intenso in una settimana",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(2);
+      expect(risultato.diagnosi![0].categoria).toBe("critico");
+      expect(risultato.diagnosi![1].categoria).toBe("attenzione");
+    });
+  });
+
+  describe("ottimizzazioni e caso pianta sana", () => {
+    it("parsa correttamente un'ottimizzazione", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "ottimizzazione",
+          titolo: "Concimazione stagionale",
+          descrizione: "Aggiungi fertilizzante liquido ogni 2 settimane in primavera",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      const ottimizzazione = risultato.diagnosi![0] as import("@/types/analysis").Ottimizzazione;
+      expect(ottimizzazione.categoria).toBe("ottimizzazione");
+      expect(ottimizzazione.titolo).toBe("Concimazione stagionale");
+      expect(ottimizzazione.descrizione).toBe("Aggiungi fertilizzante liquido ogni 2 settimane in primavera");
+    });
+
+    it("per pianta sana restituisce solo ottimizzazioni", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.statoSalute = "excellent";
+      dati.diagnosi = [
+        {
+          categoria: "ottimizzazione",
+          titolo: "Rotazione vaso",
+          descrizione: "Ruota il vaso di 90° ogni settimana per crescita uniforme",
+        },
+        {
+          categoria: "ottimizzazione",
+          titolo: "Pulizia foglie",
+          descrizione: "Pulisci le foglie con un panno umido una volta al mese",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(2);
+      expect(risultato.diagnosi!.every((d) => d.categoria === "ottimizzazione")).toBe(true);
+    });
+
+    it("parsa mix diagnosi + ottimizzazioni", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "critico",
+          titolo: "Cocciniglia",
+          cosaVedo: "Macchie bianche cotonose",
+          cosaSignifica: "Infestazione parassitaria",
+          cosaFare: "Trattare con olio di neem",
+          cosaAspettarsi: "Eliminazione in 2-3 trattamenti",
+        },
+        {
+          categoria: "ottimizzazione",
+          titolo: "Supporto crescita",
+          descrizione: "Aggiungi un tutore per favorire la crescita verticale",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(2);
+      expect(risultato.diagnosi![0].categoria).toBe("critico");
+      expect(risultato.diagnosi![1].categoria).toBe("ottimizzazione");
+    });
+  });
+
+  describe("diagnosi malformate e retrocompatibilità", () => {
+    it("ignora diagnosi con campi mancanti", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "critico",
+          titolo: "Marciume",
+          cosaVedo: "Radici scure",
+          cosaSignifica: "Eccesso d'acqua",
+          // cosaFare mancante
+          cosaAspettarsi: "Recupero lento",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toBeUndefined();
+    });
+
+    it("ignora diagnosi con categoria non valida", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "sconosciuta",
+          titolo: "Qualcosa",
+          cosaVedo: "Qualcosa",
+          cosaSignifica: "Qualcosa",
+          cosaFare: "Qualcosa",
+          cosaAspettarsi: "Qualcosa",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toBeUndefined();
+    });
+
+    it("restituisce undefined per array diagnosi vuoto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toBeUndefined();
+    });
+
+    it("restituisce undefined se diagnosi non è un array", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = "non è un array";
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toBeUndefined();
+    });
+
+    it("i campi legacy restano popolati anche con diagnosi presente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.diagnosi = [
+        {
+          categoria: "critico",
+          titolo: "Problema",
+          cosaVedo: "Sintomo",
+          cosaSignifica: "Causa",
+          cosaFare: "Azione",
+          cosaAspettarsi: "Risultato",
+        },
+      ];
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.diagnosi).toHaveLength(1);
+      expect(risultato.consigliCura).toHaveLength(3);
+      expect(risultato.statoSalute).toBe("fair");
+      expect(risultato.descrizioneSalute).toContain("segni di sofferenza");
+    });
+  });
+
   describe("confidenza bassa", () => {
     it("lancia ErroreAnalisi con tipo confidenza-bassa se livelloConfidenza è < 0.4", () => {
       const dati = JSON.parse(creaRispostaValida());

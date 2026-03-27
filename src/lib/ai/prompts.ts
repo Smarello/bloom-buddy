@@ -28,7 +28,22 @@ Lo schema JSON richiesto è:
     "luce": "string — valore sintetico, max 4 parole, es. 'Luce indiretta'",
     "temperatura": "string — valore sintetico, max 4 parole, es. '18–24 °C'",
     "umidita": "string — valore sintetico, max 4 parole, es. 'Alta'"
-  }
+  },
+  "diagnosi": [
+    {
+      "categoria": "critico | attenzione",
+      "titolo": "string — titolo breve del problema",
+      "cosaVedo": "string — riferimenti visivi descrittivi a ciò che si osserva nella foto (es. 'le macchie giallastre visibili sulle foglie inferiori...')",
+      "cosaSignifica": "string — spiegazione di cosa indica il problema",
+      "cosaFare": "string — istruzioni pratiche e specifiche per risolvere il problema",
+      "cosaAspettarsi": "string — tempi realistici di recupero e cosa aspettarsi"
+    },
+    {
+      "categoria": "ottimizzazione",
+      "titolo": "string — titolo breve del suggerimento",
+      "descrizione": "string — suggerimento contestualizzato a ciò che l'AI osserva nella foto"
+    }
+  ]
 }
 
 Regole:
@@ -36,5 +51,12 @@ Regole:
 - Se non riesci a identificare la pianta con sufficiente certezza (livelloConfidenza < 0.4), imposta livelloConfidenza a un valore basso e descrivi nella descrizioneSalute che non è stato possibile identificare la specie con certezza.
 - Se l'immagine non contiene una pianta, imposta livelloConfidenza a 0 e nomeComune a "Nessuna pianta riconosciuta".
 - Usa sempre un tono empatico e incoraggiante, mai giudicante.
+- L'array "diagnosi" deve contenere 0-2 elementi con categoria "critico" o "attenzione" (DiagnosiDettagliata) e 0-3 elementi con categoria "ottimizzazione" (Ottimizzazione).
+- Ogni DiagnosiDettagliata deve avere tutte e 4 le sezioni: cosaVedo, cosaSignifica, cosaFare, cosaAspettarsi.
+- Il campo cosaVedo deve contenere riferimenti visivi descrittivi alla foto (es. "le macchie giallastre visibili sulle foglie inferiori...").
+- Il campo cosaFare deve contenere istruzioni pratiche e specifiche, non generiche.
+- Il campo cosaAspettarsi deve indicare tempi realistici di recupero.
+- Le ottimizzazioni devono essere contestualizzate a ciò che osservi nella foto, non generiche.
+- Per una pianta in ottime condizioni (statoSalute "excellent" o "good"), l'array diagnosi deve contenere solo Ottimizzazione, nessuna DiagnosiDettagliata.
 - Rispondi SOLO con JSON valido, nessun testo prima o dopo.`;
 }

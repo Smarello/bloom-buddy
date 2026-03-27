@@ -1,4 +1,4 @@
-import type { PlantAnalysis, HealthStatus, CareInfo } from "@/types/analysis";
+import type { PlantAnalysis, HealthStatus, CareInfo, RisultatoDiagnosi, DiagnosiDettagliata, Ottimizzazione } from "@/types/analysis";
 
 export class ErroreAnalisi extends Error {
   constructor(
@@ -13,6 +13,35 @@ export class ErroreAnalisi extends Error {
 const STATI_SALUTE_VALIDI: HealthStatus[] = ["excellent", "good", "fair", "poor"];
 const PRIORITA_VALIDE = ["alta", "media", "bassa"] as const;
 const SOGLIA_CONFIDENZA_MINIMA = 0.4;
+function eDiagnosiDettagliata(valore: unknown): valore is DiagnosiDettagliata {
+  if (typeof valore !== "object" || valore === null) return false;
+  const obj = valore as Record<string, unknown>;
+  return (
+    (obj.categoria === "critico" || obj.categoria === "attenzione") &&
+    typeof obj.titolo === "string" && obj.titolo.trim() !== "" &&
+    typeof obj.cosaVedo === "string" && obj.cosaVedo.trim() !== "" &&
+    typeof obj.cosaSignifica === "string" && obj.cosaSignifica.trim() !== "" &&
+    typeof obj.cosaFare === "string" && obj.cosaFare.trim() !== "" &&
+    typeof obj.cosaAspettarsi === "string" && obj.cosaAspettarsi.trim() !== ""
+  );
+}
+
+function eOttimizzazione(valore: unknown): valore is Ottimizzazione {
+  if (typeof valore !== "object" || valore === null) return false;
+  const obj = valore as Record<string, unknown>;
+  return (
+    obj.categoria === "ottimizzazione" &&
+    typeof obj.titolo === "string" && obj.titolo.trim() !== "" &&
+    typeof obj.descrizione === "string" && obj.descrizione.trim() !== ""
+  );
+}
+
+function parseDiagnosi(datiGrezzi: unknown[]): RisultatoDiagnosi[] {
+  return datiGrezzi.filter(
+    (item): item is RisultatoDiagnosi =>
+      typeof item === "object" && item !== null && (eDiagnosiDettagliata(item) || eOttimizzazione(item)),
+  );
+}
 
 function eStatoSaluteValido(valore: unknown): valore is HealthStatus {
   return typeof valore === "string" && STATI_SALUTE_VALIDI.includes(valore as HealthStatus);
@@ -129,6 +158,12 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
   const informazioniGenerali = estraiCareInfo(dati.informazioniGenerali, "Informazione non disponibile.");
   const informazioniRapide = estraiCareInfo(dati.informazioniRapide, "—");
 
+  // Validazione diagnosi
+  const diagnosiParsata = Array.isArray(dati.diagnosi)
+    ? parseDiagnosi(dati.diagnosi)
+    : undefined;
+  const diagnosi = diagnosiParsata && diagnosiParsata.length > 0 ? diagnosiParsata : undefined;
+
   return {
     nomeComune: dati.nomeComune.trim(),
     nomeScientifico,
@@ -139,5 +174,6 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
     consigliCura,
     informazioniGenerali,
     informazioniRapide,
+    ...(diagnosi && { diagnosi }),
   };
 }

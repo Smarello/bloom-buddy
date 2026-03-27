@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnosi Intelligenti — Bloom Buddy</title>
+  <link rel="stylesheet" href="../bloom-buddy-app/shared.css">
+  <style>
+    /* === RESULTS LAYOUT === */
+    .results-page {
+      padding: var(--space-6) 0 var(--space-16);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+      padding: var(--space-2) 0;
+      transition: all var(--transition-fast);
+    }
+    .back-link:hover { color: var(--color-primary-600); }
+    .back-link svg { width: 16px; height: 16px; }
+
+    /* === PLANT HERO === */
+    .plant-hero {
+      display: flex;
+      border-radius: var(--radius-2xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border-light);
+      margin-bottom: var(--space-8);
+      min-height: 340px;
+    }
+
+    .plant-hero-image-panel {
+      flex: 0 0 42%;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 30% 25%, rgba(138, 186, 138, 0.35), transparent 55%),
+        radial-gradient(ellipse at 75% 70%, rgba(192, 106, 48, 0.18), transparent 50%),
+        linear-gradient(160deg, var(--color-primary-700) 0%, #233a23 45%, #3a5a3a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .plant-hero-image-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 15c-4 3-8 11-5 19 7-1.5 11-7 9-15' fill='white' opacity='0.04'/%3E%3Cpath d='M20 50c-2 2-3 6-1 9 3-1 4-4 3-7' fill='white' opacity='0.03'/%3E%3C/svg%3E");
+      background-size: 100px 100px;
+      pointer-events: none;
+    }
+
+    .plant-image-display {
+      position: relative;
+      z-index: 1;
+      width: 65%;
+      max-width: 200px;
+      aspect-ratio: 1;
+      filter: drop-shadow(0 12px 32px rgba(0,0,0,0.35));
+    }
+    .plant-image-display svg { width: 100%; height: 100%; }
+
+    .confidence-badge {
+      position: absolute;
+      bottom: var(--space-4);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(14px);
+      color: white;
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-sm);
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      z-index: 2;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .confidence-badge svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .plant-hero-info-panel {
+      flex: 1;
+      background: var(--color-bg-card);
+      padding: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+      .plant-hero { flex-direction: column; min-height: unset; }
+      .plant-hero-image-panel { flex: none; height: 240px; width: 100%; }
+      .plant-image-display { width: 50%; max-width: 150px; }
+    }
+
+    .plant-common-name {
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-3xl);
+      color: var(--color-text-primary);
+      line-height: var(--leading-tight);
+    }
+
+    .plant-scientific-name {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: var(--text-base);
+      color: var(--color-text-muted);
+      margin-top: var(--space-1);
+    }
+
+    .plant-description {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-relaxed);
+      margin-top: var(--space-4);
+      max-width: 560px;
+    }
+
+    .plant-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-5);
+    }
+
+    .plant-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-family: var(--font-display);
+      font-weight: var(--weight-medium);
+      font-size: var(--text-xs);
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+      background: var(--color-primary-50);
+      color: var(--color-primary-600);
+      border: 1px solid var(--color-primary-100);
+    }
+    .plant-tag svg { width: 12px; height: 12px; }
+
+    /* === QUICK INFO === */
+    .quick-info {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+    @media (max-width: 768px) { .quick-info { grid-template-columns: repeat(2, 1fr); } }
+
+    .quick-info-item {
+      text-align: center;
+      padding: var(--space-5) var(--space-3);
+      background: var(--color-bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border-light);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-base);
+    }
+    .quick-info-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    .qi-icon-wrap {
+      width: 40px; height: 40px;
+      margin: 0 auto var(--space-3);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .qi-icon-wrap svg { width: 22px; height: 22px; }
+
+    .quick-info-item:nth-child(1) .qi-icon-wrap { background: rgba(91, 155, 213, 0.12); }
+    .quick-info-item:nth-child(2) .qi-icon-wrap { background: rgba(245, 197, 66, 0.12); }
+    .quick-info-item:nth-child(3) .qi-icon-wrap { background: rgba(232, 135, 90, 0.12); }
+    .quick-info-item:nth-child(4) .qi-icon-wrap { background: rgba(126, 200, 200, 0.12); }
+
+    .qi-label {
+      display: block;
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--space-1);
+    }
+    .qi-value {
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-base);
+      color: var(--color-text-primary);
+    }
+
+    /* === HEALTH SECTION (invariato) === */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+    .section-header-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .section-header-icon svg { width: 24px; height: 24px; }
+
+    .health-section { margin-bottom: var(--space-8); }
+    .health-section .section-header-icon {
+      background: linear-gradient(135deg, rgba(124, 179, 66, 0.15), rgba(124, 179, 66, 0.05));
+    }
+
+    .health-card {
+      background: var(--color-bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border-light);
+      box-shadow: var(--shadow-sm);
+      padding: var(--space-6);
+    }
+
+    .health-overview {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-6);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+    @media (max-width: 640px) { .health-overview { flex-direction: column; text-align: center; } }
+
+    .health-score-ring { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+    .health-score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: var(--color-primary-100); stroke-width: 7; }
+    .ring-fill {
+      fill: none; stroke: var(--color-health-fair); stroke-width: 7;
+      stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283;
+      transition: stroke-dashoffset 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .health-score-value {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .health-score-number {
+      font-family: var(--font-display); font-weight: var(--weight-bold);
+      font-size: var(--text-3xl); color: var(--color-health-fair); line-height: 1;
+    }
+    .health-score-label { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+
+    .health-summary h3 { font-size: var(--text-xl); margin-top: var(--space-2); margin-bottom: var(--space-2); }
+
+    /* === DIAGNOSI INTELLIGENTI — Nuovo sistema === */
+
+    .diagnosi-section {
+      margin-bottom: var(--space-8);
+    }
+
+    .diagnosi-section .section-header-icon {
+      background: linear-gradient(135deg, rgba(192, 106, 48, 0.15), rgba(192, 106, 48, 0.05));
+    }
+
+    /* --- Categoria Badge --- */
+    .categoria-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+    }
+    .categoria-badge svg { width: 14px; height: 14px; }
+
+    .categoria-badge.critico {
+      color: var(--color-accent-600);
+      background: rgba(224, 96, 96, 0.12);
+    }
+    .categoria-badge.attenzione {
+      color: var(--color-secondary-600);
+      background: rgba(192, 106, 48, 0.12);
+    }
+    .categoria-badge.ottimizzazione {
+      color: var(--color-primary-600);
+      background: rgba(74, 124, 74, 0.1);
+    }
+
+    /* === DIAGNOSI DETTAGLIATA (critico / attenzione) === */
+    .diagnosi-card {
+      position: relative;
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      margin-bottom: var(--space-6);
+      overflow: hidden;
+      border: 2px solid transparent;
+    }
+
+    .diagnosi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    }
+
+    /* Critico — rosso/corallo */
+    .diagnosi-card.critico {
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(224, 96, 96, 0.06), transparent 50%),
+        linear-gradient(135deg, #fef5f5, #fff8f6);
+      border-color: rgba(224, 96, 96, 0.35);
+    }
+    .diagnosi-card.critico::before {
+      background: linear-gradient(180deg, var(--color-accent-400), var(--color-accent-600));
+    }
+
+    /* Attenzione — terracotta */
+    .diagnosi-card.attenzione {
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(192, 106, 48, 0.06), transparent 50%),
+        linear-gradient(135deg, var(--color-secondary-50), #fff8f3);
+      border-color: var(--color-secondary-300);
+    }
+    .diagnosi-card.attenzione::before {
+      background: linear-gradient(180deg, var(--color-secondary-400), var(--color-secondary-500));
+    }
+
+    .diagnosi-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-5);
+    }
+
+    .diagnosi-icon {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .diagnosi-icon svg { width: 32px; height: 32px; }
+
+    .diagnosi-card.critico .diagnosi-icon {
+      background: linear-gradient(145deg, rgba(224, 96, 96, 0.15), rgba(224, 96, 96, 0.05));
+      box-shadow: 0 4px 12px rgba(224, 96, 96, 0.1);
+    }
+    .diagnosi-card.attenzione .diagnosi-icon {
+      background: linear-gradient(145deg, var(--color-secondary-100), var(--color-secondary-50));
+      box-shadow: 0 4px 12px rgba(192, 106, 48, 0.1);
+    }
+
+    .diagnosi-card h3 {
+      font-size: var(--text-2xl);
+      margin-bottom: var(--space-1);
+    }
+    .diagnosi-card.critico h3 { color: var(--color-accent-600); }
+    .diagnosi-card.attenzione h3 { color: var(--color-secondary-700); }
+
+    /* --- Le 4 sezioni della diagnosi --- */
+    .diagnosi-sezioni {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+    @media (max-width: 768px) {
+      .diagnosi-sezioni { grid-template-columns: 1fr; }
+    }
+
+    .diagnosi-sezione {
+      padding: var(--space-5);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      transition: all var(--transition-base);
+    }
+    .diagnosi-sezione:hover {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sezione-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+
+    .sezione-numero {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-xs);
+      color: white;
+    }
+    .diagnosi-card.critico .sezione-numero { background: var(--color-accent-500); }
+    .diagnosi-card.attenzione .sezione-numero { background: var(--color-secondary-500); }
+
+    .sezione-titolo {
+      font-family: var(--font-display);
+      font-weight: var(--weight-bold);
+      font-size: var(--text-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .diagnosi-card.critico .sezione-titolo { color: var(--color-accent-600); }
+    .diagnosi-card.attenzione .sezione-titolo { color: var(--color-secondary-600); }
+
+    .sezione-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .diagnosi-sezione p {
+      font-size: var(--text-sm);
+      line-height: var(--leading-relaxed);
+      color: var(--color-text-secondary);
+    }
+
+    .diagnosi-sezione p strong {
+      color: var(--color-text-primary);
+      font-weight: var(--weight-semibold);
+    }
+
+    /* Sezione "cosa fare" ha step numerati */
+    .azione-steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .azione-steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-relaxed);
+    }
+    .azione-step-dot {
+      width: 6px;
+      height: 6px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      margin-top: 8px;
+    }
+    .diagnosi-card.critico .azione-step-dot { background: var(--color-accent-500); }
+    .diagnosi-card.attenzione .azione-step-dot { background: var(--color-secondary-500); }
+
+    /* Sezione "cosa aspettarsi" ha timeline feel */
+    .aspettativa-timeline {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-sm);
+    }
+    .diagnosi-card.critico .aspettativa-timeline {
+      background: rgba(224, 96, 96, 0.06);
+      color: var(--color-accent-600);
+    }
+    .diagnosi-card.attenzione .aspettativa-timeline {
+      background: rgba(192, 106, 48, 0.08);
+      color: var(--color-secondary-600);
+    }
+    .aspettativa-timeline svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* === OTTIMIZZAZIONI — Formato breve === */
+    .ottimizzazioni-section {
+      margin-bottom: var(--space-8);
+    }
+    .ottimizzazioni-section .section-header-icon {
+      background: linear-gradient(135deg, rgba(74, 124, 74, 0.12), rgba(74, 124, 74, 0.04));
+    }
+
+    .ottimizzazioni-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+    }
+    @media (max-width: 768px) { .ottimizzazioni-grid { grid-template-columns: 1fr; } }
+
+    .ottimizzazione-card {
+      background: var(--color-bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border-light);
+      box-shadow: var(--shadow-sm);
+      padding: var(--space-5);
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+    .ottimizzazione-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px);
+    }
+    .ottimizzazione-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: var(--space-5);
+      right: var(--space-5);
+      height: 3px;
+      border-radius: 0 0 3px 3px;
+      background: linear-gradient(90deg, var(--color-primary-400), var(--color-primary-300));
+    }
+
+    .ottimizzazione-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .ottimizzazione-icon {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, rgba(74, 124, 74, 0.1), rgba(74, 124, 74, 0.03));
+    }
+    .ottimizzazione-icon svg { width: 22px; height: 22px; }
+
+    .ottimizzazione-card h4 {
+      font-size: var(--text-lg);
+      color: var(--color-text-primary);
+    }
+
+    .ottimizzazione-card p {
+      font-size: var(--text-sm);
+      line-height: var(--leading-relaxed);
+    }
+
+    .ottimizzazione-contesto {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      margin-top: var(--space-3);
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-xs);
+      color: var(--color-primary-600);
+      background: var(--color-primary-50);
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+    }
+    .ottimizzazione-contesto svg { width: 12px; height: 12px; }
+
+    /* === ENCOURAGEMENT === */
+    .encouragement {
+      background:
+        radial-gradient(ellipse at 0% 0%, rgba(124, 179, 66, 0.08), transparent 50%),
+        linear-gradient(135deg, var(--color-primary-50), var(--color-cream-100));
+      border: 1px solid var(--color-primary-200);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      margin-bottom: var(--space-10);
+      position: relative;
+      overflow: hidden;
+    }
+    .encouragement::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      background: var(--color-primary-400);
+      opacity: 0.03;
+      border-radius: 50%;
+    }
+
+    .encouragement-icon-wrap {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--color-primary-200), var(--color-primary-100));
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .encouragement-icon-wrap svg { width: 26px; height: 26px; }
+    .encouragement h4 { margin-bottom: var(--space-2); color: var(--color-primary-700); }
+    .encouragement p { font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+
+    /* === CTA === */
+    .new-analysis-cta {
+      text-align: center;
+      padding: var(--space-10) 0;
+    }
+    .new-analysis-cta p { margin-bottom: var(--space-4); }
+
+    /* === LEGENDA CATEGORIE === */
+    .legenda-categorie {
+      display: flex;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .legenda-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      color: var(--color-text-secondary);
+    }
+    .legenda-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .legenda-dot.critico { background: var(--color-accent-500); }
+    .legenda-dot.attenzione { background: var(--color-secondary-500); }
+    .legenda-dot.ottimizzazione { background: var(--color-primary-500); }
+
+    /* === PIANTA SANA (variante) === */
+    .pianta-sana-banner {
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(74, 158, 74, 0.1), transparent 50%),
+        linear-gradient(135deg, #f0f7f0, #f5faf5);
+      border: 2px solid rgba(74, 158, 74, 0.25);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      text-align: center;
+      margin-bottom: var(--space-8);
+    }
+    .pianta-sana-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto var(--space-4);
+      border-radius: 50%;
+      background: linear-gradient(145deg, rgba(74, 158, 74, 0.15), rgba(74, 158, 74, 0.05));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: float 4s ease-in-out infinite;
+    }
+    .pianta-sana-icon svg { width: 42px; height: 42px; }
+    .pianta-sana-banner h3 {
+      font-size: var(--text-2xl);
+      color: var(--color-health-excellent);
+      margin-bottom: var(--space-2);
+    }
+    .pianta-sana-banner p {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="../bloom-buddy-app/index.html" class="navbar-brand">
+        <span class="logo-icon">
+          <svg viewBox="0 0 38 38" fill="none">
+            <rect width="38" height="38" rx="10" fill="url(#lg)"/>
+            <path d="M19 28V20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M19 22c-3-1-6-4.5-5-9 4.5 0.5 7 3.5 7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+            <path d="M19 20c2.5-1.5 6.5-2 9 1-3 2-6.5 1.5-8-0.5" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+            <circle cx="19" cy="28.5" r="1.2" fill="white" opacity="0.6"/>
+            <defs><linearGradient id="lg" x1="0" y1="0" x2="38" y2="38"><stop stop-color="#6a9e6a"/><stop offset="1" stop-color="#3d663d"/></linearGradient></defs>
+          </svg>
+        </span>
+        Bloom Buddy
+      </a>
+      <span class="navbar-tagline">Diagnosi intelligenti per le tue piante</span>
+    </div>
+  </nav>
+
+  <main class="results-page">
+    <div class="container">
+
+      <a href="../bloom-buddy-app/index.html" class="back-link animate-fade-in-up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Nuova analisi
+      </a>
+
+      <!-- Plant Hero -->
+      <div class="plant-hero animate-scale-in delay-1">
+        <div class="plant-hero-image-panel">
+          <div class="plant-image-display">
+            <svg viewBox="0 0 100 115" fill="none">
+              <path d="M30 72 L34 100 L66 100 L70 72Z" fill="#c06a30"/>
+              <path d="M32 72 L34 80 L66 80 L68 72Z" fill="#d4864e"/>
+              <rect x="28" y="69" width="44" height="6" rx="3" fill="#e8a87a"/>
+              <path d="M50 72 V44" stroke="#3d6e3d" stroke-width="3" stroke-linecap="round"/>
+              <path d="M50 52 C42 44 32 42 28 52 C36 58 46 56 50 52Z" fill="#5a8f5a"/>
+              <path d="M50 52 C44 46 36 44 32 50" stroke="#4a7c4a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+              <path d="M50 52 C58 44 68 42 72 52 C64 58 54 56 50 52Z" fill="#6a9e6a"/>
+              <path d="M50 52 C56 46 64 44 68 50" stroke="#5a8a5a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+              <!-- Foglie con problemi visibili -->
+              <path d="M50 44 C43 38 34 36 31 44 C38 49 47 47 50 44Z" fill="#7ab07a"/>
+              <!-- Foglia con macchie gialle -->
+              <path d="M50 44 C57 38 66 36 69 44 C62 49 53 47 50 44Z" fill="#8eba8e"/>
+              <circle cx="62" cy="41" r="2" fill="#d4a843" opacity="0.6"/>
+              <circle cx="64" cy="43" r="1.5" fill="#c49a38" opacity="0.5"/>
+              <!-- Foglia superiore con bordi marroni -->
+              <path d="M50 44 C46 34 44 26 50 20 C56 26 54 34 50 44Z" fill="#9ecf9e"/>
+              <path d="M50 44 V22" stroke="#7ab07a" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+              <!-- Punte marroni -->
+              <path d="M48 22 C47 20 48.5 19 50 20" fill="#a87040" opacity="0.6"/>
+              <ellipse cx="50" cy="72" rx="20" ry="4" fill="#8a6040" opacity="0.6"/>
+              <!-- Macchia bianca oidio -->
+              <ellipse cx="38" cy="48" rx="3" ry="2" fill="white" opacity="0.3"/>
+              <ellipse cx="36" cy="50" rx="2" ry="1.5" fill="white" opacity="0.2"/>
+            </svg>
+          </div>
+          <span class="confidence-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+            Confidenza: 88%
+          </span>
+        </div>
+
+        <div class="plant-hero-info-panel">
+          <h1 class="plant-common-name">Pothos</h1>
+          <p class="plant-scientific-name">Epipremnum aureum</p>
+          <p class="plant-description">
+            Pianta tropicale rampicante amatissima per gli interni. Resistente e adattabile, ma la tua mostra alcuni segnali che meritano attenzione.
+          </p>
+          <div class="plant-tags">
+            <span class="plant-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Da interno
+            </span>
+            <span class="plant-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22c5 0 8-3 8-8s-8-12-8-12S4 9 4 14s3 8 8 8z"/></svg>
+              Facile
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Info (invariato) -->
+      <div class="quick-info animate-fade-in-up delay-2">
+        <div class="quick-info-item">
+          <div class="qi-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 22c1-3 4-5.5 4-9a4 4 0 0 0-8 0c0 3.5 3 6 4 9z" stroke="#5b9bd5" stroke-width="2" fill="none"/>
+              <path d="M12 22c1-3 4-5.5 4-9a4 4 0 0 0-8 0c0 3.5 3 6 4 9z" fill="#5b9bd5" opacity="0.12"/>
+            </svg>
+          </div>
+          <span class="qi-label">Acqua</span>
+          <span class="qi-value">Moderata</span>
+        </div>
+        <div class="quick-info-item">
+          <div class="qi-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="4" stroke="#f5c542" stroke-width="2"/>
+              <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="qi-label">Luce</span>
+          <span class="qi-value">Indiretta</span>
+        </div>
+        <div class="quick-info-item">
+          <div class="qi-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M14 4v8l4 4H6l4-4V4" stroke="#e8875a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="9" y1="4" x2="15" y2="4" stroke="#e8875a" stroke-width="2" stroke-linecap="round"/>
+              <line x1="6" y1="20" x2="18" y2="20" stroke="#e8875a" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="16" x2="12" y2="20" stroke="#e8875a" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="qi-label">Temperatura</span>
+          <span class="qi-value">18–27°C</span>
+        </div>
+        <div class="quick-info-item">
+          <div class="qi-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3c-4 3-8 7-8 12a8 8 0 0 0 16 0c0-5-4-9-8-12z" stroke="#7ec8c8" stroke-width="2" fill="none"/>
+              <path d="M12 3c-4 3-8 7-8 12a8 8 0 0 0 16 0c0-5-4-9-8-12z" fill="#7ec8c8" opacity="0.08"/>
+              <path d="M8 16c1 2 3 3 5 3" stroke="#7ec8c8" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+          </div>
+          <span class="qi-label">Umidità</span>
+          <span class="qi-value">Media</span>
+        </div>
+      </div>
+
+      <!-- Health Assessment -->
+      <section class="health-section animate-fade-in-up delay-3">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="10" r="7" stroke="#7cb342" stroke-width="2" fill="none"/>
+              <path d="M12 17v3" stroke="#7cb342" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 20c0 2-3 2-3 0" stroke="#7cb342" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M9.5 8.5l2 2.5 3.5-4" stroke="#7cb342" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2>Stato di salute</h2>
+        </div>
+        <div class="health-card">
+          <div class="health-overview">
+            <div class="health-score-ring">
+              <svg viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="45" />
+                <circle class="ring-fill" cx="50" cy="50" r="45" />
+              </svg>
+              <div class="health-score-value">
+                <span class="health-score-number">58</span>
+                <span class="health-score-label">su 100</span>
+              </div>
+            </div>
+            <div class="health-summary">
+              <span class="badge badge-health-fair">Discreto</span>
+              <h3>La tua pianta ha bisogno di cure</h3>
+              <p>Ho individuato un problema che richiede intervento immediato e un'area di attenzione. Niente panico — con le azioni giuste, il Pothos si riprenderà.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Encouragement -->
+      <div class="encouragement animate-fade-in-up delay-4">
+        <div class="encouragement-icon-wrap">
+          <svg viewBox="0 0 28 28" fill="none">
+            <path d="M14 24c-7-4-10-8-10-12a5 5 0 0 1 10-1 5 5 0 0 1 10 1c0 4-3 8-10 12z" fill="#6a9e6a" opacity="0.4" stroke="#4a7c4a" stroke-width="1.5"/>
+            <path d="M14 17c-1-0.5-3-2-3-4a1.8 1.8 0 0 1 3-.8 1.8 1.8 0 0 1 3 .8c0 2-2 3.5-3 4z" fill="#e8a87a" opacity="0.7"/>
+          </svg>
+        </div>
+        <div>
+          <h4>Non preoccuparti, il tuo Pothos è un guerriero!</h4>
+          <p>Il Pothos è una delle piante più resilienti. Ho identificato esattamente cosa sta succedendo e cosa puoi fare. Segui le diagnosi qui sotto, una alla volta, e in poche settimane vedrai miglioramenti concreti.</p>
+        </div>
+      </div>
+
+      <!-- ===== DIAGNOSI INTELLIGENTI — Nuova sezione ===== -->
+      <section class="diagnosi-section animate-fade-in-up delay-5">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v6m12-4v4m0 0H3m18 0v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8" stroke="#a35628" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="15" r="2" stroke="#a35628" stroke-width="1.8"/>
+              <path d="M12 13v-2" stroke="#a35628" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Diagnosi</h2>
+        </div>
+
+        <!-- Legenda categorie -->
+        <div class="legenda-categorie">
+          <div class="legenda-item">
+            <span class="legenda-dot critico"></span>
+            Critico — intervento urgente
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-dot attenzione"></span>
+            Attenzione — da monitorare
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-dot ottimizzazione"></span>
+            Ottimizzazione — per farla prosperare
+          </div>
+        </div>
+
+        <!-- ====== DIAGNOSI 1: CRITICO — Oidio ====== -->
+        <div class="diagnosi-card critico animate-scale-in delay-6">
+          <div class="diagnosi-card-header">
+            <div class="diagnosi-icon">
+              <!-- Fungus/disease icon -->
+              <svg viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="14" r="8" stroke="#c94a4a" stroke-width="2" fill="none"/>
+                <circle cx="13" cy="12" r="2" fill="#c94a4a" opacity="0.3"/>
+                <circle cx="18" cy="11" r="1.5" fill="#c94a4a" opacity="0.25"/>
+                <circle cx="15" cy="16" r="1.8" fill="#c94a4a" opacity="0.2"/>
+                <circle cx="19" cy="15" r="1" fill="#c94a4a" opacity="0.3"/>
+                <path d="M16 22v4" stroke="#c94a4a" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 26h8" stroke="#c94a4a" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <span class="categoria-badge critico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 9v4"/><circle cx="12" cy="16.5" r="0.5" fill="currentColor"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none"/></svg>
+                Critico
+              </span>
+              <h3>Oidio (mal bianco)</h3>
+            </div>
+          </div>
+
+          <div class="diagnosi-sezioni">
+            <!-- 1. Cosa vedo -->
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">1</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#c94a4a" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span class="sezione-titolo">Cosa vedo</span>
+              </div>
+              <p><strong>Le patine biancastre visibili sulle foglie inferiori sinistre</strong> della tua pianta sono il segno tipico dell'oidio. Si presentano come un velo polveroso, quasi farinoso, che copre la superficie fogliare.</p>
+            </div>
+
+            <!-- 2. Cosa significa -->
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">2</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#c94a4a" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 16v-4"/><circle cx="12" cy="8" r="0.5" fill="#c94a4a"/></svg>
+                <span class="sezione-titolo">Cosa significa</span>
+              </div>
+              <p>L'oidio è un <strong>fungo parassita</strong> che prospera in ambienti umidi con scarsa ventilazione. Se non trattato, si diffonde rapidamente alle altre foglie e indebolisce la pianta, che non riesce più a fare fotosintesi nelle zone colpite.</p>
+            </div>
+
+            <!-- 3. Cosa fare -->
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">3</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#c94a4a" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.9 20.1a2.12 2.12 0 0 1-3-3l6.63-6.63a6 6 0 0 1 7.94-7.94z"/></svg>
+                <span class="sezione-titolo">Cosa fare</span>
+              </div>
+              <ul class="azione-steps">
+                <li>
+                  <span class="azione-step-dot"></span>
+                  Isola la pianta dalle altre per evitare il contagio
+                </li>
+                <li>
+                  <span class="azione-step-dot"></span>
+                  Rimuovi con cura le foglie più colpite con forbici disinfettate
+                </li>
+                <li>
+                  <span class="azione-step-dot"></span>
+                  Prepara una soluzione di acqua e bicarbonato (1 cucchiaino per litro) e spruzza sulle foglie rimanenti
+                </li>
+                <li>
+                  <span class="azione-step-dot"></span>
+                  Migliora la ventilazione attorno alla pianta — non lasciarla in un angolo chiuso
+                </li>
+              </ul>
+            </div>
+
+            <!-- 4. Cosa aspettarsi -->
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">4</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#c94a4a" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="sezione-titolo">Cosa aspettarsi</span>
+              </div>
+              <p>Le foglie già colpite non guariranno, ma con il trattamento <strong>la diffusione si fermerà in 5-7 giorni</strong>. Le nuove foglie cresceranno sane. Ripeti il trattamento con bicarbonato ogni 5 giorni per 2-3 settimane.</p>
+              <div class="aspettativa-timeline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Miglioramento visibile in 2-3 settimane
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== DIAGNOSI 2: ATTENZIONE — Eccesso d'acqua ====== -->
+        <div class="diagnosi-card attenzione animate-scale-in delay-7">
+          <div class="diagnosi-card-header">
+            <div class="diagnosi-icon">
+              <!-- Overwatering icon -->
+              <svg viewBox="0 0 32 32" fill="none">
+                <path d="M16 4C12 9 7 13 7 18.5a9 9 0 0 0 18 0C25 13 20 9 16 4z" stroke="#a35628" stroke-width="2" fill="none"/>
+                <path d="M16 4C12 9 7 13 7 18.5a9 9 0 0 0 18 0C25 13 20 9 16 4z" fill="#d4864e" opacity="0.1"/>
+                <path d="M12 20c1 2 3 3 5.5 2.5" stroke="#a35628" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                <!-- Excess indicator -->
+                <path d="M22 22l3 3m0-3l-3 3" stroke="#a35628" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <span class="categoria-badge attenzione">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Attenzione
+              </span>
+              <h3>Eccesso di annaffiatura</h3>
+            </div>
+          </div>
+
+          <div class="diagnosi-sezioni">
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">1</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#a35628" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span class="sezione-titolo">Cosa vedo</span>
+              </div>
+              <p><strong>Le punte marroni e l'ingiallimento che noti sulle foglie della parte destra</strong> della tua pianta sono indicatori classici di un terreno troppo umido. Il colore giallo parte dalla punta e avanza verso il centro della foglia.</p>
+            </div>
+
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">2</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#a35628" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 16v-4"/><circle cx="12" cy="8" r="0.5" fill="#a35628"/></svg>
+                <span class="sezione-titolo">Cosa significa</span>
+              </div>
+              <p>Quando il terreno resta troppo bagnato, <strong>le radici non ricevono ossigeno</strong> e iniziano a soffocare. Le foglie ingialliscono perché la pianta non riesce ad assorbire nutrienti correttamente. Se prolungato, può portare a marciume radicale.</p>
+            </div>
+
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">3</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#a35628" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.9 20.1a2.12 2.12 0 0 1-3-3l6.63-6.63a6 6 0 0 1 7.94-7.94z"/></svg>
+                <span class="sezione-titolo">Cosa fare</span>
+              </div>
+              <ul class="azione-steps">
+                <li>
+                  <span class="azione-step-dot"></span>
+                  Salta la prossima annaffiatura — aspetta che i primi 3 cm di terra siano asciutti al tatto
+                </li>
+                <li>
+                  <span class="azione-step-dot"></span>
+                  Verifica che il vaso abbia fori di drenaggio e che il sottovaso non ristagni acqua
+                </li>
+                <li>
+                  <span class="azione-step-dot"></span>
+                  Da ora, annaffia solo quando il terreno è asciutto — infila un dito per controllare
+                </li>
+              </ul>
+            </div>
+
+            <div class="diagnosi-sezione">
+              <div class="sezione-header">
+                <span class="sezione-numero">4</span>
+                <svg class="sezione-icon" viewBox="0 0 24 24" fill="none" stroke="#a35628" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="sezione-titolo">Cosa aspettarsi</span>
+              </div>
+              <p>Le foglie già ingiallite non torneranno verdi — puoi rimuoverle se lo desideri. Ma <strong>le nuove foglie cresceranno sane</strong> una volta regolato il ritmo di annaffiatura. Il Pothos risponde molto bene a questa correzione.</p>
+              <div class="aspettativa-timeline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Nuove foglie sane in 10-14 giorni
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== OTTIMIZZAZIONI — Formato breve ===== -->
+      <section class="ottimizzazioni-section animate-fade-in-up delay-8">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 22V12" stroke="#4a7c4a" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 14c-4-1-7-5-6-10 5.5 0.5 8 4 8 8" fill="#6a9e6a" opacity="0.6" stroke="#4a7c4a" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M12 12c3-1.5 7-2 9 1.5-4 2.5-7.5 1.5-8.5-1" fill="#8eba8e" opacity="0.5" stroke="#4a7c4a" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M7 3l1.5 1.5M17 3l-1.5 1.5M12 1v2" stroke="#4a7c4a" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+            </svg>
+          </div>
+          <h2>Ottimizzazioni</h2>
+        </div>
+
+        <div class="ottimizzazioni-grid">
+          <!-- Ottimizzazione 1 -->
+          <div class="ottimizzazione-card animate-fade-in-up delay-9">
+            <div class="ottimizzazione-card-header">
+              <div class="ottimizzazione-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="5" stroke="#4a7c4a" stroke-width="2" fill="none"/>
+                  <circle cx="12" cy="12" r="5" fill="#4a7c4a" opacity="0.08"/>
+                  <path d="M12 2v3m0 14v3M4.93 4.93l2.12 2.12m9.9 9.9l2.12 2.12M2 12h3m14 0h3M4.93 19.07l2.12-2.12m9.9-9.9l2.12-2.12" stroke="#4a7c4a" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h4>Più luce indiretta</h4>
+            </div>
+            <p>Dalla foto noto che il fogliame è leggermente allungato con internodi distanziati — segno che la pianta cerca più luce. Avvicinala a una finestra orientata a est o nord, evitando il sole diretto pomeridiano.</p>
+            <span class="ottimizzazione-contesto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Osservato dalla foto
+            </span>
+          </div>
+
+          <!-- Ottimizzazione 2 -->
+          <div class="ottimizzazione-card animate-fade-in-up delay-9">
+            <div class="ottimizzazione-card-header">
+              <div class="ottimizzazione-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M7 14h14v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6z" stroke="#4a7c4a" stroke-width="2" fill="none"/>
+                  <ellipse cx="14" cy="14" rx="7" ry="2" stroke="#4a7c4a" stroke-width="1.5" fill="#4a7c4a" opacity="0.08"/>
+                  <path d="M14 14V9" stroke="#6a9e6a" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M14 11c-2-.5-4-2-3.5-5 2.5 0 4 1.5 4 3.5" fill="#8eba8e" opacity="0.5"/>
+                </svg>
+              </div>
+              <h4>Rinvaso primaverile</h4>
+            </div>
+            <p>Le radici che intravedo dal foro di drenaggio suggeriscono che il vaso attuale è diventato stretto. Un rinvaso in un vaso di 2-3 cm più grande, con terriccio fresco ben drenante, darà nuova energia alla pianta.</p>
+            <span class="ottimizzazione-contesto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Osservato dalla foto
+            </span>
+          </div>
+
+          <!-- Ottimizzazione 3 -->
+          <div class="ottimizzazione-card animate-fade-in-up delay-10">
+            <div class="ottimizzazione-card-header">
+              <div class="ottimizzazione-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 22c1-3 4-5.5 4-9a4 4 0 0 0-8 0c0 3.5 3 6 4 9z" stroke="#4a7c4a" stroke-width="2" fill="none"/>
+                  <path d="M12 22c1-3 4-5.5 4-9a4 4 0 0 0-8 0c0 3.5 3 6 4 9z" fill="#4a7c4a" opacity="0.08"/>
+                  <path d="M7 2l2 2M17 2l-2 2M12 0v3" stroke="#4a7c4a" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                </svg>
+              </div>
+              <h4>Nebulizzazione fogliare</h4>
+            </div>
+            <p>Le foglie mostrano bordi leggermente arricciati, tipico di aria secca. Nebulizza le foglie 2-3 volte a settimana con acqua a temperatura ambiente, preferibilmente al mattino, per ricreare l'umidità tropicale che ama.</p>
+            <span class="ottimizzazione-contesto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Osservato dalla foto
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== VARIANTE: PIANTA SANA (solo ottimizzazioni, no diagnosi) ===== -->
+      <section style="margin-bottom: var(--space-8); padding-top: var(--space-8); border-top: 2px dashed var(--color-border-light);">
+        <p style="font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: var(--text-sm); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-4); text-align: center;">
+          Variante: pianta in ottime condizioni (FR9)
+        </p>
+
+        <div class="pianta-sana-banner animate-fade-in-up">
+          <div class="pianta-sana-icon">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M24 40V28" stroke="#4a9e4a" stroke-width="3" stroke-linecap="round"/>
+              <path d="M24 30c-5-1.5-9-6-8-13 6 0.5 9 4.5 9 10" fill="#6ab06a" opacity="0.6" stroke="#4a9e4a" stroke-width="2" stroke-linecap="round"/>
+              <path d="M24 28c4-2 9-2.5 12 2-5 3-9 2-11-1" fill="#8eba8e" opacity="0.5" stroke="#4a9e4a" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Sparkles -->
+              <circle cx="14" cy="16" r="1.5" fill="#f5c542" opacity="0.6"/>
+              <circle cx="36" cy="20" r="1" fill="#f5c542" opacity="0.5"/>
+              <circle cx="18" cy="10" r="1" fill="#f5c542" opacity="0.4"/>
+              <path d="M33 12l1-3 1 3-3 1 3 1-1 3-1-3 3-1z" fill="#f5c542" opacity="0.5"/>
+            </svg>
+          </div>
+          <h3>La tua pianta sta benissimo!</h3>
+          <p>Non ho trovato problemi o segnali di sofferenza. Il fogliame è sano, il colore è vivace e la struttura è robusta. Ecco qualche suggerimento per farla prosperare ancora di più.</p>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <div class="new-analysis-cta animate-fade-in-up delay-10">
+        <p class="text-muted">Vuoi controllare un'altra pianta?</p>
+        <a href="../bloom-buddy-app/index.html" class="btn btn-primary btn-lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Nuova analisi
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-brand">
+      <svg viewBox="0 0 38 38" fill="none">
+        <rect width="38" height="38" rx="10" fill="url(#lg2)"/>
+        <path d="M19 28V20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M19 22c-3-1-6-4.5-5-9 4.5 0.5 7 3.5 7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <defs><linearGradient id="lg2" x1="0" y1="0" x2="38" y2="38"><stop stop-color="#6a9e6a"/><stop offset="1" stop-color="#3d663d"/></linearGradient></defs>
+      </svg>
+      Bloom Buddy
+    </div>
+    <p>La tua guida verde personale — diagnosi intelligenti</p>
+  </footer>
+
+  <script>
+    // Animate health ring
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const ring = document.querySelector('.ring-fill');
+        if (ring) {
+          // 58/100 = 58% of 283 = 164 dashoffset from full = 283 - 164 = 119
+          ring.style.strokeDashoffset = 283 - (283 * 0.58);
+        }
+      }, 600);
+    });
+  </script>
+
+</body>
+</html>
