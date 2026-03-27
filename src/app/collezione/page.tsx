@@ -1,18 +1,23 @@
 import { redirect } from "next/navigation";
 import { ottieniSessioneServer } from "@/lib/auth/sessione";
 import { prisma } from "@/lib/db/client";
-import { SchedaPiantaCollezione } from "@/components/scheda-pianta-collezione";
-import type { PlantAnalysis } from "@/types/analysis";
+import type { PlantAnalysis, HealthStatus } from "@/types/analysis";
 import Link from "next/link";
+import Image from "next/image";
+import { isPlantAnalysis } from "@/lib/collezione/recuperaAnalisiPerPianta";
 
-function isPlantAnalysis(valore: unknown): valore is PlantAnalysis {
-  return (
-    typeof valore === "object" &&
-    valore !== null &&
-    typeof (valore as PlantAnalysis).nomeComune === "string" &&
-    typeof (valore as PlantAnalysis).statoSalute === "string"
-  );
+interface PiantaRaggruppata {
+  nomeComune: string;
+  analisiPiuRecente: { id: string; urlFoto: string; datiAnalisi: PlantAnalysis; createdAt: Date };
+  totaleAnalisi: number;
 }
+
+const COLORI_SALUTE: Record<HealthStatus, { bg: string; testo: string; etichetta: string }> = {
+  excellent: { bg: "bg-[var(--color-primary-50)]", testo: "text-[var(--color-primary-700)]", etichetta: "Ottima" },
+  good: { bg: "bg-[var(--color-primary-50)]", testo: "text-[var(--color-primary-600)]", etichetta: "Buona" },
+  fair: { bg: "bg-amber-100", testo: "text-amber-700", etichetta: "Discreta" },
+  poor: { bg: "bg-red-100", testo: "text-red-700", etichetta: "Critica" },
+};
 
 export default async function PaginaCollezione() {
   const sessione = await ottieniSessioneServer();
@@ -30,6 +35,39 @@ export default async function PaginaCollezione() {
   } catch {
     analisiSalvate = [];
   }
+
+  // Raggruppa le analisi valide per nomeComune (case-insensitive)
+  const gruppiPerNome = new Map<string, PiantaRaggruppata>();
+
+  for (const analisi of analisiSalvate) {
+    if (!isPlantAnalysis(analisi.datiAnalisi)) continue;
+    const datiValidati: PlantAnalysis = analisi.datiAnalisi;
+    const chiave = datiValidati.nomeComune.toLowerCase();
+
+    if (!gruppiPerNome.has(chiave)) {
+      // Prima occorrenza: è già la più recente perché il fetch è ordinato desc
+      gruppiPerNome.set(chiave, {
+        nomeComune: datiValidati.nomeComune,
+        analisiPiuRecente: {
+          id: analisi.id,
+          urlFoto: analisi.urlFoto,
+          datiAnalisi: datiValidati,
+          createdAt: analisi.createdAt,
+        },
+        totaleAnalisi: 1,
+      });
+    } else {
+      const gruppo = gruppiPerNome.get(chiave)!;
+      gruppo.totaleAnalisi += 1;
+    }
+  }
+
+  // Ordina per data dell'analisi più recente (discendente)
+  const piantaRaggruppate: PiantaRaggruppata[] = Array.from(gruppiPerNome.values()).sort(
+    (a, b) =>
+      new Date(b.analisiPiuRecente.createdAt).getTime() -
+      new Date(a.analisiPiuRecente.createdAt).getTime()
+  );
 
   return (
     <section className="py-8 pb-20">
@@ -94,17 +132,60 @@ export default async function PaginaCollezione() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {analisiSalvate.map((analisi) => {
-              if (!isPlantAnalysis(analisi.datiAnalisi)) return null;
-              const datiValidati: PlantAnalysis = analisi.datiAnalisi;
+            {piantaRaggruppate.map((pianta) => {
+              const { analisiPiuRecente, totaleAnalisi, nomeComune } = pianta;
+              const salute =
+                COLORI_SALUTE[analisiPiuRecente.datiAnalisi.statoSalute] ?? COLORI_SALUTE.good;
+              const dataFormattata = new Date(analisiPiuRecente.createdAt).toLocaleDateString(
+                "it-IT",
+                { day: "numeric", month: "long", year: "numeric" }
+              );
+              const etichettaAnalisi =
+                totaleAnalisi === 1 ? "1 analisi" : `${totaleAnalisi} analisi`;
+
               return (
-                <SchedaPiantaCollezione
-                  key={analisi.id}
-                  idAnalisi={analisi.id}
-                  urlFoto={analisi.urlFoto}
-                  datiAnalisi={datiValidati}
-                  dataSalvataggio={analisi.createdAt}
-                />
+                <Link
+                  key={nomeComune.toLowerCase()}
+                  href={`/collezione/${encodeURIComponent(nomeComune)}`}
+                  aria-label={`Apri collezione di ${nomeComune}`}
+                >
+                  <article className="group rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-primary-50)]">
+                      <Image
+                        src={analisiPiuRecente.urlFoto}
+                        alt={nomeComune}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <span
+                        className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${salute.bg} ${salute.testo}`}
+                      >
+                        {salute.etichetta}
+                      </span>
+                    </div>
+
+                    <div className="p-4">
+                      <h2 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-text)] leading-tight mb-0.5">
+                        {nomeComune}
+                      </h2>
+                      <p className="text-sm text-[var(--color-text-muted)] italic mb-3">
+                        {analisiPiuRecente.datiAnalisi.nomeScientifico}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <time
+                          dateTime={new Date(analisiPiuRecente.createdAt).toISOString()}
+                          className="text-xs text-[var(--color-text-secondary)]"
+                        >
+                          {dataFormattata}
+                        </time>
+                        <span className="text-xs font-medium text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-2 py-0.5 rounded-full">
+                          {etichettaAnalisi}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
               );
             })}
           </div>
