@@ -67,20 +67,20 @@ export async function Navbar() {
               <span className="hidden sm:inline">Collezione</span>
             </Link>
 
-            {/* Avatar con iniziale */}
-            <div
-              className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-white font-[family-name:var(--font-display)] font-bold text-sm"
-              style={{
-                background: "linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600))",
-              }}
-            >
-              {sessione.email?.charAt(0).toUpperCase() ?? "?"}
-            </div>
-
-            {/* Email visibile solo su schermi >= 480px */}
-            <span className="hidden min-[480px]:inline font-[family-name:var(--font-display)] text-sm text-[var(--color-text-secondary)]">
-              {sessione.email}
-            </span>
+            {/* Link profilo: avatar + email */}
+            <Link href="/profilo" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+              <div
+                className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-white font-[family-name:var(--font-display)] font-bold text-sm"
+                style={{
+                  background: "linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600))",
+                }}
+              >
+                {sessione.email?.charAt(0).toUpperCase() ?? "?"}
+              </div>
+              <span className="hidden min-[480px]:inline font-[family-name:var(--font-display)] text-sm text-[var(--color-text-secondary)]">
+                {sessione.email}
+              </span>
+            </Link>
 
             {/* Pulsante logout */}
             <form action="/api/auth/logout" method="post">
