@@ -24,3 +24,20 @@ export interface PlantAnalysis {
   informazioniGenerali: CareInfo;
   informazioniRapide: CareInfo;
 }
+
+export interface DiagnosiDettagliata {
+  categoria: "critico" | "attenzione";
+  titolo: string;
+  cosaVedo: string;
+  cosaSignifica: string;
+  cosaFare: string;
+  cosaAspettarsi: string;
+}
+
+export interface Ottimizzazione {
+  categoria: "ottimizzazione";
+  titolo: string;
+  descrizione: string;
+}
+
+export type RisultatoDiagnosi = DiagnosiDettagliata | Ottimizzazione;
