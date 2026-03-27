@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ottieniSessioneServer } from "@/lib/auth/sessione";
+import { MenuUtente } from "./menu-utente";
 
 export async function Navbar() {
   const sessione = await ottieniSessioneServer();
@@ -45,81 +46,7 @@ export async function Navbar() {
         </Link>
 
         {sessione.utenteId ? (
-          <div className="flex items-center gap-3">
-            {/* Link collezione */}
-            <Link
-              href="/collezione"
-              className="inline-flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-semibold text-[var(--color-primary-600)] transition-colors hover:text-[var(--color-primary-500)]"
-            >
-              <svg
-                viewBox="0 0 20 20"
-                fill="none"
-                className="w-4 h-4"
-                aria-hidden="true"
-              >
-                <path
-                  d="M10 18c-1-2-8-7-8-12a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 5-7 10-8 12z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-              </svg>
-              <span className="hidden sm:inline">Collezione</span>
-            </Link>
-
-            {/* Link profilo: avatar + email */}
-            <Link href="/profilo" className="flex items-center gap-3 transition-opacity hover:opacity-80">
-              <div
-                className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-white font-[family-name:var(--font-display)] font-bold text-sm"
-                style={{
-                  background: "linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600))",
-                }}
-              >
-                {sessione.email?.charAt(0).toUpperCase() ?? "?"}
-              </div>
-              <span className="hidden min-[480px]:inline font-[family-name:var(--font-display)] text-sm text-[var(--color-text-secondary)]">
-                {sessione.email}
-              </span>
-            </Link>
-
-            {/* Pulsante logout */}
-            <form action="/api/auth/logout" method="post">
-              <button
-                type="submit"
-                className="flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-semibold text-[var(--color-text-secondary)] border border-[var(--color-primary-200)] px-4 py-2 rounded-full transition-colors hover:text-red-600 hover:border-red-300 hover:bg-red-50 cursor-pointer"
-              >
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4"
-                >
-                  <path
-                    d="M13 2.5H15.5C16.0523 2.5 16.5 2.94772 16.5 3.5V16.5C16.5 17.0523 16.0523 17.5 15.5 17.5H13"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M9 14L13 10L9 6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M13 10H3.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Esci
-              </button>
-            </form>
-          </div>
+          <MenuUtente email={sessione.email ?? ""} />
         ) : (
           <div className="flex items-center gap-2">
             <Link
