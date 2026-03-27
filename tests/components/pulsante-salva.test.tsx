@@ -43,16 +43,7 @@ function creaAnalisiTest(): PlantAnalysis {
   };
 }
 
-const URL_ANTEPRIMA_FINTO = "blob:http://localhost/fake-image";
-
-function creaRispostaImmagine() {
-  const blobImmagine = new Blob(["fake-image-data"], { type: "image/jpeg" });
-  return {
-    ok: true,
-    status: 200,
-    blob: () => Promise.resolve(blobImmagine),
-  };
-}
+const URL_ANTEPRIMA_FINTO = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
 
 function creaRispostaApi(status: number, body: Record<string, unknown> = {}) {
   return {
@@ -103,7 +94,6 @@ describe("Pulsante salva nella collezione", () => {
     const utente = userEvent.setup();
 
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce(creaRispostaImmagine())
       .mockImplementationOnce(
         () => new Promise((resolve) => setTimeout(() => resolve(creaRispostaApi(201, { successo: true })), 5000))
       );
@@ -129,7 +119,6 @@ describe("Pulsante salva nella collezione", () => {
     const utente = userEvent.setup();
 
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce(creaRispostaImmagine())
       .mockResolvedValueOnce(creaRispostaApi(201, { successo: true }));
 
     vi.stubGlobal("fetch", fetchMock);
@@ -155,7 +144,6 @@ describe("Pulsante salva nella collezione", () => {
     const utente = userEvent.setup();
 
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce(creaRispostaImmagine())
       .mockResolvedValueOnce(creaRispostaApi(409, { errore: "duplicato" }));
 
     vi.stubGlobal("fetch", fetchMock);

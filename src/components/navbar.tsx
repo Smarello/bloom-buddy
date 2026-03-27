@@ -46,6 +46,27 @@ export async function Navbar() {
 
         {sessione.utenteId ? (
           <div className="flex items-center gap-3">
+            {/* Link collezione */}
+            <Link
+              href="/collezione"
+              className="inline-flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-semibold text-[var(--color-primary-600)] transition-colors hover:text-[var(--color-primary-500)]"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                className="w-4 h-4"
+                aria-hidden="true"
+              >
+                <path
+                  d="M10 18c-1-2-8-7-8-12a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 5-7 10-8 12z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  fill="none"
+                />
+              </svg>
+              <span className="hidden sm:inline">Collezione</span>
+            </Link>
+
             {/* Avatar con iniziale */}
             <div
               className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-white font-[family-name:var(--font-display)] font-bold text-sm"

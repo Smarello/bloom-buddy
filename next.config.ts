@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 import { ottieniHeaderSicurezza } from "./src/lib/sicurezza/header-sicurezza";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+    ],
+  },
   async headers() {
     return [
       {
