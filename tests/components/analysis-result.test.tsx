@@ -26,6 +26,13 @@ const sessionStorageMock = (() => {
 
 Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock });
 
+// Mock IntersectionObserver (non disponibile in jsdom)
+vi.stubGlobal("IntersectionObserver", class {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+});
+
 import { AnalysisResult } from "@/components/analysis-result";
 import type { PlantAnalysis } from "@/types/analysis";
 

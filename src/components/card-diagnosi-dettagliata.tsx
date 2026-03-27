@@ -1,55 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import type { DiagnosiDettagliata } from "@/types/analysis";
 
 interface PropsCardDiagnosiDettagliata {
   diagnosi: DiagnosiDettagliata;
 }
 
-const STILI_CATEGORIA = {
-  critico: {
-    etichettaBadge: "CRITICO",
-    background:
-      "radial-gradient(ellipse at 100% 0%, rgba(224, 96, 96, 0.07), transparent 50%), radial-gradient(ellipse at 0% 100%, rgba(224, 96, 96, 0.03), transparent 40%), linear-gradient(135deg, #fef5f5, #fff8f6, #fffafa)",
-    borderColor: "rgba(224, 96, 96, 0.35)",
-    boxShadow: "0 4px 24px rgba(224, 96, 96, 0.08)",
-    bordoSinistro: "linear-gradient(180deg, var(--color-accent-400), var(--color-accent-600))",
-    cerchioDecorativo: "var(--color-accent-500)",
-    icona: { coloreStroke: "#c94a4a" },
-    badgeBg: "rgba(224, 96, 96, 0.14)",
-    badgeColore: "var(--color-accent-600)",
-    titoloColore: "var(--color-accent-600)",
-    iconaSfondo: "linear-gradient(145deg, rgba(224, 96, 96, 0.18), rgba(224, 96, 96, 0.06))",
-    iconaOmbra: "0 4px 16px rgba(224, 96, 96, 0.12)",
-    sezioneNumero: "var(--color-accent-500)",
-    sezioneIcona: "var(--color-accent-500)",
-    sezioneTitolo: "var(--color-accent-600)",
-    bulletColore: "var(--color-accent-500)",
-    timelineBg: "rgba(224, 96, 96, 0.06)",
-    timelineColore: "var(--color-accent-600)",
-    timelineBordo: "linear-gradient(180deg, var(--color-accent-400), var(--color-accent-600))",
-  },
-  attenzione: {
-    etichettaBadge: "ATTENZIONE",
-    background:
-      "radial-gradient(ellipse at 100% 0%, rgba(192, 106, 48, 0.07), transparent 50%), radial-gradient(ellipse at 0% 100%, rgba(192, 106, 48, 0.03), transparent 40%), linear-gradient(135deg, var(--color-secondary-50), #fff8f3, #fffcf8)",
-    borderColor: "var(--color-secondary-300)",
-    boxShadow: "0 4px 24px rgba(192, 106, 48, 0.08)",
-    bordoSinistro: "linear-gradient(180deg, var(--color-secondary-400), var(--color-secondary-500))",
-    cerchioDecorativo: "var(--color-secondary-500)",
-    icona: { coloreStroke: "#a35628" },
-    badgeBg: "rgba(192, 106, 48, 0.14)",
-    badgeColore: "var(--color-secondary-600)",
-    titoloColore: "var(--color-secondary-700)",
-    iconaSfondo: "linear-gradient(145deg, var(--color-secondary-100), var(--color-secondary-50))",
-    iconaOmbra: "0 4px 16px rgba(192, 106, 48, 0.12)",
-    sezioneNumero: "var(--color-secondary-500)",
-    sezioneIcona: "var(--color-secondary-500)",
-    sezioneTitolo: "var(--color-secondary-600)",
-    bulletColore: "var(--color-secondary-500)",
-    timelineBg: "rgba(192, 106, 48, 0.08)",
-    timelineColore: "var(--color-secondary-600)",
-    timelineBordo: "linear-gradient(180deg, var(--color-secondary-400), var(--color-secondary-500))",
-  },
-} as const;
+const ETICHETTA_BADGE: Record<DiagnosiDettagliata["categoria"], string> = {
+  critico: "CRITICO",
+  attenzione: "ATTENZIONE",
+};
 
 const ICONE_SEZIONI = {
   cosaVedo: (
@@ -64,11 +25,6 @@ const ICONE_SEZIONI = {
       <path d="M12 16v-4m0-4h.01" />
     </svg>
   ),
-  cosaFare: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91A6 6 0 016.3 2.53l3.77 3.77z" />
-    </svg>
-  ),
   cosaAspettarsi: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
@@ -77,22 +33,13 @@ const ICONE_SEZIONI = {
   ),
 };
 
-const SEZIONI = [
+const SEZIONI_APPROFONDIMENTO = [
   { numero: 1, chiave: "cosaVedo" as const, titolo: "Cosa vedo", iconaChiave: "cosaVedo" as const },
   { numero: 2, chiave: "cosaSignifica" as const, titolo: "Cosa significa", iconaChiave: "cosaSignifica" as const },
-  { numero: 3, chiave: "cosaFare" as const, titolo: "Cosa fare", iconaChiave: "cosaFare" as const },
-  { numero: 4, chiave: "cosaAspettarsi" as const, titolo: "Cosa aspettarsi", iconaChiave: "cosaAspettarsi" as const },
+  { numero: 3, chiave: "cosaAspettarsi" as const, titolo: "Cosa aspettarsi", iconaChiave: "cosaAspettarsi" as const },
 ];
 
-function parseAzioni(testo: string): string[] {
-  return testo
-    .split("\n")
-    .map((riga) => riga.trim())
-    .filter((riga) => riga.length > 0);
-}
-
 function parseTempoRecupero(testo: string): { descrizione: string; tempo: string } | null {
-  // Cerca un pattern temporale alla fine (es. "... in 3-4 settimane")
   const match = testo.match(/(.+?)(\d[\w\s-]*(?:settiman[ae]|giorn[oi]|mes[ei]))\s*$/i);
   if (match) {
     return { descrizione: match[1].trim(), tempo: match[2].trim() };
@@ -101,17 +48,16 @@ function parseTempoRecupero(testo: string): { descrizione: string; tempo: string
 }
 
 export function CardDiagnosiDettagliata({ diagnosi }: PropsCardDiagnosiDettagliata) {
-  const stili = STILI_CATEGORIA[diagnosi.categoria];
-  const azioni = parseAzioni(diagnosi.cosaFare);
+  const [aperta, setAperta] = useState(false);
   const tempoRecupero = parseTempoRecupero(diagnosi.cosaAspettarsi);
 
   return (
     <div
-      className="relative rounded-2xl p-8 max-sm:p-5 overflow-hidden"
+      className="relative rounded-2xl overflow-hidden"
       style={{
-        background: stili.background,
-        border: `2px solid ${stili.borderColor}`,
-        boxShadow: stili.boxShadow,
+        background: "var(--diagnosi-bg)",
+        border: `2px solid var(--diagnosi-border-color)`,
+        boxShadow: "var(--diagnosi-box-shadow)",
       }}
       data-testid="card-diagnosi-dettagliata"
       data-categoria={diagnosi.categoria}
@@ -119,25 +65,31 @@ export function CardDiagnosiDettagliata({ diagnosi }: PropsCardDiagnosiDettaglia
       {/* Bordo laterale sinistro */}
       <div
         className="absolute top-0 left-0 w-1.5 h-full rounded-l-sm"
-        style={{ background: stili.bordoSinistro }}
+        style={{ background: "var(--diagnosi-bordo-sinistro)" }}
         aria-hidden="true"
       />
 
       {/* Decorazione angolo top-right */}
       <div
         className="absolute top-[-40px] right-[-40px] w-[140px] h-[140px] rounded-full opacity-[0.06] pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${stili.cerchioDecorativo}, transparent 70%)` }}
+        style={{ background: `radial-gradient(circle, var(--diagnosi-cerchio), transparent 70%)` }}
         aria-hidden="true"
       />
 
-      {/* Header: icona + badge + titolo */}
-      <div className="flex items-center gap-4 max-sm:gap-3 mb-6">
+      {/* Header cliccabile: badge + titolo + chevron */}
+      <button
+        type="button"
+        className="w-full flex items-center gap-4 max-sm:gap-3 p-8 max-sm:p-5 text-left"
+        onClick={() => setAperta((prev) => !prev)}
+        aria-expanded={aperta}
+        aria-controls={`approfondimento-${diagnosi.titolo}`}
+      >
         <div
-          className="w-16 h-16 max-sm:w-12 max-sm:h-12 shrink-0 rounded-xl flex items-center justify-center relative"
-          style={{ background: stili.iconaSfondo, boxShadow: stili.iconaOmbra }}
+          className="w-14 h-14 max-sm:w-11 max-sm:h-11 shrink-0 rounded-xl flex items-center justify-center relative"
+          style={{ background: "var(--diagnosi-icona-sfondo)", boxShadow: "var(--diagnosi-icona-ombra)" }}
           aria-hidden="true"
         >
-          <span className="w-8 h-8 max-sm:w-6 max-sm:h-6 relative z-[1]" style={{ color: stili.icona.coloreStroke }}>
+          <span className="w-7 h-7 max-sm:w-5 max-sm:h-5 relative z-[1]" style={{ color: "var(--diagnosi-icona-stroke)" }}>
             {diagnosi.categoria === "critico" ? (
               <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 4L3 28h26L16 4z" />
@@ -156,7 +108,7 @@ export function CardDiagnosiDettagliata({ diagnosi }: PropsCardDiagnosiDettaglia
         <div className="flex-1 min-w-0">
           <span
             className="inline-flex items-center gap-2 font-[family-name:var(--font-display)] font-bold text-xs uppercase tracking-[0.08em] px-3 py-1 rounded-full"
-            style={{ color: stili.badgeColore, background: stili.badgeBg }}
+            style={{ color: "var(--diagnosi-badge-colore)", background: "var(--diagnosi-badge-bg)" }}
             data-testid="badge-categoria"
           >
             <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
@@ -166,99 +118,109 @@ export function CardDiagnosiDettagliata({ diagnosi }: PropsCardDiagnosiDettaglia
                 <path d="M8 1l7 14H1L8 1z" />
               )}
             </svg>
-            {stili.etichettaBadge}
+            {ETICHETTA_BADGE[diagnosi.categoria]}
           </span>
           <h3
-            className="font-[family-name:var(--font-display)] font-bold text-2xl max-sm:text-xl leading-tight mt-2"
-            style={{ color: stili.titoloColore }}
+            className="font-[family-name:var(--font-display)] font-bold text-xl max-sm:text-lg leading-tight mt-1.5"
+            style={{ color: "var(--diagnosi-titolo-colore)" }}
           >
             {diagnosi.titolo}
           </h3>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+            {aperta ? "Nascondi dettagli" : "Mostra dettagli analisi"}
+          </p>
         </div>
-      </div>
+        {/* Chevron */}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--diagnosi-sezione-icona)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`w-5 h-5 shrink-0 transition-transform duration-300 ${aperta ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
 
-      {/* Griglia 4 sezioni: 2x2 desktop, 1 colonna mobile */}
-      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4" data-testid="griglia-sezioni">
-        {SEZIONI.map((sezione) => (
-          <div
-            key={sezione.chiave}
-            className="p-5 max-sm:p-4 rounded-lg backdrop-blur-[4px] transition-all hover:shadow-[var(--shadow-sm)] hover:-translate-y-px"
-            style={{
-              background: "rgba(255, 255, 255, 0.7)",
-              border: "1px solid rgba(0, 0, 0, 0.04)",
-            }}
-            data-testid={`sezione-${sezione.chiave}`}
-          >
-            {/* Header sezione: numero + icona + titolo */}
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center font-[family-name:var(--font-display)] font-bold text-xs text-white"
-                style={{ background: stili.sezioneNumero }}
-              >
-                {sezione.numero}
-              </span>
-              <span
-                className="w-[18px] h-[18px] shrink-0"
-                style={{ color: stili.sezioneIcona }}
-              >
-                {ICONE_SEZIONI[sezione.iconaChiave]}
-              </span>
-              <span
-                className="font-[family-name:var(--font-display)] font-bold text-sm uppercase tracking-[0.06em]"
-                style={{ color: stili.sezioneTitolo }}
-              >
-                {sezione.titolo}
-              </span>
-            </div>
-
-            {/* Contenuto sezione */}
-            {sezione.chiave === "cosaFare" ? (
-              <ul className="flex flex-col gap-2 list-none" data-testid="lista-azioni">
-                {azioni.map((azione, indice) => (
-                  <li
-                    key={indice}
-                    className="flex items-start gap-3 text-sm text-[var(--color-text-secondary)] leading-relaxed"
-                  >
+      {/* Contenuto approfondimento — collassabile */}
+      <div
+        id={`approfondimento-${diagnosi.titolo}`}
+        className={`grid transition-[grid-template-rows] duration-300 ease-out ${aperta ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-8 max-sm:px-5 pb-8 max-sm:pb-5 pt-0">
+            {/* Griglia 3 sezioni: cosaVedo, cosaSignifica, cosaAspettarsi */}
+            <div className="grid grid-cols-3 max-md:grid-cols-1 gap-4" data-testid="griglia-sezioni">
+              {SEZIONI_APPROFONDIMENTO.map((sezione) => (
+                <div
+                  key={sezione.chiave}
+                  className="p-5 max-sm:p-4 rounded-lg backdrop-blur-[4px]"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.7)",
+                    border: "1px solid rgba(0, 0, 0, 0.04)",
+                  }}
+                  data-testid={`sezione-${sezione.chiave}`}
+                >
+                  {/* Header sezione */}
+                  <div className="flex items-center gap-2 mb-3">
                     <span
-                      className="w-[7px] h-[7px] shrink-0 rounded-full mt-[8px] shadow-[0_0_6px_rgba(0,0,0,0.08)]"
-                      style={{ background: stili.bulletColore }}
-                      aria-hidden="true"
-                    />
-                    <span>{azione}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : sezione.chiave === "cosaAspettarsi" ? (
-              <>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-1">
-                  {tempoRecupero ? tempoRecupero.descrizione : diagnosi.cosaAspettarsi}
-                </p>
-                {tempoRecupero && (
-                  <div
-                    className="flex items-center gap-3 mt-3 px-4 py-3 rounded-md relative overflow-hidden font-[family-name:var(--font-display)] font-semibold text-sm"
-                    style={{ background: stili.timelineBg, color: stili.timelineColore }}
-                    data-testid="indicatore-temporale"
-                  >
-                    <div
-                      className="absolute left-0 top-0 w-[3px] h-full rounded-[3px]"
-                      style={{ background: stili.timelineBordo }}
-                      aria-hidden="true"
-                    />
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px] shrink-0">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span>Recupero visibile in {tempoRecupero.tempo}</span>
+                      className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center font-[family-name:var(--font-display)] font-bold text-xs text-white"
+                      style={{ background: "var(--diagnosi-sezione-numero)" }}
+                    >
+                      {sezione.numero}
+                    </span>
+                    <span
+                      className="w-[18px] h-[18px] shrink-0"
+                      style={{ color: "var(--diagnosi-sezione-icona)" }}
+                    >
+                      {ICONE_SEZIONI[sezione.iconaChiave]}
+                    </span>
+                    <span
+                      className="font-[family-name:var(--font-display)] font-bold text-sm uppercase tracking-[0.06em]"
+                      style={{ color: "var(--diagnosi-sezione-titolo)" }}
+                    >
+                      {sezione.titolo}
+                    </span>
                   </div>
-                )}
-              </>
-            ) : (
-              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                {diagnosi[sezione.chiave]}
-              </p>
-            )}
+
+                  {/* Contenuto */}
+                  {sezione.chiave === "cosaAspettarsi" ? (
+                    <>
+                      <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-1">
+                        {tempoRecupero ? tempoRecupero.descrizione : diagnosi.cosaAspettarsi}
+                      </p>
+                      {tempoRecupero && (
+                        <div
+                          className="flex items-center gap-3 mt-3 px-4 py-3 rounded-md relative overflow-hidden font-[family-name:var(--font-display)] font-semibold text-sm"
+                          style={{ background: "var(--diagnosi-timeline-bg)", color: "var(--diagnosi-timeline-colore)" }}
+                          data-testid="indicatore-temporale"
+                        >
+                          <div
+                            className="absolute left-0 top-0 w-[3px] h-full rounded-[3px]"
+                            style={{ background: "var(--diagnosi-timeline-bordo)" }}
+                            aria-hidden="true"
+                          />
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px] shrink-0">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          <span>Recupero visibile in {tempoRecupero.tempo}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                      {diagnosi[sezione.chiave]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );

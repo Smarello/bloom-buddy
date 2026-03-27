@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
   const utenteId = sessione.utenteId;
 
   const percorsoBlob = `collezione/${utenteId}/${hashFoto}.jpg`;
-  const blobRisultato = await put(percorsoBlob, bytesFoto, { access: "public" });
+  const blobRisultato = await put(percorsoBlob, bytesFoto, { access: "public", addRandomSuffix: true });
 
   const nomeComune = (datiAnalisiOggetto.nomeComune as string).trim();
   const nomeScientifico = (datiAnalisiOggetto.nomeScientifico as string).trim();

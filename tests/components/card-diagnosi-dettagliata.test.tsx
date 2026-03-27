@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, within, cleanup } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { CardDiagnosiDettagliata } from "@/components/card-diagnosi-dettagliata";
 import type { DiagnosiDettagliata } from "@/types/analysis";
@@ -55,11 +56,15 @@ describe("CardDiagnosiDettagliata", () => {
     });
   });
 
-  describe("sezioni", () => {
-    it("mostra le 4 sezioni con i titoli corretti", () => {
+  describe("sezioni approfondimento", () => {
+    it("mostra le 3 sezioni con i titoli corretti dopo l'espansione", async () => {
+      const user = userEvent.setup();
       render(<CardDiagnosiDettagliata diagnosi={creaDiagnosiCritica()} />);
 
-      const titoliAttesi = ["Cosa vedo", "Cosa significa", "Cosa fare", "Cosa aspettarsi"];
+      // Espandi il pannello collassabile
+      await user.click(screen.getByRole("button", { expanded: false }));
+
+      const titoliAttesi = ["Cosa vedo", "Cosa significa", "Cosa aspettarsi"];
 
       for (const titolo of titoliAttesi) {
         expect(screen.getByText(titolo)).toBeInTheDocument();
@@ -67,88 +72,96 @@ describe("CardDiagnosiDettagliata", () => {
 
       expect(screen.getByTestId("sezione-cosaVedo")).toBeInTheDocument();
       expect(screen.getByTestId("sezione-cosaSignifica")).toBeInTheDocument();
-      expect(screen.getByTestId("sezione-cosaFare")).toBeInTheDocument();
       expect(screen.getByTestId("sezione-cosaAspettarsi")).toBeInTheDocument();
+    });
+
+    it("non include la sezione cosaFare nella card di approfondimento", async () => {
+      const user = userEvent.setup();
+      render(<CardDiagnosiDettagliata diagnosi={creaDiagnosiCritica()} />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
+
+      expect(screen.queryByTestId("sezione-cosaFare")).not.toBeInTheDocument();
     });
   });
 
-  describe("cosaFare con newline", () => {
-    it("splitta il testo in una lista di azioni", () => {
-      const diagnosi = creaDiagnosiCritica({
-        cosaFare: "Prima azione\nSeconda azione\nTerza azione",
-      });
-      render(<CardDiagnosiDettagliata diagnosi={diagnosi} />);
+  describe("collassabile", () => {
+    it("inizia chiusa e si espande al click", async () => {
+      const user = userEvent.setup();
+      render(<CardDiagnosiDettagliata diagnosi={creaDiagnosiCritica()} />);
 
-      const listaAzioni = screen.getByTestId("lista-azioni");
-      const vociLista = within(listaAzioni).getAllByRole("listitem");
+      const bottone = screen.getByRole("button", { expanded: false });
+      expect(bottone).toHaveAttribute("aria-expanded", "false");
 
-      expect(vociLista).toHaveLength(3);
-      expect(vociLista[0]).toHaveTextContent("Prima azione");
-      expect(vociLista[1]).toHaveTextContent("Seconda azione");
-      expect(vociLista[2]).toHaveTextContent("Terza azione");
-    });
+      await user.click(bottone);
 
-    it("ignora righe vuote nel testo cosaFare", () => {
-      const diagnosi = creaDiagnosiCritica({
-        cosaFare: "Prima azione\n\nSeconda azione\n  \nTerza azione",
-      });
-      render(<CardDiagnosiDettagliata diagnosi={diagnosi} />);
-
-      const listaAzioni = screen.getByTestId("lista-azioni");
-      const vociLista = within(listaAzioni).getAllByRole("listitem");
-
-      expect(vociLista).toHaveLength(3);
+      expect(screen.getByRole("button", { expanded: true })).toHaveAttribute("aria-expanded", "true");
     });
   });
 
   describe("indicatore temporale", () => {
-    it("mostra l'indicatore quando cosaAspettarsi contiene un pattern temporale", () => {
+    it("mostra l'indicatore quando cosaAspettarsi contiene un pattern temporale", async () => {
+      const user = userEvent.setup();
       const diagnosi = creaDiagnosiCritica({
         cosaAspettarsi: "La pianta dovrebbe riprendersi in 3-4 settimane",
       });
       render(<CardDiagnosiDettagliata diagnosi={diagnosi} />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
 
       const indicatore = screen.getByTestId("indicatore-temporale");
       expect(indicatore).toBeInTheDocument();
       expect(indicatore).toHaveTextContent("3-4 settimane");
     });
 
-    it("non mostra l'indicatore quando non c'è un pattern temporale", () => {
+    it("non mostra l'indicatore quando non c'è un pattern temporale", async () => {
+      const user = userEvent.setup();
       const diagnosi = creaDiagnosiCritica({
         cosaAspettarsi: "Monitora la pianta nei prossimi periodi.",
       });
       render(<CardDiagnosiDettagliata diagnosi={diagnosi} />);
 
+      await user.click(screen.getByRole("button", { expanded: false }));
+
       expect(screen.queryByTestId("indicatore-temporale")).not.toBeInTheDocument();
     });
 
-    it("riconosce il pattern temporale con giorni", () => {
+    it("riconosce il pattern temporale con giorni", async () => {
+      const user = userEvent.setup();
       const diagnosi = creaDiagnosiCritica({
         cosaAspettarsi: "I primi miglioramenti saranno visibili in 5 giorni",
       });
       render(<CardDiagnosiDettagliata diagnosi={diagnosi} />);
 
+      await user.click(screen.getByRole("button", { expanded: false }));
+
       const indicatore = screen.getByTestId("indicatore-temporale");
       expect(indicatore).toHaveTextContent("5 giorni");
     });
 
-    it("riconosce il pattern temporale con mesi", () => {
+    it("riconosce il pattern temporale con mesi", async () => {
+      const user = userEvent.setup();
       const diagnosi = creaDiagnosiCritica({
         cosaAspettarsi: "Il recupero completo richiederà circa 2 mesi",
       });
       render(<CardDiagnosiDettagliata diagnosi={diagnosi} />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
 
       const indicatore = screen.getByTestId("indicatore-temporale");
       expect(indicatore).toHaveTextContent("2 mesi");
     });
   });
 
-  describe("griglia 2x2", () => {
-    it("il contenitore sezioni ha la classe grid-cols-2", () => {
+  describe("griglia 3 colonne", () => {
+    it("il contenitore sezioni ha la classe grid-cols-3", async () => {
+      const user = userEvent.setup();
       render(<CardDiagnosiDettagliata diagnosi={creaDiagnosiCritica()} />);
 
+      await user.click(screen.getByRole("button", { expanded: false }));
+
       const griglia = screen.getByTestId("griglia-sezioni");
-      expect(griglia.className).toContain("grid-cols-2");
+      expect(griglia.className).toContain("grid-cols-3");
     });
   });
 });
