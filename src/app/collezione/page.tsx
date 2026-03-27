@@ -100,6 +100,7 @@ export default async function PaginaCollezione() {
               return (
                 <SchedaPiantaCollezione
                   key={analisi.id}
+                  idAnalisi={analisi.id}
                   urlFoto={analisi.urlFoto}
                   datiAnalisi={datiValidati}
                   dataSalvataggio={analisi.createdAt}

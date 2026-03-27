@@ -11,6 +11,7 @@ const mockRouter = {
 
 vi.mock("next/navigation", () => ({
   useRouter: () => mockRouter,
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/components/analysis-result", () => ({

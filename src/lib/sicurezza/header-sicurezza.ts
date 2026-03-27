@@ -35,8 +35,8 @@ export function ottieniHeaderSicurezza(): HeaderHttp[] {
         "font-src 'self' https://fonts.gstatic.com",
         // Script: proprio dominio e inline (richiesto da Next.js per hydration)
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        // Immagini: proprio dominio e data URI (anteprime immagine client-side)
-        "img-src 'self' data: blob:",
+        // Immagini: proprio dominio, data URI, blob URL e Vercel Blob Storage (foto collezione)
+        "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
         // Connessioni di rete: solo il proprio dominio
         "connect-src 'self'",
         // Frame: disabilitati (vedi anche X-Frame-Options)

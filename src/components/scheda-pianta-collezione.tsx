@@ -1,7 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { PlantAnalysis, HealthStatus } from "@/types/analysis";
 
 interface PropsSchedaPiantaCollezione {
+  idAnalisi: string;
   urlFoto: string;
   datiAnalisi: PlantAnalysis;
   dataSalvataggio: Date;
@@ -15,6 +17,7 @@ const COLORI_SALUTE: Record<HealthStatus, { bg: string; testo: string; etichetta
 };
 
 export function SchedaPiantaCollezione({
+  idAnalisi,
   urlFoto,
   datiAnalisi,
   dataSalvataggio,
@@ -27,7 +30,8 @@ export function SchedaPiantaCollezione({
   });
 
   return (
-    <article className="group rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
+    <Link href={`/analysis?id=${idAnalisi}`} aria-label={`Apri analisi di ${datiAnalisi.nomeComune}`}>
+      <article className="group rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-primary-50)]">
         <Image
           src={urlFoto}
@@ -57,6 +61,7 @@ export function SchedaPiantaCollezione({
           {dataFormattata}
         </time>
       </div>
-    </article>
+      </article>
+    </Link>
   );
 }

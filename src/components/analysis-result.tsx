@@ -14,6 +14,7 @@ interface PropsAnalysisResult {
   urlAnteprima: string;
   onNuovaAnalisi: () => void;
   utenteAutenticato: boolean;
+  giaSalvata?: boolean;
 }
 
 const TESTO_INCORAGGIAMENTO: Record<
@@ -114,6 +115,7 @@ export function AnalysisResult({
   urlAnteprima,
   onNuovaAnalisi,
   utenteAutenticato,
+  giaSalvata = false,
 }: PropsAnalysisResult) {
   const [popupAperto, setPopupAperto] = useState(false);
   const [statoSalvataggio, setStatoSalvataggio] = useState<StatoSalvataggio>("idle");
@@ -403,6 +405,7 @@ export function AnalysisResult({
       </div>
 
       {/* 5. SALVA NELLA COLLEZIONE */}
+      {!giaSalvata && (
       <div
         className="mb-0"
         style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 350ms both" }}
@@ -565,6 +568,7 @@ export function AnalysisResult({
           </div>
         )}
       </div>
+      )}
 
       {/* 6. CARE SECTION */}
       <section
