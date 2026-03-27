@@ -45,5 +45,5 @@ model Analisi {
   utente        User         @relation(fields: [utenteId], references: [id])
   collezione    Collezione?  @relation(fields: [collezioneId], references: [id])
 
-  @@unique([utenteId, hashFoto])
+  @@index([utenteId, hashFoto])
 }

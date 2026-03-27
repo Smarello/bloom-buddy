@@ -9,6 +9,7 @@ import { HealthIndicator } from "./health-indicator";
 import { CareTipsList } from "./care-tips-list";
 import { CareInfoGrid } from "./care-info-grid";
 import { CardDiagnosiDettagliata } from "./card-diagnosi-dettagliata";
+import { SelettoreCollezione } from "./selettore-collezione";
 
 type StatoSalvataggio = "idle" | "saving" | "saved" | "duplicate" | "error";
 
@@ -127,6 +128,7 @@ export function AnalysisResult({
   const router = useRouter();
   const [popupAperto, setPopupAperto] = useState(false);
   const [statoSalvataggio, setStatoSalvataggio] = useState<StatoSalvataggio>("idle");
+  const [selettoreAperto, setSelettoreAperto] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [traslazione, setTraslazione] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -285,7 +287,7 @@ export function AnalysisResult({
 
   const percentualeConfidenza = Math.round(analisi.livelloConfidenza * 100);
 
-  const salvaNellaCollezione = async () => {
+  const salvaNellaCollezione = async (collezioneIdSelezionato?: string | null) => {
     if (statoSalvataggio !== "idle" && statoSalvataggio !== "error") return;
     setStatoSalvataggio("saving");
     try {
@@ -298,20 +300,21 @@ export function AnalysisResult({
       }
       const fileImmagine = new File([arrayBuffer], "foto-pianta.jpg", { type: mimeType });
 
+      const idCollezioneFinale = collezioneIdSelezionato ?? collezioneId;
+
       const datiForm = new FormData();
       datiForm.append("foto", fileImmagine);
       datiForm.append("datiAnalisi", JSON.stringify(analisi));
-      if (collezioneId) {
-        datiForm.append("collezioneId", collezioneId);
+      if (idCollezioneFinale) {
+        datiForm.append("collezioneId", idCollezioneFinale);
       }
 
       const risposta = await fetch("/api/collezione", { method: "POST", body: datiForm });
-      if (risposta.status === 409) {
-        setStatoSalvataggio("duplicate");
-      } else if (risposta.ok) {
+      if (risposta.ok) {
         setStatoSalvataggio("saved");
-        if (collezioneId) {
-          router.push(`/collezione/${collezioneId}`);
+        const datiRisposta = await risposta.json();
+        if (idCollezioneFinale || datiRisposta.collezioneId) {
+          router.push(`/collezione/${idCollezioneFinale || datiRisposta.collezioneId}`);
         }
       } else {
         setStatoSalvataggio("error");
@@ -320,6 +323,10 @@ export function AnalysisResult({
       console.error("Errore salvataggio nella collezione:", errore);
       setStatoSalvataggio("error");
     }
+  };
+
+  const gestisciSelezioneCollezione = (collezioneIdSelezionato: string | null) => {
+    salvaNellaCollezione(collezioneIdSelezionato);
   };
 
   // Aggregazione azioni: diagnosi cosaFare + consigliCura
@@ -796,7 +803,7 @@ export function AnalysisResult({
             <button
               type="button"
               disabled={statoSalvataggio === "saving" || statoSalvataggio === "saved" || statoSalvataggio === "duplicate"}
-              onClick={salvaNellaCollezione}
+              onClick={() => collezioneId ? salvaNellaCollezione(collezioneId) : setSelettoreAperto(true)}
               className={`
                 group relative w-full inline-flex items-center justify-center gap-3
                 font-[family-name:var(--font-display)] font-bold text-base
@@ -905,6 +912,14 @@ export function AnalysisResult({
                 </div>
               </div>
             )}
+
+            <SelettoreCollezione
+              aperto={selettoreAperto}
+              onChiudi={() => setSelettoreAperto(false)}
+              onSeleziona={gestisciSelezioneCollezione}
+              nomePiantaCorrente={analisi.nomeComune}
+              nomeScientifico={analisi.nomeScientifico}
+            />
 
             {/* Toast successo */}
             {statoSalvataggio === "saved" && (

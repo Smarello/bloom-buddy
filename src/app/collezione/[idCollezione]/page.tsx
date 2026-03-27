@@ -5,6 +5,7 @@ import type { PlantAnalysis, HealthStatus } from "@/types/analysis";
 import Link from "next/link";
 import Image from "next/image";
 import { isPlantAnalysis } from "@/lib/collezione/validazione";
+import IntestazioneCollezione from "@/components/intestazione-collezione";
 
 const COLORI_SALUTE: Record<HealthStatus, { bg: string; testo: string; etichetta: string }> = {
   excellent: { bg: "bg-[var(--color-primary-50)]", testo: "text-[var(--color-primary-700)]", etichetta: "Ottima" },
@@ -71,14 +72,11 @@ export default async function PaginaDettaglioCollezione({
         {/* Intestazione pagina */}
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-[family-name:var(--font-display)] font-bold text-2xl text-[var(--color-text)] leading-tight mb-1">
-              {collezione.nome}
-            </h1>
-            {collezione.nomeScientifico && (
-              <p className="text-base text-[var(--color-text-muted)] italic mb-3">
-                {collezione.nomeScientifico}
-              </p>
-            )}
+            <IntestazioneCollezione
+              idCollezione={idCollezione}
+              nome={collezione.nome}
+              nomeScientifico={collezione.nomeScientifico}
+            />
             <span className="text-sm font-medium text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-3 py-1 rounded-full">
               {etichettaTotaleAnalisi}
             </span>

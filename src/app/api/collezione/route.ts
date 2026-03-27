@@ -175,13 +175,6 @@ export async function POST(request: NextRequest) {
     ) {
       const codicePrisma = (errore as { code: string }).code;
 
-      if (codicePrisma === "P2002") {
-        return NextResponse.json(
-          { errore: "Questa foto è già presente nella tua collezione." },
-          { status: 409 },
-        );
-      }
-
       if (codicePrisma === "P2003") {
         return NextResponse.json(
           { errore: "Collezione non trovata" },
