@@ -1,11 +1,11 @@
 ---
 name: airchetipo-implement
-description: Implements a user story by executing the technical plan from the planning directory. Supports both file-based (docs/BACKLOG.md) and GitHub Projects v2 backends via .airchetipo/config.yaml. Selects a PLANNED user story (passed as argument or auto-selected by priority), loads its implementation plan, and orchestrates a virtual team (Developer, Test Architect, Code Reviewer) to write code, tests, and perform code review. Agents work in parallel where possible. Use this skill whenever the user wants to implement a user story, develop a planned story, start coding a story, execute a sprint task, or build a feature from backlog.
+description: Implements a user story by executing the technical implementation plan. Supports both file-based (docs/BACKLOG.md) and GitHub Projects v2 backends via .airchetipo/config.yaml. Selects a PLANNED user story (passed as argument or auto-selected by priority), loads its implementation plan (from local file for file backend, or from GitHub issue body + sub-issues for github backend), and orchestrates a virtual team (Developer, Test Architect, Code Reviewer) to write code, tests, and perform code review. Agents work in parallel where possible. Use this skill whenever the user wants to implement a user story, develop a planned story, start coding a story, execute a sprint task, or build a feature from backlog.
 ---
 
 # AIRchetipo - User Story Implementation Skill
 
-You are the facilitator of a **user story implementation** session assisted by a team of specialized virtual agents. Your goal is to orchestrate the team to **write production code, tests, and pass code review** for a planned user story, following the implementation plan from `{config.paths.planning}/US-XXX.md`.
+You are the facilitator of a **user story implementation** session assisted by a team of specialized virtual agents. Your goal is to orchestrate the team to **write production code, tests, and pass code review** for a planned user story, following the implementation plan (from `{config.paths.planning}/US-XXX.md` for file backend, or from the GitHub parent issue body + sub-issues for github backend).
 
 ---
 
@@ -67,8 +67,9 @@ Puoi:
 - Specificare una story diversa come argomento
 ```
 
-4. **Load the implementation plan:** Read `{config.paths.planning}/US-XXX.md`
-   - If the file does not exist, show this message and stop:
+4. **Load the implementation plan:**
+   - **If `backend: github`:** The plan is loaded from GitHub (parent issue body + sub-issues) as described in `references/backend-github.md` Step 4b. Skip the local file check below.
+   - **If `backend: file`:** Read `{config.paths.planning}/US-XXX.md`. If the file does not exist, show this message and stop:
 
 ```
 🔧 **Ugo:** Non trovo il piano di implementazione {config.paths.planning}/US-XXX.md.
@@ -82,8 +83,10 @@ Questa story non è stata ancora pianificata. Esegui prima:
    - Do NOT read `{config.paths.prd}` — the implementation plan already contains all necessary context. Only read the PRD if the implementation plan explicitly references it or the story touches core architecture decisions.
 
 6. **Load mockup references (if UI tasks are present):**
-   - Scan the implementation plan for references to mockup files (paths, filenames, or mentions of "mockup", "wireframe", "UI design")
-   - Search `{config.paths.mockups}` for files related to the user story (e.g., files containing `{US-XXX}` in their name, or files explicitly referenced in the plan)
+   - Scan the implementation plan for references to mockup files (paths, filenames, or mentions of "mockup", "wireframe", "UI design"):
+     - **File backend:** Search within `{config.paths.planning}/{US-CODE}.md`
+     - **GitHub backend:** Search within the parent issue body (fetched in Step 4b) — look for the `### Mockup` section or `🎨` marker
+   - Search `{config.paths.mockups}` for files related to the user story (e.g., files in `{config.paths.mockups}/{US-CODE}/`, or files explicitly referenced in the plan)
    - If mockup files are found, record their paths — they become **mandatory references** for any UI implementation task
    - If the plan explicitly mentions specific mockup files, those have the highest priority and must be followed with strict fidelity
    - Skip this step entirely if no tasks in the plan involve UI/frontend work
@@ -104,7 +107,7 @@ Il team di sviluppo è pronto.
 **User Story:** US-XXX: [titolo]
 **Epic:** EP-XXX | **Priorità:** HIGH | **Story Points:** N
 
-**Piano di implementazione:** {config.paths.planning}/US-XXX.md
+**Piano di implementazione:** {config.paths.planning}/US-XXX.md (file) | Issue #{NN} (github)
 **Task da completare:** N ({N} implementazione + {N} test)
 
 Avvio l'implementazione...
@@ -168,7 +171,9 @@ Execute the tasks wave by wave following the parallelization strategy.
 2. **Follow project conventions** from CLAUDE.md and .claude/ files
 3. When designing UI/UX, **Follow the mockups** from `{config.paths.mockups}`, if they exist
 4. **Write code** that matches the existing patterns and style in the codebase
-5. **Mark the task as done** inside the `{config.paths.planning}/US-XXX.md` file by changing its status from `TODO` to `DONE` in the task table
+5. **Mark the task as done:**
+   - **If `backend: file`:** Change its status from `TODO` to `DONE` in the task table inside `{config.paths.planning}/US-XXX.md`
+   - **If `backend: github`:** Close the corresponding sub-issue: `gh issue close <SUB_ISSUE_NUMBER>`
 6. **Announce completion** briefly after each task
 
 **Ugo's implementation rules:**
@@ -194,6 +199,13 @@ These rules exist because mockups represent design decisions already made — th
 - Use the same testing patterns already present in the codebase
 - Each test must be independent and repeatable
 - Test names should describe the behavior being tested, not the implementation
+- **E2E tests with video recording** (when the implementation plan includes an e2e test strategy):
+  - Detect the project's e2e framework from config files, package.json, and CLAUDE.md conventions. Do NOT assume any specific framework
+  - If no e2e framework is installed, install and configure one following the plan's recommendation and project conventions, including video recording support
+  - Configure video recording in the e2e framework config (if not already configured) so every test run produces a video artifact
+  - Write e2e tests that simulate real user behavior: full navigation flows, clicking, form filling, waiting for responses, visual confirmations — not isolated unit-style assertions
+  - Each e2e test scenario must map to a user flow described in the plan's test strategy
+  - Video artifacts MUST be saved in `{config.paths.test_results}/{story-id}/` (e.g., `docs/test-results/US-012/`). Create the subfolder if it doesn't exist
 
 **Progress reporting:** After each wave completes, briefly report:
 
@@ -218,14 +230,14 @@ These rules exist because mockups represent design decisions already made — th
 
 After all tasks are implemented and tests pass, **delegate the code review to a separate worker** to avoid consuming the main context. The worker should be instructed to:
 - Read the project configuration files for conventions
-- Read the implementation plan at `{config.paths.planning}/US-XXX.md`
+- Read the implementation plan (from `{config.paths.planning}/US-XXX.md` for file backend, or from the parent issue body for github backend)
 - Review only the diffs/changes made during implementation (not entire files from scratch)
 - Apply the review criteria listed below
 - Return the review output in the format specified below
 
 **Cesare reviews against these criteria:**
 
-1. **Aderenza al piano:** Does the implementation match the technical solution described in `{config.paths.planning}/US-XXX.md`?
+1. **Aderenza al piano:** Does the implementation match the technical solution described in the implementation plan?
 2. **Qualità del codice:**
    - Code is readable and well-structured
    - Naming is clear and consistent with project conventions

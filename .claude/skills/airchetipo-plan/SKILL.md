@@ -1,6 +1,6 @@
 ---
 name: airchetipo-plan
-description: Plans the implementation of a user story from the product backlog. Supports both file-based (docs/BACKLOG.md) and GitHub Projects v2 backends via .airchetipo/config.yaml. Selects the target user story (passed as argument or auto-selected by priority), and orchestrates a virtual team (Architect, Analyst, Developer, Test Architect) to produce a detailed technical implementation plan saved in docs/planning/{US-CODE}.md. If the argument is a free-text description of a new feature (not a US-XXX code), the skill first creates the user story in the backlog and then plans it. Use this skill whenever the user wants to plan a user story, create an implementation plan, do sprint planning, break down a story into technical tasks, prepare a story for development, or quickly plan a new feature idea.
+description: Plans the implementation of a user story from the product backlog. Supports both file-based (docs/BACKLOG.md) and GitHub Projects v2 backends via .airchetipo/config.yaml. Selects the target user story (passed as argument or auto-selected by priority), and orchestrates a virtual team (Architect, Analyst, Developer, Test Architect) to produce a detailed technical implementation plan. With file backend, the plan is saved in docs/planning/{US-CODE}.md. With GitHub backend, the plan is written directly into the parent issue body (strategy) and sub-issues (executable tasks) — no local file is created. If the argument is a free-text description of a new feature (not a US-XXX code), the skill first creates the user story in the backlog and then plans it. Use this skill whenever the user wants to plan a user story, create an implementation plan, do sprint planning, break down a story into technical tasks, prepare a story for development, or quickly plan a new feature idea.
 ---
 
 # AIRchetipo - User Story Planning Skill
@@ -66,7 +66,8 @@ Agents appear only in the **Team Brief** output. Each agent speaks **1-3 sentenc
 After selecting the story, read ALL context in a **single turn with parallel tool calls**:
 - `{config.paths.prd}` (if exists)
 - `{config.paths.mockups}/` contents (if exists)
-- Relevant codebase files: `prisma/schema.prisma`, existing related source files, existing tests
+- Relevant codebase files: schema/model definition files, existing related source files, existing tests
+- If the target story has a `Blocked by` field with values other than `-`, read those blocking stories from the backlog to understand preconditions and shared context
 - Check if `{config.paths.planning}/{US-CODE}.md` already exists (if so, ask user: overwrite or skip)
 
 #### Step 3 — Announce
@@ -94,20 +95,26 @@ Silently perform all of the following — this is your chain of thought, not vis
 - Clarify scope: what the story explicitly requires vs. out of scope
 - Map each acceptance criterion to specific behavior, inputs/outputs, error scenarios
 - Identify implicit requirements (permissions, validation, data model changes)
+- If the story has `Blocked by` dependencies, verify their status. If any blocker is not yet `planned` or beyond, flag this to the user as a risk: "Story US-XXX depends on US-YYY which is not yet planned. Consider planning US-YYY first."
 - Flag ambiguities — if critical ambiguities exist, ask the user (max 3 questions in a single message) BEFORE proceeding
 
 **As Leonardo (Architecture):**
-- Read relevant codebase files to understand current patterns (models, routes, components)
+- Read relevant codebase files to understand current patterns and conventions
 - Design the technical solution: approach, motivation, key decisions across layers
 - Evaluate alternatives if multiple viable approaches exist
 
 **As Ugo (Development):**
 - Validate the solution is realistically implementable
 - Check for hidden dependencies or blocking issues
-- Break down into concrete tasks ordered by dependency (data model → backend → frontend → tests interleaved)
+- Break down into concrete tasks ordered by dependency, adapting the sequence to the project's architecture (tests interleaved, not all at end)
 
 **As Mina (Testing):**
 - Define test strategy: what to test, test type (unit/integration/e2e), coverage focus
+- **If the story involves UI or user interaction**, Mina MUST define an e2e testing strategy that includes:
+  - User scenarios to simulate (complete user flows, not isolated clicks — e.g., "user registers, logs in, creates first project")
+  - Video recording enabled for every e2e scenario (to produce visual artifacts of test runs), with videos saved in `{config.paths.test_results}/{story-id}/`
+  - The e2e framework to use, detected from the project (existing config files, package.json, CLAUDE.md conventions). Do NOT hardcode any specific framework — adapt to whatever the project uses
+  - If no e2e infrastructure exists in the project, include a setup task (TASK) in the task list for installing and configuring the framework, including video recording support
 
 #### UI/UX Assessment & Mockup Spawn
 
@@ -141,7 +148,11 @@ In a **single turn**, produce both:
 🧪 **Mina:** [1 sentence on test strategy focus]
 ```
 
-**2. Write the planning document** to `{config.paths.planning}/{US-CODE}.md` using exactly this template:
+**2. Write the planning document:**
+
+> **Backend dispatch:** If `backend: github`, do NOT write a local file. Instead, the plan is written directly into the GitHub issue body and sub-issues as described in `references/backend-github.md`. Skip the file template below and proceed to STAGE 2. The template below applies only to `backend: file`.
+
+Write to `{config.paths.planning}/{US-CODE}.md` using exactly this template:
 
 ```markdown
 # {US-CODE}: {Story Title} — Piano di Implementazione
@@ -182,6 +193,18 @@ In a **single turn**, produce both:
 - {PUNTO_TEST_2}
 - {PUNTO_TEST_3}
 
+{IF_E2E_TESTS}
+### Test E2E — Simulazione Utente
+
+**Framework:** {DETECTED_E2E_FRAMEWORK}
+**Video recording:** Abilitato per tutti gli scenari
+
+| Scenario | Descrizione flusso utente |
+|---|---|
+| {SCENARIO_1} | {DESCRIZIONE_FLUSSO_1} |
+| {SCENARIO_2} | {DESCRIZIONE_FLUSSO_2} |
+{/IF_E2E_TESTS}
+
 ---
 
 ## Task di Implementazione
@@ -206,8 +229,10 @@ _Piano generato via AIRchetipo Planning — {DATE}_
 **Task rules:**
 - Each task: small enough for a single work session, independently verifiable, ordered by dependency
 - Task format: sequential ID (TASK-01, TASK-02...), action-oriented title, brief description (1-2 sentences), type (Impl/Test), dependencies
-- Implementation order: data model first → backend logic → frontend → tests interleaved (not all at end)
+- Implementation order: follow the project's natural dependency chain — lower layers first, tests interleaved (not all at end)
 - Frontend tasks when mockups exist: If `mockup_generated = true`, include at least one frontend implementation task (type: Impl) that explicitly references the mockups directory `{config.paths.mockups}/{US-CODE}/`. Omitting frontend tasks when `mockup_generated = true` is a plan error — do not proceed without them.
+- Task dependencies (`Dipendenze` column) must only reference tasks within the same story plan. Cross-story task dependencies are not supported — use story-level `Blocked by` for cross-story sequencing
+- If the `Blocked by` field is absent from the story (older backlogs), treat it as `-` (no dependencies)
 - If total tasks exceed 15, suggest splitting into sub-stories
 
 ---
@@ -218,10 +243,11 @@ After saving the planning document:
 
 1. **Update backlog status:**
    - **File backend:** Find the story in `{config.paths.backlog}` and add/update status to `{config.workflow.statuses.planned}`
-   - **GitHub backend:** Follow the Write Output procedure from `references/backend-github.md` to create sub-issues, update parent issue body, add "planned" label, and move Status to {config.workflow.statuses.planned}
+   - **GitHub backend:** Follow the Write Output procedure from `references/backend-github.md` to write the full plan into the parent issue body, create sub-issues with executable task details, add "planned" label, and move Status to {config.workflow.statuses.planned}. No local file is written.
 
 2. **Confirm completion:**
 
+For **file backend:**
 ```
 ✅ Pianificazione completata!
 
@@ -232,6 +258,8 @@ After saving the planning document:
 - Task totali: {N} ({N} implementazione + {N} test)
 - Stato nel backlog: {config.workflow.statuses.planned} ✅
 ```
+
+For **github backend**, use the completion message format from `references/backend-github.md`.
 
 If mockup generation was spawned, add: `🎨 Mockup in generazione in background — disponibili in {config.paths.mockups}/{US-CODE}/ a breve.`
 

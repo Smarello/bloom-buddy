@@ -66,27 +66,84 @@ If this fails with a scope/permission error, tell the user to run `gh auth refre
    gh issue view <NUMBER> --json body,title,labels,number,url
    ```
 
+4. Parse the `Blocked by` field from the issue body. If it contains issue references (e.g., `#NN (US-XXX)`), fetch those issue bodies in **parallel tool calls** to load blocking story context:
+   ```bash
+   gh issue view <BLOCKER_NUMBER> --json body,title,number,url
+   ```
+   If the `Blocked by` field is absent or `-`, treat the story as having no dependencies.
+
 > **Note:** Free-text story creation is not supported with the GitHub backend. If the argument is not a US-XXX code, inform the user to create the issue on GitHub first.
 
 ## Write Output
 
-After saving the planning document in `{config.paths.planning}/{US-CODE}.md`:
+> **Important:** With `backend: github`, GitHub is the **single source of truth** for the implementation plan. No local file is written in `{config.paths.planning}/`. The parent issue body contains the strategic plan (technical solution + test strategy), and sub-issues contain the executable task details. This is what `airchetipo-implement` reads.
 
 ### Step 1 — Detect epic label
 
 Read the labels from the parent issue (fetched during story selection). Identify the epic label matching the pattern `EP-XXX`. Save it as `$EPIC_LABEL`.
 
-### Step 2 — Create ALL sub-issues in a single Bash call
+### Step 2 — Update parent issue body with full plan
+
+Write the **complete implementation plan** into the parent issue body. This replaces the original story body with the story content PLUS the plan. The parent issue body becomes the strategic reference that `airchetipo-implement` reads.
+
+```bash
+gh issue edit <NUMBER> --repo "$OWNER/$REPO" --body "$(cat <<'BODYEOF'
+{ORIGINAL_STORY_BODY}
+
+---
+
+## 📋 Piano di Implementazione
+
+**Generato da:** AIRchetipo Planning Team
+**Data:** {DATE}
+
+### Soluzione Tecnica
+
+{FRASE_INTRODUTTIVA_APPROCCIO_E_MOTIVAZIONE}
+
+- {PUNTO_CHIAVE_1}
+- {PUNTO_CHIAVE_2}
+- {PUNTO_CHIAVE_3}
+
+### Strategia di Test
+
+{FRASE_INTRODUTTIVA_STRATEGIA}
+
+- {PUNTO_TEST_1}
+- {PUNTO_TEST_2}
+- {PUNTO_TEST_3}
+
+### Riepilogo Task
+
+- Task totali: {N} ({N} implementazione + {N} test)
+- I task dettagliati sono nelle sub-issues associate
+
+{IF_MOCKUP_GENERATED}
+### Mockup
+
+> 🎨 I mockup per questa storia sono disponibili in `{config.paths.mockups}/{US-CODE}/`
+{/IF_MOCKUP_GENERATED}
+
+_Generato da AIRchetipo Planning Team_
+BODYEOF
+)"
+```
+
+> Include the `### Mockup` section only if `mockup_generated = true`. Omit it entirely otherwise.
+
+### Step 3 — Create ALL sub-issues in a single Bash call
 
 Create all sub-issues in **one Bash tool call** using a loop. Do NOT create them in separate tool calls.
 
-Use this compact sub-issue body template:
+Sub-issues are the **executable task details** that `airchetipo-implement` reads and executes. Their body must be structured for machine parsing.
+
+Use this sub-issue body template:
 
 ```
 **Parent:** #{PARENT_NUMBER} — {US-CODE}: {Story Title}
-**Tipo:** {Impl/Test} | **Dipendenze:** {deps}
+**Tipo:** {Impl/Test} | **Dipendenze:** {TASK-XX, TASK-YY or "-" if none}
 
-{DESCRIPTION — 2-3 sentences}
+{DESCRIPTION — 2-5 sentences with enough technical context to implement the task}
 
 **Completamento:**
 - [ ] {criterion 1}
@@ -131,56 +188,32 @@ echo "Created issues: ${NUMS[*]}"
 
 **Important:** Create sub-issues in TASK order (TASK-01 first, then TASK-02, etc.) to maintain logical ordering.
 
-### Step 3 — Link sub-issues + cleanup in a single Bash call
+### Step 4 — Link sub-issues to parent in a single Bash call
 
-After creating all sub-issues, link them to the parent AND remove from project board in **one Bash tool call**:
+After creating all sub-issues, link them to the parent as native sub-issues in **one Bash tool call**:
 
 ```bash
 OWNER="..."
 REPO="..."
 PARENT=N
-PROJECT_NUMBER=N
+NUMS=(N N N N)  # actual issue numbers from Step 3
 
 for CHILD_NUMBER in ${NUMS[*]}; do
-  # Link as native sub-issue
   CHILD_ID=$(gh api /repos/$OWNER/$REPO/issues/$CHILD_NUMBER --jq '.id')
   gh api -X POST /repos/$OWNER/$REPO/issues/$PARENT/sub_issues \
     -F "sub_issue_id=$CHILD_ID" \
     -H "X-GitHub-Api-Version: 2026-03-10"
-
-  # Remove from project board if auto-added
-  ITEM_ID=$(gh project item-list $PROJECT_NUMBER --owner "$OWNER" --format json -L 200 \
-    --jq ".items[] | select(.content.number == $CHILD_NUMBER) | .id")
-  if [ -n "$ITEM_ID" ]; then
-    gh project item-delete $PROJECT_NUMBER --owner "$OWNER" --id "$ITEM_ID"
-  fi
 done
 ```
 
-### Step 4 — Update parent issue + label + status in parallel
+> **Note:** Sub-issues do NOT appear on the project board because `airchetipo-backlog` disables all auto-add workflows during project setup (Step 2b). Only issues explicitly added via `addProjectV2ItemById` appear on the board.
+
+### Step 5 — Add label + move status in parallel
 
 Run these in **parallel tool calls**:
 
-**Call 1:** Update parent issue body + add label
+**Call 1:** Add label
 ```bash
-CURRENT_BODY=$(gh issue view <NUMBER> --repo "$OWNER/$REPO" --json body --jq '.body')
-
-gh issue edit <NUMBER> --repo "$OWNER/$REPO" --body "$(cat <<BODYEOF
-${CURRENT_BODY}
-
----
-
-## 📋 Piano di Implementazione
-
-**File:** \`{config.paths.planning}/{US-CODE}.md\`
-
-**Riepilogo:**
-- Task totali: {N} ({N} implementazione + {N} test)
-
-_Generato da AIRchetipo Planning Team_
-BODYEOF
-)"
-
 gh label create "planned" --repo "$OWNER/$REPO" --description "Story has an implementation plan" --color "0E8A16" --force 2>/dev/null
 gh issue edit <NUMBER> --repo "$OWNER/$REPO" --add-label "planned"
 ```
@@ -199,8 +232,7 @@ The GitHub-specific completion message:
 ```
 ✅ Pianificazione completata!
 
-📁 {config.paths.planning}/{US-CODE}.md
-🔗 Issue: #NN — body aggiornato con piano e sub-issues
+🔗 Issue: #NN — piano completo nel body + sub-issues
 
 📋 Sub-issues create: {N}
 {list each: - #NNN TASK-XX: {title}}
@@ -211,6 +243,8 @@ The GitHub-specific completion message:
 - Label: `planned` ✅
 - Sub-issues: {N} associate come sub-issue native
 - Status nel project: {config.workflow.statuses.planned} ✅
+
+📝 Per modificare il piano: edita il body dell'issue padre (strategia) o le singole sub-issues (task).
 ```
 
 ## Technical Reference

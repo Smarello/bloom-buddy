@@ -135,13 +135,13 @@ Leonardo's proposal format:
 
 "Based on what we've discussed, I propose the following architecture:
 
-**Pattern:** [e.g., Modular Monolith with NestJS]
+**Pattern:** [chosen architectural pattern]
 **Rationale:** [why this choice for this project]
 
 **Stack:**
-- Backend: [e.g., TypeScript 5.x + NestJS 10.x]
+- Backend: [language + framework + version]
 - Frontend: [if applicable]
-- Database: [e.g., PostgreSQL 16 with Prisma ORM 5.x]
+- Database: [database + ORM/data access layer if any]
 - ...
 
 What do you think? Are there any technical constraints or preferences to consider?"

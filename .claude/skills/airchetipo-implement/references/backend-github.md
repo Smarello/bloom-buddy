@@ -57,6 +57,8 @@ Esegui prima `/airchetipo-backlog-gh` per creare il project e le issue.
 
 ## Read Backlog (Story Source)
 
+> **Important:** With `backend: github`, GitHub is the **single source of truth**. The implementation plan lives in the parent issue body (strategic plan) and its sub-issues (executable tasks). No local planning file is required.
+
 ### Step 3 — Fetch and filter items
 
 1. Fetch all items:
@@ -67,15 +69,11 @@ Esegui prima `/airchetipo-backlog-gh` per creare il project e le issue.
 2. Filter to items where:
    - Status == {config.workflow.statuses.planned}
 
-3. For each candidate, verify that `{config.paths.planning}/{US-CODE}.md` exists locally.
-
-4. If no eligible items found (Planned status + local plan), inform the user and **stop**:
+3. If no eligible items found, inform the user and **stop**:
 ```
 🔧 **Ugo:** Non ci sono story pronte per l'implementazione.
 
-Per essere implementabile, una story deve:
-- Essere in stato "{config.workflow.statuses.planned}" nel project
-- Avere un piano locale in {config.paths.planning}/
+Per essere implementabile, una story deve essere in stato "{config.workflow.statuses.planned}" nel project.
 
 Puoi:
 - Eseguire `/airchetipo-plan` per pianificare una story
@@ -96,6 +94,52 @@ Puoi:
    ```bash
    gh issue view <NUMBER> --json body,title,labels,number,url
    ```
+
+### Step 4b — Load implementation plan from GitHub
+
+The implementation plan is split across two GitHub sources. Read both:
+
+1. **Strategic plan from parent issue body:** The body (fetched in Step 4.3) contains sections "Soluzione Tecnica" and "Strategia di Test" under `## 📋 Piano di Implementazione`. Parse these sections to understand the technical approach and test strategy.
+
+2. **Task list from sub-issues:**
+   ```bash
+   gh api /repos/$OWNER/$REPO/issues/$PARENT_NUMBER/sub_issues \
+     -H "X-GitHub-Api-Version: 2026-03-10"
+   ```
+   This returns all sub-issues with their full body in a single API call.
+
+3. **For each open sub-issue**, parse:
+   - **Task ID and title:** From issue title (e.g., `TASK-01: Setup data model`)
+   - **Type:** From body field `**Tipo:** Impl` or `**Tipo:** Test`
+   - **Dependencies:** From body field `**Dipendenze:** TASK-01, TASK-03` (or `-` if none)
+   - **Description:** The prose section in the body
+   - **Completion criteria:** The `**Completamento:**` checklist items
+
+4. **Build the ordered task list** sorted by TASK-XX number, with dependency graph from the parsed dependencies.
+
+5. **Validation:** If a sub-issue has unexpected format (missing "Tipo", malformed "Dipendenze"), log a warning but continue with reasonable defaults:
+   - Missing Tipo → default to `Impl`
+   - Missing/malformed Dipendenze → default to no dependencies
+   - Missing TASK-XX in title → assign next available number
+
+6. **If no open sub-issues found**, inform the user and **stop**:
+```
+🔧 **Ugo:** L'issue #{PARENT_NUMBER} non ha sub-issues aperte.
+
+La story è in stato PLANNED ma non ha task da implementare. Puoi:
+- Eseguire `/airchetipo-plan {US-CODE}` per ri-pianificare
+- Creare manualmente le sub-issues su GitHub
+```
+
+### Step 4c — Load mockup references
+
+After loading the implementation plan from the parent issue body:
+
+1. Scan the plan body for a mockup section (look for `### Mockup` or a line containing `🎨` and a path to `{config.paths.mockups}/`)
+2. If found, extract the mockup directory path (e.g., `{config.paths.mockups}/{US-CODE}/`)
+3. Check if the directory exists locally and list its contents
+4. If mockup files are found, record their paths — they become **mandatory references** for any UI implementation task (same rules as SKILL.md Phase 0 Step 6)
+5. If the directory does not exist or is empty, do NOT block — the mockup may still be generating
 
 ---
 

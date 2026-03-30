@@ -32,7 +32,7 @@ If the provided details are insufficient to proceed, ask for clarification befor
 Before designing, explore the existing technical context:
 
 **Design system and UI libraries:**
-Search the codebase for design system libraries already in use (ShadCN, Material UI, Ant Design, Chakra UI, Tailwind CSS, Bootstrap, etc.). Check `package.json`, configuration files, and existing components. If you find a design system, use it as the foundation for the mockups — this ensures consistency with the rest of the product and real component reuse.
+Search the codebase for any design system or UI framework already in use. Check dependency manifests, configuration files, and existing components. If you find a design system, use it as the foundation for the mockups — this ensures consistency with the rest of the product and real component reuse. If the project is empty, consult the PRD for technology choices.
 
 **Existing mockups:**
 Check whether `{config.paths.mockups}` already contains mockups. If so, analyze them to understand:
@@ -59,7 +59,7 @@ If existing mockups are present, the aesthetic direction must integrate with the
 
 ### 4. Implementation
 
-Implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
+Implement working code using the project's existing framework (or HTML/CSS/JS if no framework is established) that is:
 - Production-grade and functional
 - Visually striking and memorable
 - Cohesive with a clear aesthetic point of view
@@ -78,7 +78,7 @@ If a design system is present, use the fonts it defines — but suggest improvem
 Build a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly distributed palettes.
 
 ### Motion
-Use animations for effects and micro-interactions. Prioritize CSS-only solutions for static HTML. For React, use Motion library when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
+Use animations for effects and micro-interactions. Prioritize CSS-only solutions for static HTML. If the project includes an animation library, use it. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
 
 ### Spatial composition
 Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
@@ -123,9 +123,9 @@ Choose the format based on the number of screens and complexity:
 - Per-page CSS files (e.g., `dashboard.css`) only when a screen has substantial unique styles — otherwise, keep page-specific styles in a `<style>` block within the HTML
 
 **Mini web app** — when complexity requires components, state, or composability:
-- Use Vite as the bundler
-- Minimum structure: `index.html`, `package.json`, `vite.config.js`, `src/main.jsx`, `src/App.jsx`
-- If the project uses a design system, import it in the mockup's `package.json`
+- Use the project's existing framework and bundler. If the project is empty, consult the PRD for technology choices
+- Follow the project's established directory structure and conventions
+- If the project uses a design system, import it in the mockup's dependencies
 - For multi-page apps, still separate screens into distinct routes/components with shared styles extracted
 
 ### Shared CSS architecture
