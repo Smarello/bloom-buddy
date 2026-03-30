@@ -38,7 +38,7 @@ vi.stubGlobal(
 // ─── Import componente (dopo i mock) ────────────────────────────────────────
 
 import { AnalysisResult } from "@/components/analysis-result";
-import type { PlantAnalysis } from "@/types/analysis";
+import { creaAnalisiTest, URL_ANTEPRIMA_FINTO } from "../helpers/analisi-fixture";
 
 // ─── Dati di test ───────────────────────────────────────────────────────────
 
@@ -75,46 +75,13 @@ const COLLEZIONI_DI_TEST = {
   ],
 };
 
-function creaAnalisiPothos(): PlantAnalysis {
-  return {
-    nomeComune: "Pothos dorato",
-    nomeScientifico: "Epipremnum aureum",
-    descrizione: "Una pianta tropicale molto resistente.",
-    livelloConfidenza: 0.92,
-    statoSalute: "good",
-    descrizioneSalute: "La pianta è in buone condizioni.",
-    consigliCura: [
-      {
-        titolo: "Annaffia regolarmente",
-        descrizione: "Ogni 7-10 giorni.",
-        priorita: "media",
-      },
-    ],
-    informazioniGenerali: {
-      annaffiatura: "Ogni 7-10 giorni",
-      luce: "Luce indiretta brillante",
-      temperatura: "15-30 °C",
-      umidita: "Media (40-60%)",
-    },
-    informazioniRapide: {
-      annaffiatura: "Moderata",
-      luce: "Indiretta",
-      temperatura: "18-25 °C",
-      umidita: "Media",
-    },
-  };
-}
-
-function creaAnalisiOrchidea(): PlantAnalysis {
-  return {
-    ...creaAnalisiPothos(),
+function creaAnalisiOrchidea() {
+  return creaAnalisiTest({
     nomeComune: "Orchidea",
     nomeScientifico: "Phalaenopsis amabilis",
     descrizione: "Orchidea elegante con fiori bianchi.",
-  };
+  });
 }
-
-const URL_ANTEPRIMA_FINTO = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
 
 function creaRispostaListaCollezioni() {
   return {
@@ -135,9 +102,9 @@ function creaRispostaSalvataggioRiuscito(collezioneId: string) {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function apriSelettoreCollezione(utente: ReturnType<typeof userEvent.setup>) {
-  const pulsanteSalva = screen.getByRole("button", {
-    name: /salva nella collezione/i,
-  });
+  // Aspetta che il fetch iniziale completi: gli shortcut appaiono dopo il fetch,
+  // e il pulsante per aprire il selettore diventa "Altra collezione"
+  const pulsanteSalva = await screen.findByRole("button", { name: /altra collezione/i });
   await utente.click(pulsanteSalva);
 
   await waitFor(() => {
@@ -169,7 +136,7 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -187,7 +154,7 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -211,7 +178,7 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -236,7 +203,7 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -257,7 +224,7 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -290,7 +257,7 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -314,7 +281,7 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -346,16 +313,18 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     const fetchMock = vi
       .fn()
-      // Prima chiamata: lista collezioni
+      // Prima chiamata: useEffect mount di AnalysisResult (lista collezioni)
       .mockResolvedValueOnce(creaRispostaListaCollezioni())
-      // Seconda chiamata: salvataggio
+      // Seconda chiamata: useEffect del SelettoreCollezione (lista collezioni)
+      .mockResolvedValueOnce(creaRispostaListaCollezioni())
+      // Terza chiamata: salvataggio
       .mockResolvedValueOnce(creaRispostaSalvataggioRiuscito("col-rose"));
 
     vi.stubGlobal("fetch", fetchMock);
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
@@ -401,14 +370,18 @@ describe("Flusso completo: selettore collezione con ricerca e salvataggio", () =
 
     const fetchMock = vi
       .fn()
+      // Prima chiamata: useEffect mount di AnalysisResult (lista collezioni)
       .mockResolvedValueOnce(creaRispostaListaCollezioni())
+      // Seconda chiamata: useEffect del SelettoreCollezione (lista collezioni)
+      .mockResolvedValueOnce(creaRispostaListaCollezioni())
+      // Terza chiamata: salvataggio
       .mockResolvedValueOnce(creaRispostaSalvataggioRiuscito("col-pothos"));
 
     vi.stubGlobal("fetch", fetchMock);
 
     render(
       <AnalysisResult
-        analisi={creaAnalisiPothos()}
+        analisi={creaAnalisiTest()}
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}

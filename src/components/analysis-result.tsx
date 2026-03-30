@@ -9,7 +9,8 @@ import { HealthIndicator } from "./health-indicator";
 import { CareTipsList } from "./care-tips-list";
 import { CareInfoGrid } from "./care-info-grid";
 import { CardDiagnosiDettagliata } from "./card-diagnosi-dettagliata";
-import { SelettoreCollezione, type SelezioneCollezione } from "./selettore-collezione";
+import { SelettoreCollezione, type SelezioneCollezione, type CollezioneListItem } from "./selettore-collezione";
+import { normalizzaNome } from "@/lib/collezione/normalizzazione";
 
 type StatoSalvataggio = "idle" | "saving" | "saved" | "duplicate" | "error";
 
@@ -135,6 +136,45 @@ export function AnalysisResult({
   const puntoInizioTrascinamento = useRef({ x: 0, y: 0 });
   const refHaTrascinato = useRef(false);
   const refContenitorePopup = useRef<HTMLDivElement>(null);
+
+  // Collezioni suggerite (shortcut salvataggio rapido)
+  const [collezioniSuggerite, setCollezioniSuggerite] = useState<CollezioneListItem[]>([]);
+  const [collezioniUtente, setCollezioniUtente] = useState<CollezioneListItem[] | undefined>();
+
+  useEffect(() => {
+    if (!utenteAutenticato || giaSalvata) return;
+
+    const controller = new AbortController();
+
+    fetch("/api/collezione/lista", { signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then((dati) => {
+        const tutteCollezioni: CollezioneListItem[] = dati.collezioni;
+        setCollezioniUtente(tutteCollezioni);
+
+        const nomeSciNorm = analisi.nomeScientifico
+          ? normalizzaNome(analisi.nomeScientifico)
+          : null;
+        const nomeComuneNorm = normalizzaNome(analisi.nomeComune);
+
+        const compatibili = tutteCollezioni.filter((c) => {
+          if (nomeSciNorm && c.nomeScientifico && normalizzaNome(c.nomeScientifico) === nomeSciNorm) {
+            return true;
+          }
+          return normalizzaNome(c.nome) === nomeComuneNorm;
+        });
+
+        setCollezioniSuggerite(compatibili);
+      })
+      .catch(() => {
+        // Fallback silenzioso: lo shortcut non appare
+      });
+
+    return () => controller.abort();
+  }, [utenteAutenticato, giaSalvata, analisi.nomeScientifico, analisi.nomeComune]);
 
   // Touch zoom state
   const refDistanzaIniziale = useRef(0);
@@ -807,6 +847,95 @@ export function AnalysisResult({
           </div>
         ) : (
           <div>
+            {/* Griglia pulsanti salvataggio: shortcut suggeriti + salvataggio generico */}
+            {collezioniSuggerite.length > 0 && (statoSalvataggio === "idle" || statoSalvataggio === "error") && !selettoreAperto ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {collezioniSuggerite.map((collezione) => (
+                  <button
+                    key={collezione.id}
+                    type="button"
+                    onClick={() => salvaNellaCollezione(collezione.id)}
+                    aria-label={`Salva nella collezione ${collezione.nome}`}
+                    className="group relative inline-flex items-center justify-center gap-3 font-[family-name:var(--font-display)] font-bold text-base py-4 px-6 rounded-xl border-2 overflow-hidden transition-all duration-[var(--transition-base)] border-[var(--color-primary-400)] text-white cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(74,124,74,0.25),var(--shadow-glow)] active:scale-[0.98]"
+                    style={{
+                      background: "linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))",
+                    }}
+                  >
+                    {/* Hover brighten overlay */}
+                    <span
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--transition-base)]"
+                      style={{ background: "linear-gradient(135deg, var(--color-primary-400), var(--color-primary-500))" }}
+                      aria-hidden="true"
+                    />
+
+                    {/* Icon */}
+                    <span className="relative z-10 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[20px] h-[20px]">
+                        <path d="M12 3c-2 0-4 2-4 4 0 3 4 5 4 5s4-2 4-5c0-2-2-4-4-4z" />
+                        <path d="M12 12v9" />
+                        <path d="M9 18c-2 0-4-1-4-3 0-1.5 1.5-3 4-3" />
+                        <path d="M15 18c2 0 4-1 4-3 0-1.5-1.5-3-4-3" />
+                      </svg>
+                    </span>
+
+                    {/* Label */}
+                    <span className="relative z-10 flex flex-col items-start leading-tight">
+                      <span>Salva in {collezione.nome}</span>
+                      <span className="text-xs font-normal opacity-70">{collezione.numeroAnalisi} analisi</span>
+                    </span>
+
+                    {/* Decorative leaf */}
+                    <svg
+                      className="absolute bottom-[-6px] right-[-4px] w-[60px] h-[60px] opacity-[0.12] -rotate-[25deg] pointer-events-none transition-all duration-[var(--transition-slow)] group-hover:opacity-[0.2] group-hover:-rotate-[18deg] group-hover:-translate-x-1 group-hover:-translate-y-1"
+                      viewBox="0 0 60 60"
+                      fill="white"
+                      aria-hidden="true"
+                    >
+                      <path d="M50 5C30 10 10 30 8 52c15-2 30-15 38-30 2-5 4-12 4-17z" />
+                    </svg>
+                  </button>
+                ))}
+
+                {/* Pulsante salvataggio generico (altra collezione) */}
+                <button
+                  type="button"
+                  onClick={() => collezioneId ? salvaNellaCollezione(collezioneId) : setSelettoreAperto(true)}
+                  className="group relative inline-flex items-center justify-center gap-3 font-[family-name:var(--font-display)] font-bold text-base py-4 px-6 rounded-xl border-2 overflow-hidden transition-all duration-[var(--transition-base)] border-[var(--color-primary-300)] text-[var(--color-primary-600)] cursor-pointer hover:-translate-y-0.5 hover:border-[var(--color-primary-400)] hover:shadow-[0_4px_20px_rgba(74,124,74,0.18),var(--shadow-glow)] active:scale-[0.98]"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(74, 124, 74, 0.06), rgba(74, 124, 74, 0.02))",
+                  }}
+                >
+                  {/* Hover fill overlay */}
+                  <span
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--transition-base)]"
+                    style={{ background: "linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))" }}
+                    aria-hidden="true"
+                  />
+
+                  <span className="relative z-10 flex items-center justify-center group-hover:text-white transition-colors duration-[var(--transition-base)]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[20px] h-[20px] group-hover:stroke-white transition-[stroke] duration-[var(--transition-base)]">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                      <polyline points="17 21 17 13 7 13 7 21" />
+                      <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                  </span>
+
+                  <span className="relative z-10 group-hover:text-white transition-colors duration-[var(--transition-base)]">
+                    Altra collezione
+                  </span>
+
+                  {/* Decorative leaf */}
+                  <svg
+                    className="absolute bottom-[-6px] right-[-4px] w-[60px] h-[60px] opacity-[0.08] -rotate-[25deg] pointer-events-none transition-all duration-[var(--transition-slow)] group-hover:opacity-[0.15] group-hover:-rotate-[18deg] group-hover:-translate-x-1 group-hover:-translate-y-1"
+                    viewBox="0 0 60 60"
+                    fill="var(--color-primary-500)"
+                    aria-hidden="true"
+                  >
+                    <path d="M50 5C30 10 10 30 8 52c15-2 30-15 38-30 2-5 4-12 4-17z" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
             <button
               type="button"
               disabled={statoSalvataggio === "saving" || statoSalvataggio === "saved" || statoSalvataggio === "duplicate"}
@@ -887,6 +1016,7 @@ export function AnalysisResult({
                 </svg>
               )}
             </button>
+            )}
 
             {/* Toast errore */}
             {statoSalvataggio === "error" && (
@@ -926,6 +1056,7 @@ export function AnalysisResult({
               onSeleziona={gestisciSelezioneCollezione}
               nomePiantaCorrente={analisi.nomeComune}
               nomeScientifico={analisi.nomeScientifico}
+              collezioniPrecaricate={collezioniUtente}
             />
 
             {/* Toast successo */}

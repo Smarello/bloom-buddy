@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { normalizzaNome } from "@/lib/collezione/normalizzazione";
 
-interface CollezioneListItem {
+export interface CollezioneListItem {
   id: string;
   nome: string;
   nomeScientifico: string | null;
@@ -20,10 +21,7 @@ interface PropsSelettoreCollezione {
   onSeleziona: (selezione: SelezioneCollezione) => void;
   nomePiantaCorrente: string;
   nomeScientifico?: string;
-}
-
-function normalizzaNome(nome: string): string {
-  return nome.toLowerCase().trim();
+  collezioniPrecaricate?: CollezioneListItem[];
 }
 
 const SOGLIA_MINIMA_COLLEZIONI_PER_RICERCA = 3;
@@ -54,6 +52,7 @@ export function SelettoreCollezione({
   onSeleziona,
   nomePiantaCorrente,
   nomeScientifico,
+  collezioniPrecaricate,
 }: PropsSelettoreCollezione) {
   const [collezioni, setCollezioni] = useState<CollezioneListItem[]>([]);
   const [caricamento, setCaricamento] = useState(true);
@@ -93,21 +92,28 @@ export function SelettoreCollezione({
   useEffect(() => {
     if (aperto) {
       refDialog.current?.showModal();
-      setCaricamento(true);
       setErrore(false);
       setTermineRicerca("");
       setPannelloCreazioneAperto(false);
-      fetch("/api/collezione/lista")
-        .then((r) => {
-          if (!r.ok) throw new Error();
-          return r.json();
-        })
-        .then((dati) => setCollezioni(dati.collezioni))
-        .catch(() => setErrore(true))
-        .finally(() => setCaricamento(false));
+
+      if (collezioniPrecaricate) {
+        setCollezioni(collezioniPrecaricate);
+        setCaricamento(false);
+      } else {
+        setCaricamento(true);
+        fetch("/api/collezione/lista")
+          .then((r) => {
+            if (!r.ok) throw new Error();
+            return r.json();
+          })
+          .then((dati) => setCollezioni(dati.collezioni))
+          .catch(() => setErrore(true))
+          .finally(() => setCaricamento(false));
+      }
     } else {
       refDialog.current?.close();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aperto]);
 
   const gestisciClickBackdrop = (e: React.MouseEvent<HTMLDialogElement>) => {
@@ -351,7 +357,7 @@ export function SelettoreCollezione({
                         <span className="text-xs text-[var(--color-text-muted)] block truncate">
                           {collezione.nomeScientifico && <em>{collezione.nomeScientifico}</em>}
                           {collezione.nomeScientifico && " · "}
-                          {collezione.numeroAnalisi} {collezione.numeroAnalisi === 1 ? "analisi" : "analisi"}
+                          {collezione.numeroAnalisi} analisi
                         </span>
                       </div>
                       {/* Arrow */}

@@ -22,39 +22,7 @@ HTMLDialogElement.prototype.showModal = vi.fn();
 HTMLDialogElement.prototype.close = vi.fn();
 
 import { AnalysisResult } from "@/components/analysis-result";
-import type { PlantAnalysis } from "@/types/analysis";
-
-function creaAnalisiTest(): PlantAnalysis {
-  return {
-    nomeComune: "Pothos dorato",
-    nomeScientifico: "Epipremnum aureum",
-    descrizione: "Una pianta tropicale molto resistente.",
-    livelloConfidenza: 0.92,
-    statoSalute: "good",
-    descrizioneSalute: "La pianta è in buone condizioni.",
-    consigliCura: [
-      {
-        titolo: "Annaffia regolarmente",
-        descrizione: "Ogni 7-10 giorni.",
-        priorita: "media",
-      },
-    ],
-    informazioniGenerali: {
-      annaffiatura: "Ogni 7-10 giorni",
-      luce: "Luce indiretta brillante",
-      temperatura: "15-30 °C",
-      umidita: "Media (40-60%)",
-    },
-    informazioniRapide: {
-      annaffiatura: "Moderata",
-      luce: "Indiretta",
-      temperatura: "18-25 °C",
-      umidita: "Media",
-    },
-  };
-}
-
-const URL_ANTEPRIMA_FINTO = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
+import { creaAnalisiTest, URL_ANTEPRIMA_FINTO } from "../helpers/analisi-fixture";
 
 function creaRispostaApi(status: number, body: Record<string, unknown> = {}) {
   return {
@@ -62,6 +30,20 @@ function creaRispostaApi(status: number, body: Record<string, unknown> = {}) {
     status,
     json: () => Promise.resolve(body),
   };
+}
+
+const RISPOSTA_LISTA_VUOTA = creaRispostaApi(200, { collezioni: [] });
+
+function creaFetchMockConLista(rispostaSalvataggio?: ReturnType<typeof creaRispostaApi>) {
+  return vi.fn((url: string) => {
+    if (typeof url === "string" && url.includes("/api/collezione/lista")) {
+      return Promise.resolve(RISPOSTA_LISTA_VUOTA);
+    }
+    if (rispostaSalvataggio) {
+      return Promise.resolve(rispostaSalvataggio);
+    }
+    return Promise.resolve(creaRispostaApi(404));
+  });
 }
 
 describe("Pulsante salva nella collezione", () => {
@@ -75,6 +57,8 @@ describe("Pulsante salva nella collezione", () => {
   });
 
   it("il pulsante salva è visibile quando utenteAutenticato è true", () => {
+    vi.stubGlobal("fetch", creaFetchMockConLista());
+
     render(
       <AnalysisResult
         analisi={creaAnalisiTest()}
@@ -84,7 +68,7 @@ describe("Pulsante salva nella collezione", () => {
       />
     );
 
-    expect(screen.getByText("Salva nella collezione")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /salva nella collezione/i })).toBeInTheDocument();
   });
 
   it("il pulsante salva è nascosto quando utenteAutenticato è false", () => {
@@ -104,10 +88,12 @@ describe("Pulsante salva nella collezione", () => {
   it("mostra stato di caricamento durante il salvataggio", async () => {
     const utente = userEvent.setup();
 
-    const fetchMock = vi.fn()
-      .mockImplementationOnce(
-        () => new Promise((resolve) => setTimeout(() => resolve(creaRispostaApi(201, { successo: true })), 5000))
-      );
+    const fetchMock = vi.fn((url: string) => {
+      if (typeof url === "string" && url.includes("/api/collezione/lista")) {
+        return Promise.resolve(RISPOSTA_LISTA_VUOTA);
+      }
+      return new Promise((resolve) => setTimeout(() => resolve(creaRispostaApi(201, { successo: true })), 5000));
+    });
 
     vi.stubGlobal("fetch", fetchMock);
 
@@ -130,10 +116,7 @@ describe("Pulsante salva nella collezione", () => {
   it("mostra messaggio di conferma dopo il salvataggio", async () => {
     const utente = userEvent.setup();
 
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(creaRispostaApi(201, { successo: true }));
-
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("fetch", creaFetchMockConLista(creaRispostaApi(201, { successo: true })));
 
     render(
       <AnalysisResult
@@ -156,10 +139,7 @@ describe("Pulsante salva nella collezione", () => {
   it("gestisce errore duplicato", async () => {
     const utente = userEvent.setup();
 
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(creaRispostaApi(409, { errore: "duplicato" }));
-
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("fetch", creaFetchMockConLista(creaRispostaApi(409, { errore: "duplicato" })));
 
     render(
       <AnalysisResult

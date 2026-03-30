@@ -38,42 +38,7 @@ HTMLDialogElement.prototype.showModal = vi.fn();
 HTMLDialogElement.prototype.close = vi.fn();
 
 import { AnalysisResult } from "@/components/analysis-result";
-import type { PlantAnalysis } from "@/types/analysis";
-
-function creaAnalisiTest(statoSalute: PlantAnalysis["statoSalute"] = "fair"): PlantAnalysis {
-  return {
-    nomeComune: "Pothos dorato",
-    nomeScientifico: "Epipremnum aureum",
-    livelloConfidenza: 0.92,
-    statoSalute,
-    descrizioneSalute: "La pianta mostra alcuni segni di sofferenza.",
-    consigliCura: [
-      {
-        titolo: "Riduci l'annaffiatura",
-        descrizione: "Aspetta che il terriccio sia asciutto.",
-        priorita: "alta",
-      },
-      {
-        titolo: "Sposta verso più luce",
-        descrizione: "Posizione vicino a una finestra.",
-        priorita: "media",
-      },
-    ],
-    descrizione: "Pianta tropicale rampicante molto resistente e adattabile.",
-    informazioniGenerali: {
-      annaffiatura: "Ogni 7-10 giorni",
-      luce: "Luce indiretta brillante",
-      temperatura: "15-30 °C",
-      umidita: "Media (40-60%)",
-    },
-    informazioniRapide: {
-      annaffiatura: "Moderata",
-      luce: "Indiretta",
-      temperatura: "18-25 °C",
-      umidita: "Media",
-    },
-  };
-}
+import { creaAnalisiTest } from "../helpers/analisi-fixture";
 
 const URL_ANTEPRIMA_FINTO = "blob:http://localhost/fake-image";
 
@@ -208,7 +173,18 @@ describe("AnalysisResult", () => {
     let fetchSpia: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
-      fetchSpia = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+      fetchSpia = vi.fn().mockImplementation((url: string) => {
+        if (typeof url === "string" && url.includes("/api/collezione/lista")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ collezioni: [] }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ collezioneId: "col-risultato" }),
+        });
+      });
       global.fetch = fetchSpia;
     });
 
@@ -232,8 +208,11 @@ describe("AnalysisResult", () => {
       const pulsante = screen.getByRole("button", { name: /salva nella collezione/i });
       await user.click(pulsante);
 
-      expect(fetchSpia).toHaveBeenCalledOnce();
-      const formDataInviato: FormData = fetchSpia.mock.calls[0][1].body;
+      const chiamataPost = fetchSpia.mock.calls.find(
+        (call: unknown[]) => call[0] === "/api/collezione" && (call[1] as RequestInit)?.method === "POST"
+      );
+      expect(chiamataPost).toBeDefined();
+      const formDataInviato: FormData = (chiamataPost![1] as RequestInit).body as FormData;
       expect(formDataInviato.get("collezioneId")).toBe("col-123");
     });
 
@@ -253,7 +232,9 @@ describe("AnalysisResult", () => {
       const pulsante = screen.getByRole("button", { name: /salva nella collezione/i });
       await user.click(pulsante);
 
-      expect(mockRouterPush).toHaveBeenCalledWith("/collezione/col-456");
+      await vi.waitFor(() => {
+        expect(mockRouterPush).toHaveBeenCalledWith("/collezione/col-456");
+      });
     });
 
     it("non reindirizza alla collezione dopo il salvataggio quando collezioneId non è presente", async () => {
@@ -271,7 +252,11 @@ describe("AnalysisResult", () => {
       const pulsante = screen.getByRole("button", { name: /salva nella collezione/i });
       await user.click(pulsante);
 
-      expect(fetchSpia).toHaveBeenCalledOnce();
+      // Senza collezioneId, il click apre il selettore invece di fare il POST diretto
+      const chiamatePost = fetchSpia.mock.calls.filter(
+        (call: unknown[]) => call[0] === "/api/collezione" && (call[1] as RequestInit)?.method === "POST"
+      );
+      expect(chiamatePost).toHaveLength(0);
       expect(mockRouterPush).not.toHaveBeenCalled();
     });
   });
@@ -352,6 +337,197 @@ describe("AnalysisResult", () => {
       );
 
       expect(screen.queryByTestId("sezione-diagnosi")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("chip collezioni suggerite (shortcut salvataggio rapido)", () => {
+    const URL_DATA_FINTO = "data:image/jpeg;base64,dGVzdA==";
+    let fetchSpia: ReturnType<typeof vi.fn>;
+
+    const collezioniConMatchScientifico = [
+      { id: "col-1", nome: "I miei Pothos", nomeScientifico: "Epipremnum aureum", numeroAnalisi: 3, anteprimaUrl: null },
+      { id: "col-2", nome: "Succulente", nomeScientifico: "Echeveria elegans", numeroAnalisi: 1, anteprimaUrl: null },
+    ];
+
+    const collezioniSenzaMatch = [
+      { id: "col-3", nome: "Succulente", nomeScientifico: "Echeveria elegans", numeroAnalisi: 1, anteprimaUrl: null },
+      { id: "col-4", nome: "Cactus", nomeScientifico: "Opuntia ficus-indica", numeroAnalisi: 2, anteprimaUrl: null },
+    ];
+
+    const collezioniConMatchMultipli = [
+      { id: "col-a", nome: "Pothos salotto", nomeScientifico: "Epipremnum aureum", numeroAnalisi: 2, anteprimaUrl: null },
+      { id: "col-b", nome: "Pothos bagno", nomeScientifico: "Epipremnum Aureum", numeroAnalisi: 1, anteprimaUrl: null },
+      { id: "col-c", nome: "Succulente", nomeScientifico: "Echeveria elegans", numeroAnalisi: 4, anteprimaUrl: null },
+    ];
+
+    function mockFetchConCollezioni(collezioni: unknown[]) {
+      return vi.fn().mockImplementation((url: string, opzioni?: RequestInit) => {
+        if (typeof url === "string" && url.includes("/api/collezione/lista")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ collezioni }),
+          });
+        }
+        if (typeof url === "string" && url === "/api/collezione" && opzioni?.method === "POST") {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ collezioneId: "col-risultato" }),
+          });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      });
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("mostra i chip quando le collezioni hanno un nomeScientifico corrispondente", async () => {
+      global.fetch = mockFetchConCollezioni(collezioniConMatchScientifico);
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+        />
+      );
+
+      expect(await screen.findByRole("button", { name: /salva nella collezione i miei pothos/i })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /salva nella collezione succulente/i })).not.toBeInTheDocument();
+    });
+
+    it("non mostra chip quando nessuna collezione corrisponde", async () => {
+      global.fetch = mockFetchConCollezioni(collezioniSenzaMatch);
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+        />
+      );
+
+      // Aspetta che il fetch sia completato
+      await vi.waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith("/api/collezione/lista", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+      });
+
+      expect(screen.queryByRole("button", { name: /salva nella collezione i miei pothos/i })).not.toBeInTheDocument();
+    });
+
+    it("non effettua il fetch e non mostra chip quando l'utente non è autenticato", async () => {
+      fetchSpia = mockFetchConCollezioni(collezioniConMatchScientifico);
+      global.fetch = fetchSpia;
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={false}
+        />
+      );
+
+      // Il fetch per la lista collezioni non deve essere chiamato
+      expect(fetchSpia).not.toHaveBeenCalledWith("/api/collezione/lista", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+      expect(screen.queryByRole("button", { name: /salva nella collezione i miei pothos/i })).not.toBeInTheDocument();
+    });
+
+    it("non effettua il fetch e non mostra chip quando l'analisi è già salvata", async () => {
+      fetchSpia = mockFetchConCollezioni(collezioniConMatchScientifico);
+      global.fetch = fetchSpia;
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+          giaSalvata={true}
+        />
+      );
+
+      expect(fetchSpia).not.toHaveBeenCalledWith("/api/collezione/lista", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+      expect(screen.queryByRole("button", { name: /salva nella collezione i miei pothos/i })).not.toBeInTheDocument();
+    });
+
+    it("non mostra chip quando il fetch delle collezioni fallisce (errore di rete)", async () => {
+      const fetchErroreRete = vi.fn().mockImplementation((url: string) => {
+        if (typeof url === "string" && url.includes("/api/collezione/lista")) {
+          return Promise.reject(new TypeError("Failed to fetch"));
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      });
+      global.fetch = fetchErroreRete;
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+          giaSalvata={false}
+        />
+      );
+
+      // Aspetta che il fetch sia stato tentato
+      await vi.waitFor(() => {
+        expect(fetchErroreRete).toHaveBeenCalledWith(
+          "/api/collezione/lista",
+          expect.objectContaining({ signal: expect.any(AbortSignal) }),
+        );
+      });
+
+      // Nessun chip suggerito deve apparire
+      expect(screen.queryByRole("button", { name: /salva nella collezione i miei pothos/i })).not.toBeInTheDocument();
+
+      // Il pulsante standard di salvataggio deve essere ancora visibile
+      expect(screen.getByRole("button", { name: /salva nella collezione/i })).toBeInTheDocument();
+    });
+
+    it("mostra tutti i chip quando più collezioni corrispondono", async () => {
+      global.fetch = mockFetchConCollezioni(collezioniConMatchMultipli);
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+        />
+      );
+
+      expect(await screen.findByRole("button", { name: /salva nella collezione pothos salotto/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /salva nella collezione pothos bagno/i })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /salva nella collezione succulente/i })).not.toBeInTheDocument();
+    });
+
+    it("chiama POST /api/collezione con il collezioneId corretto al click su un chip", async () => {
+      fetchSpia = mockFetchConCollezioni(collezioniConMatchScientifico);
+      global.fetch = fetchSpia;
+      const user = userEvent.setup();
+
+      render(
+        <AnalysisResult
+          analisi={creaAnalisiTest()}
+          urlAnteprima={URL_DATA_FINTO}
+          onNuovaAnalisi={vi.fn()}
+          utenteAutenticato={true}
+        />
+      );
+
+      const pulsanteShortcut = await screen.findByRole("button", { name: /salva nella collezione i miei pothos/i });
+      await user.click(pulsanteShortcut);
+
+      const chiamataPost = fetchSpia.mock.calls.find(
+        (call: unknown[]) => call[0] === "/api/collezione" && (call[1] as RequestInit)?.method === "POST"
+      );
+      expect(chiamataPost).toBeDefined();
+      const formDataInviato: FormData = (chiamataPost![1] as RequestInit).body as FormData;
+      expect(formDataInviato.get("collezioneId")).toBe("col-1");
     });
   });
 });
