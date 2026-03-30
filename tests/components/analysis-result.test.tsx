@@ -33,6 +33,10 @@ vi.stubGlobal("IntersectionObserver", class {
   disconnect = vi.fn();
 });
 
+// Mock HTMLDialogElement methods (non disponibili in jsdom)
+HTMLDialogElement.prototype.showModal = vi.fn();
+HTMLDialogElement.prototype.close = vi.fn();
+
 import { AnalysisResult } from "@/components/analysis-result";
 import type { PlantAnalysis } from "@/types/analysis";
 

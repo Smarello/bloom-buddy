@@ -9,7 +9,7 @@ import { HealthIndicator } from "./health-indicator";
 import { CareTipsList } from "./care-tips-list";
 import { CareInfoGrid } from "./care-info-grid";
 import { CardDiagnosiDettagliata } from "./card-diagnosi-dettagliata";
-import { SelettoreCollezione } from "./selettore-collezione";
+import { SelettoreCollezione, type SelezioneCollezione } from "./selettore-collezione";
 
 type StatoSalvataggio = "idle" | "saving" | "saved" | "duplicate" | "error";
 
@@ -287,7 +287,7 @@ export function AnalysisResult({
 
   const percentualeConfidenza = Math.round(analisi.livelloConfidenza * 100);
 
-  const salvaNellaCollezione = async (collezioneIdSelezionato?: string | null) => {
+  const salvaNellaCollezione = async (collezioneIdSelezionato?: string | null, nomeCollezione?: string) => {
     if (statoSalvataggio !== "idle" && statoSalvataggio !== "error") return;
     setStatoSalvataggio("saving");
     try {
@@ -308,6 +308,9 @@ export function AnalysisResult({
       if (idCollezioneFinale) {
         datiForm.append("collezioneId", idCollezioneFinale);
       }
+      if (nomeCollezione) {
+        datiForm.append("nomeCollezione", nomeCollezione);
+      }
 
       const risposta = await fetch("/api/collezione", { method: "POST", body: datiForm });
       if (risposta.ok) {
@@ -325,8 +328,12 @@ export function AnalysisResult({
     }
   };
 
-  const gestisciSelezioneCollezione = (collezioneIdSelezionato: string | null) => {
-    salvaNellaCollezione(collezioneIdSelezionato);
+  const gestisciSelezioneCollezione = (selezione: SelezioneCollezione) => {
+    if (selezione.tipo === "esistente") {
+      salvaNellaCollezione(selezione.collezioneId);
+    } else {
+      salvaNellaCollezione(null, selezione.nomeCollezione);
+    }
   };
 
   // Aggregazione azioni: diagnosi cosaFare + consigliCura

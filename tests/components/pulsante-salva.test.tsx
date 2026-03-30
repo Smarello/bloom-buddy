@@ -17,6 +17,10 @@ vi.stubGlobal("IntersectionObserver", class {
   disconnect = vi.fn();
 });
 
+// Mock HTMLDialogElement methods (non disponibili in jsdom)
+HTMLDialogElement.prototype.showModal = vi.fn();
+HTMLDialogElement.prototype.close = vi.fn();
+
 import { AnalysisResult } from "@/components/analysis-result";
 import type { PlantAnalysis } from "@/types/analysis";
 
@@ -113,6 +117,7 @@ describe("Pulsante salva nella collezione", () => {
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
+        collezioneId="col-test"
       />
     );
 
@@ -136,6 +141,7 @@ describe("Pulsante salva nella collezione", () => {
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
+        collezioneId="col-test"
       />
     );
 
@@ -161,6 +167,7 @@ describe("Pulsante salva nella collezione", () => {
         urlAnteprima={URL_ANTEPRIMA_FINTO}
         onNuovaAnalisi={vi.fn()}
         utenteAutenticato={true}
+        collezioneId="col-test"
       />
     );
 

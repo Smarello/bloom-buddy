@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 interface CollezioneListItem {
   id: string;
@@ -10,16 +10,42 @@ interface CollezioneListItem {
   anteprimaUrl: string | null;
 }
 
+export type SelezioneCollezione =
+  | { tipo: "nuova"; nomeCollezione: string }
+  | { tipo: "esistente"; collezioneId: string };
+
 interface PropsSelettoreCollezione {
   aperto: boolean;
   onChiudi: () => void;
-  onSeleziona: (collezioneId: string | null) => void;
+  onSeleziona: (selezione: SelezioneCollezione) => void;
   nomePiantaCorrente: string;
   nomeScientifico?: string;
 }
 
 function normalizzaNome(nome: string): string {
   return nome.toLowerCase().trim();
+}
+
+const SOGLIA_MINIMA_COLLEZIONI_PER_RICERCA = 3;
+const LUNGHEZZA_MASSIMA_NOME_COLLEZIONE = 100;
+
+export function filtraCollezioni(
+  collezioni: CollezioneListItem[],
+  termineRicerca: string
+): CollezioneListItem[] {
+  const termineNormalizzato = normalizzaNome(termineRicerca);
+  if (!termineNormalizzato) return collezioni;
+
+  return collezioni.filter((collezione) => {
+    const nomeNorm = normalizzaNome(collezione.nome);
+    const sciNorm = collezione.nomeScientifico
+      ? normalizzaNome(collezione.nomeScientifico)
+      : "";
+    return (
+      nomeNorm.includes(termineNormalizzato) ||
+      sciNorm.includes(termineNormalizzato)
+    );
+  });
 }
 
 export function SelettoreCollezione({
@@ -32,13 +58,45 @@ export function SelettoreCollezione({
   const [collezioni, setCollezioni] = useState<CollezioneListItem[]>([]);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState(false);
+  const [termineRicerca, setTermineRicerca] = useState("");
+  const [pannelloCreazioneAperto, setPannelloCreazioneAperto] = useState(false);
+  const [nomeNuovaCollezione, setNomeNuovaCollezione] = useState("");
   const refDialog = useRef<HTMLDialogElement>(null);
+  const refInputNomeNuovaCollezione = useRef<HTMLInputElement>(null);
+
+  const erroreValidazioneNome = useMemo(() => {
+    const nomeTrimmed = nomeNuovaCollezione.trim();
+    if (nomeTrimmed.length === 0) return "Il nome non può essere vuoto";
+    if (nomeNuovaCollezione.length > LUNGHEZZA_MASSIMA_NOME_COLLEZIONE)
+      return `Massimo ${LUNGHEZZA_MASSIMA_NOME_COLLEZIONE} caratteri`;
+    return null;
+  }, [nomeNuovaCollezione]);
+
+  const apriPannelloCreazione = useCallback(() => {
+    setNomeNuovaCollezione(nomePiantaCorrente);
+    setPannelloCreazioneAperto(true);
+    setTimeout(() => {
+      refInputNomeNuovaCollezione.current?.select();
+    }, 0);
+  }, [nomePiantaCorrente]);
+
+  const chiudiPannelloCreazione = useCallback(() => {
+    setPannelloCreazioneAperto(false);
+  }, []);
+
+  const confermaCreazioneCollezione = useCallback(() => {
+    if (erroreValidazioneNome) return;
+    onSeleziona({ tipo: "nuova", nomeCollezione: nomeNuovaCollezione.trim() });
+    onChiudi();
+  }, [erroreValidazioneNome, nomeNuovaCollezione, onSeleziona, onChiudi]);
 
   useEffect(() => {
     if (aperto) {
       refDialog.current?.showModal();
       setCaricamento(true);
       setErrore(false);
+      setTermineRicerca("");
+      setPannelloCreazioneAperto(false);
       fetch("/api/collezione/lista")
         .then((r) => {
           if (!r.ok) throw new Error();
@@ -82,6 +140,13 @@ export function SelettoreCollezione({
     ];
   }, [collezioni, idCollezioneSuggerita]);
 
+  const collegioniFiltrate = useMemo(
+    () => filtraCollezioni(collezioniOrdinate, termineRicerca),
+    [collezioniOrdinate, termineRicerca]
+  );
+
+  const mostraRicerca = collezioniOrdinate.length >= SOGLIA_MINIMA_COLLEZIONI_PER_RICERCA;
+
   return (
     <dialog
       ref={refDialog}
@@ -97,7 +162,7 @@ export function SelettoreCollezione({
         {/* Header */}
         <div className="flex items-center justify-between p-5 pb-3 border-b border-[var(--color-border-light)]">
           <h3 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-text-primary)]">
-            Salva nella collezione
+            {pannelloCreazioneAperto ? "Nuova collezione" : "Salva nella collezione"}
           </h3>
           <button
             type="button"
@@ -111,11 +176,76 @@ export function SelettoreCollezione({
           </button>
         </div>
 
+        {pannelloCreazioneAperto ? (
+          /* Sub-panel creazione nuova collezione */
+          <div className="px-5 py-4 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="input-nome-nuova-collezione"
+                className="text-xs font-medium text-[var(--color-text-muted)]"
+              >
+                Nome collezione
+              </label>
+              <input
+                ref={refInputNomeNuovaCollezione}
+                id="input-nome-nuova-collezione"
+                type="text"
+                value={nomeNuovaCollezione}
+                onChange={(e) => setNomeNuovaCollezione(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !erroreValidazioneNome) {
+                    confermaCreazioneCollezione();
+                  }
+                }}
+                maxLength={LUNGHEZZA_MASSIMA_NOME_COLLEZIONE}
+                className={`w-full px-3 py-2.5 rounded-xl border text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none transition-colors ${
+                  erroreValidazioneNome && nomeNuovaCollezione.length > 0
+                    ? "border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-200"
+                    : "border-[var(--color-border-light)] focus:border-[var(--color-primary-400)] focus:ring-1 focus:ring-[var(--color-primary-200)]"
+                }`}
+                placeholder="Es. Rose del giardino"
+              />
+              <div className="flex items-center justify-between">
+                {erroreValidazioneNome && nomeNuovaCollezione.length > 0 ? (
+                  <p className="text-xs text-red-500">{erroreValidazioneNome}</p>
+                ) : (
+                  <span />
+                )}
+                <span className={`text-[10px] tabular-nums ${
+                  nomeNuovaCollezione.length > LUNGHEZZA_MASSIMA_NOME_COLLEZIONE
+                    ? "text-red-500"
+                    : "text-[var(--color-text-muted)]"
+                }`}>
+                  {nomeNuovaCollezione.length}/{LUNGHEZZA_MASSIMA_NOME_COLLEZIONE}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={chiudiPannelloCreazione}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border-light)] text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={confermaCreazioneCollezione}
+                disabled={!!erroreValidazioneNome}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)]"
+              >
+                Conferma
+              </button>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Crea nuova */}
         <div className="px-5 pt-4 pb-2">
           <button
             type="button"
-            onClick={() => { onSeleziona(null); onChiudi(); }}
+            onClick={apriPannelloCreazione}
             className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-[var(--color-primary-300)] hover:border-[var(--color-primary-400)] hover:bg-[rgba(74,124,74,0.04)] transition-all group"
           >
             <div
@@ -156,14 +286,30 @@ export function SelettoreCollezione({
           ) : (
             <>
               <p className="text-xs text-[var(--color-text-muted)] mb-2 mt-1">Collezioni esistenti</p>
+              {mostraRicerca && (
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    value={termineRicerca}
+                    onChange={(e) => setTermineRicerca(e.target.value)}
+                    placeholder="Cerca collezione..."
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary-400)] focus:ring-1 focus:ring-[var(--color-primary-200)] transition-colors"
+                  />
+                </div>
+              )}
+              {collegioniFiltrate.length === 0 ? (
+                <p className="text-xs text-[var(--color-text-muted)] text-center py-4">
+                  Nessuna collezione trovata
+                </p>
+              ) : (
               <div className="flex flex-col gap-2">
-                {collezioniOrdinate.map((collezione) => {
+                {collegioniFiltrate.map((collezione) => {
                   const suggerita = collezione.id === idCollezioneSuggerita;
                   return (
                     <button
                       key={collezione.id}
                       type="button"
-                      onClick={() => { onSeleziona(collezione.id); onChiudi(); }}
+                      onClick={() => { onSeleziona({ tipo: "esistente", collezioneId: collezione.id }); onChiudi(); }}
                       className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left group ${
                         suggerita
                           ? "border-[var(--color-primary-400)] bg-[rgba(74,124,74,0.06)] ring-1 ring-[var(--color-primary-200)]"
@@ -216,9 +362,12 @@ export function SelettoreCollezione({
                   );
                 })}
               </div>
+              )}
             </>
           )}
         </div>
+        </>
+        )}
       </div>
     </dialog>
   );

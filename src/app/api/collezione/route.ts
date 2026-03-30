@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
   const foto = formData.get("foto");
   const datiAnalisiGrezzi = formData.get("datiAnalisi");
   const collezioneIdRicevuto = formData.get("collezioneId");
+  const nomeCollezioneRicevuto = formData.get("nomeCollezione");
 
   if (!(foto instanceof File)) {
     return NextResponse.json(
@@ -131,6 +132,10 @@ export async function POST(request: NextRequest) {
     ? collezioneIdRicevuto.trim()
     : null;
 
+  const nomeCollezionePersonalizzato = (typeof nomeCollezioneRicevuto === "string" && nomeCollezioneRicevuto.trim().replace(/[\t\n\r]/g, ""))
+    ? nomeCollezioneRicevuto.trim().replace(/[\t\n\r]/g, " ").replace(/\s+/g, " ").slice(0, 100)
+    : null;
+
   let risultato: { analisi: { id: string; urlFoto: string; createdAt: Date }; collezioneId: string };
   try {
     risultato = await prisma.$transaction(async (tx) => {
@@ -141,7 +146,7 @@ export async function POST(request: NextRequest) {
       } else {
         const nuovaCollezione = await tx.collezione.create({
           data: {
-            nome: nomeComune,
+            nome: nomeCollezionePersonalizzato ?? nomeComune,
             nomeScientifico,
             utenteId,
           },
