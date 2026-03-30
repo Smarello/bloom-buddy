@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { PlantAnalysis, HealthStatus } from "@/types/analysis";
 import { isPlantAnalysis } from "@/lib/collezione/validazione";
-import { PulsanteEliminaAnalisi } from "@/components/pulsante-elimina-analisi";
+import PulsanteEliminaAnalisiCard from "@/components/pulsante-elimina-analisi-card";
 
 const COLORI_SALUTE: Record<HealthStatus, { bg: string; testo: string; etichetta: string }> = {
   excellent: { bg: "bg-[var(--color-primary-50)]", testo: "text-[var(--color-primary-700)]", etichetta: "Ottima" },
@@ -73,7 +73,7 @@ export default function GrigliaAnalisiCollezione({
           >
             <article className="group relative rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
               {/* Pulsante elimina analisi */}
-              <PulsanteEliminaAnalisi
+              <PulsanteEliminaAnalisiCard
                 idAnalisi={analisi.id}
                 onEliminata={() => rimuoviAnalisi(analisi.id)}
               />

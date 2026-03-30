@@ -6,6 +6,7 @@ import type { PlantAnalysis, HealthStatus } from "@/types/analysis";
 import Link from "next/link";
 import Image from "next/image";
 import { isPlantAnalysis } from "@/lib/collezione/validazione";
+import PulsanteEliminaCollezioneCard from "@/components/pulsante-elimina-collezione-card";
 
 type CollezioneConAnalisi = Prisma.CollezioneGetPayload<{
   include: { analisi: true; _count: { select: { analisi: true } } };
@@ -142,6 +143,11 @@ export default async function PaginaCollezione() {
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       )}
+                      <PulsanteEliminaCollezioneCard
+                        idCollezione={collezione.id}
+                        nomeCollezione={collezione.nome}
+                        numeroAnalisi={totaleAnalisi}
+                      />
                       {datiAnalisi && (
                         <span
                           className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${salute.bg} ${salute.testo}`}
