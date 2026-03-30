@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { del } from "@vercel/blob";
 import { prisma } from "@/lib/db/client";
 import { ottieniSessione } from "@/lib/auth/sessione";
 
@@ -74,6 +75,71 @@ export async function PATCH(
 
   return NextResponse.json(
     { nome: collezioneAggiornata.nome },
+    { status: 200 },
+  );
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ idCollezione: string }> },
+) {
+  const risposta = NextResponse.json({});
+  const sessione = await ottieniSessione(request, risposta);
+
+  if (!sessione.utenteId) {
+    return NextResponse.json(
+      { errore: "Devi effettuare l'accesso per eliminare una collezione." },
+      { status: 401 },
+    );
+  }
+
+  const { idCollezione } = await params;
+
+  const collezione = await prisma.collezione.findUnique({
+    where: { id: idCollezione },
+    select: { id: true, utenteId: true, analisi: { select: { urlFoto: true } } },
+  });
+
+  if (!collezione) {
+    return NextResponse.json(
+      { errore: "Collezione non trovata." },
+      { status: 404 },
+    );
+  }
+
+  if (collezione.utenteId !== sessione.utenteId) {
+    return NextResponse.json(
+      { errore: "Non sei autorizzato a eliminare questa collezione." },
+      { status: 403 },
+    );
+  }
+
+  await prisma.$transaction([
+    prisma.analisi.deleteMany({ where: { collezioneId: idCollezione } }),
+    prisma.collezione.delete({ where: { id: idCollezione } }),
+  ]);
+
+  const urlFotoDaEliminare = collezione.analisi
+    .map((analisi) => analisi.urlFoto)
+    .filter(Boolean) as string[];
+
+  if (urlFotoDaEliminare.length > 0) {
+    const risultatiPulizia = await Promise.allSettled(
+      urlFotoDaEliminare.map((url) => del(url)),
+    );
+
+    for (const risultato of risultatiPulizia) {
+      if (risultato.status === "rejected") {
+        console.error(
+          "Errore durante la pulizia del blob:",
+          risultato.reason,
+        );
+      }
+    }
+  }
+
+  return NextResponse.json(
+    { messaggio: "Collezione eliminata con successo." },
     { status: 200 },
   );
 }

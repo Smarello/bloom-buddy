@@ -17,6 +17,14 @@ vi.mock("next/navigation", () => ({
     notFoundMock();
     throw new Error("NEXT_NOT_FOUND");
   },
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+  }),
 }));
 
 // ─── Mock next/link ───────────────────────────────────────────────────────────
@@ -82,6 +90,11 @@ function creaCollezioneCompleta(analisi: Array<{ id: string; datiAnalisi: PlantA
 function creaParams(idCollezione: string): Promise<{ idCollezione: string }> {
   return Promise.resolve({ idCollezione });
 }
+
+// ─── Mock HTMLDialogElement (non disponibile in jsdom) ───────────────────────
+
+HTMLDialogElement.prototype.showModal = vi.fn();
+HTMLDialogElement.prototype.close = vi.fn();
 
 // ─── Setup / Teardown ─────────────────────────────────────────────────────────
 

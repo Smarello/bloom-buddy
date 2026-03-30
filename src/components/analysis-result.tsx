@@ -359,6 +359,8 @@ export function AnalysisResult({
         if (idCollezioneFinale || datiRisposta.collezioneId) {
           router.push(`/collezione/${idCollezioneFinale || datiRisposta.collezioneId}`);
         }
+      } else if (risposta.status === 409) {
+        setStatoSalvataggio("duplicate");
       } else {
         setStatoSalvataggio("error");
       }
