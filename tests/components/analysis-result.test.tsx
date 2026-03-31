@@ -107,7 +107,7 @@ describe("AnalysisResult", () => {
       expect(screen.getByText("Sposta verso più luce")).toBeInTheDocument();
     });
 
-    it("mostra le informazioni generali della specie", () => {
+    it("mostra le informazioni rapide della specie nei chip", () => {
       render(
         <AnalysisResult
           analisi={creaAnalisiTest()}
@@ -117,10 +117,10 @@ describe("AnalysisResult", () => {
         />
       );
 
-      expect(screen.getByText("Ogni 7-10 giorni")).toBeInTheDocument();
-      expect(screen.getByText("Luce indiretta brillante")).toBeInTheDocument();
-      expect(screen.getByText("15-30 °C")).toBeInTheDocument();
-      expect(screen.getByText("Media (40-60%)")).toBeInTheDocument();
+      expect(screen.getByText("Moderata")).toBeInTheDocument();
+      expect(screen.getByText("Indiretta")).toBeInTheDocument();
+      expect(screen.getByText("18-25 °C")).toBeInTheDocument();
+      expect(screen.getByText("Media")).toBeInTheDocument();
     });
   });
 

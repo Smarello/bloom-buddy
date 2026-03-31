@@ -1,4 +1,4 @@
-import type { PlantAnalysis, HealthStatus, CareInfo, RisultatoDiagnosi, DiagnosiDettagliata, Ottimizzazione, GuidaAnnaffiaturaAccessibile } from "@/types/analysis";
+import type { PlantAnalysis, HealthStatus, CareInfo, RisultatoDiagnosi, DiagnosiDettagliata, Ottimizzazione, GuidaAnnaffiaturaAccessibile, GuidaLuceAccessibile, GuidaUmiditaAccessibile, GuidaTemperaturaAccessibile } from "@/types/analysis";
 
 export class ErroreAnalisi extends Error {
   constructor(
@@ -64,9 +64,66 @@ function normalizzaGuidaAnnaffiaturaAccessibile(raw: unknown): GuidaAnnaffiatura
   const obj = raw as Record<string, unknown>;
 
   const frequenzaGiorni = stringaConFallback(obj.frequenzaGiorni, "3-5");
-  const metodoVerifica = stringaConFallback(obj.metodoVerifica, "Tocca il terreno con il dito a 2 cm di profondità");
+  const metodoVerifica = stringaConFallback(obj.metodoVerifica, "Osserva il terreno e il comportamento delle foglie prima di annaffiare");
+  const segnaliTroppaAcqua = stringaConFallback(obj.segnaliTroppaAcqua, "foglie gialle e molli, terreno sempre bagnato");
+  const segnaliPocaAcqua = stringaConFallback(obj.segnaliPocaAcqua, "foglie che avvizziscono o si accartocciano, terreno molto secco");
 
-  return { frequenzaGiorni, metodoVerifica };
+  return { frequenzaGiorni, metodoVerifica, segnaliTroppaAcqua, segnaliPocaAcqua };
+}
+
+function normalizzaGuidaLuceAccessibile(raw: unknown): GuidaLuceAccessibile | undefined {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const obj = raw as Record<string, unknown>;
+
+  const oreEsposizioneGiornaliere = stringaConFallback(obj.oreEsposizioneGiornaliere, "2-4 ore di luce indiretta");
+  const orientamentoFinestra = stringaConFallback(obj.orientamentoFinestra, "finestra a est o nord");
+  const segniLuceTroppa = stringaConFallback(obj.segniLuceTroppa, "foglie che ingialliscono o bruciano");
+  const segniLucePoca = stringaConFallback(obj.segniLucePoca, "foglie che impallidiscono o steli che si allungano");
+
+  return { oreEsposizioneGiornaliere, orientamentoFinestra, segniLuceTroppa, segniLucePoca };
+}
+
+function normalizzaGuidaUmiditaAccessibile(raw: unknown): GuidaUmiditaAccessibile | undefined {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const obj = raw as Record<string, unknown>;
+
+  const metodoPratico = stringaConFallback(obj.metodoPratico, "Spruzza le foglie con acqua a temperatura ambiente ogni 2-3 giorni");
+  const livelloPratico = stringaConFallback(obj.livelloPratico, "Simile all'umidità di un bagno dopo la doccia");
+  const segnaliAriaSecca = stringaConFallback(obj.segnaliAriaSecca, "Punte delle foglie che diventano marroni e secche");
+
+  return { metodoPratico, livelloPratico, segnaliAriaSecca };
+}
+
+const SITUAZIONI_DA_EVITARE_FALLBACK = [
+  "non vicino a porte esterne in inverno",
+  "non sopra o vicino a un termosifone",
+];
+
+function normalizzaGuidaTemperaturaAccessibile(raw: unknown): GuidaTemperaturaAccessibile | undefined {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const obj = raw as Record<string, unknown>;
+
+  const rangeConRiferimentoDomestico = stringaConFallback(
+    obj.rangeConRiferimentoDomestico,
+    "tra 15°C e 25°C — una temperatura confortevole per la maggior parte delle piante da appartamento",
+  );
+
+  let situazioniDaEvitare: string[];
+  if (Array.isArray(obj.situazioniDaEvitare)) {
+    const voci = obj.situazioniDaEvitare.filter((v): v is string => typeof v === "string" && v.trim() !== "");
+    situazioniDaEvitare = voci.length >= 2 ? voci : [...voci, ...SITUAZIONI_DA_EVITARE_FALLBACK].slice(0, 2);
+  } else if (typeof obj.situazioniDaEvitare === "string" && obj.situazioniDaEvitare.trim() !== "") {
+    situazioniDaEvitare = [obj.situazioniDaEvitare, SITUAZIONI_DA_EVITARE_FALLBACK[1]];
+  } else {
+    situazioniDaEvitare = SITUAZIONI_DA_EVITARE_FALLBACK;
+  }
+
+  const segniStressDaTemperatura = stringaConFallback(
+    obj.segniStressDaTemperatura,
+    "foglie che cadono o ingialliscono improvvisamente, specialmente in inverno o in estate",
+  );
+
+  return { rangeConRiferimentoDomestico, situazioniDaEvitare, segniStressDaTemperatura };
 }
 
 function parseDiagnosi(datiGrezzi: unknown[]): RisultatoDiagnosi[] {
@@ -215,6 +272,15 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
   // Validazione guidaAnnaffiaturaAccessibile
   const guidaAnnaffiaturaAccessibile = normalizzaGuidaAnnaffiaturaAccessibile(dati.guidaAnnaffiaturaAccessibile);
 
+  // Validazione guidaLuceAccessibile
+  const guidaLuceAccessibile = normalizzaGuidaLuceAccessibile(dati.guidaLuceAccessibile);
+
+  // Validazione guidaUmiditaAccessibile
+  const guidaUmiditaAccessibile = normalizzaGuidaUmiditaAccessibile(dati.guidaUmiditaAccessibile);
+
+  // Validazione guidaTemperaturaAccessibile
+  const guidaTemperaturaAccessibile = normalizzaGuidaTemperaturaAccessibile(dati.guidaTemperaturaAccessibile);
+
   return {
     nomeComune: dati.nomeComune.trim(),
     nomeScientifico,
@@ -227,5 +293,8 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
     informazioniRapide,
     ...(diagnosi && { diagnosi }),
     ...(guidaAnnaffiaturaAccessibile && { guidaAnnaffiaturaAccessibile }),
+    ...(guidaLuceAccessibile && { guidaLuceAccessibile }),
+    ...(guidaUmiditaAccessibile && { guidaUmiditaAccessibile }),
+    ...(guidaTemperaturaAccessibile && { guidaTemperaturaAccessibile }),
   };
 }

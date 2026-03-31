@@ -30,8 +30,26 @@ Lo schema JSON richiesto è:
     "umidita": "string — valore sintetico, max 4 parole, es. 'Alta'"
   },
   "guidaAnnaffiaturaAccessibile": {
-    "metodoVerifica": "string — spiega il test del dito in linguaggio quotidiano: tocca il terreno con il dito a circa 2 cm di profondità e descrivi cosa fare in base a ciò che senti (asciutto/umido). Nessun termine botanico, tono rassicurante, in italiano.",
-    "frequenzaGiorni": "string — solo il numero o intervallo di giorni tra un'annaffiatura e l'altra (es. '3-5', '7'). Se la specie è incerta o il livelloConfidenza è basso, usa '3-5' come valore di fallback."
+    "metodoVerifica": "string — spiega in 1-2 frasi e linguaggio quotidiano come capire quando è il momento di annaffiare QUESTA specifica pianta. Il metodo deve essere adatto alla specie: per succulente ecactus osserva se le foglie/fusto perdono turgore o aspetta che il terreno sia asciutto da giorni; perortaggi e piante da orto controlla il colore e la consistenza del terreno in superficie; per alberi dafrutto e piante da esterno considera stagione e condizioni meteo; per piante tropicali e d'appartamento comuni puoi usare il test del dito. Tono rassicurante, in italiano.",
+    "frequenzaGiorni": "string — solo il numero o intervallo di giorni tra un'annaffiatura e l'altra (es. '3-5', '7'). Se la specie è incerta o il livelloConfidenza è basso, usa '3-5' come valore di fallback.",
+    "segnaliTroppaAcqua": "string — segni visivi osservabili che indicano eccesso di annaffiatura (es. 'foglie gialle e molli, terreno sempre bagnato, radici scure'). Linguaggio quotidiano, in italiano.",
+    "segnaliPocaAcqua": "string — segni visivi osservabili che indicano mancanza di acqua (es. 'foglie che si accartocciano o avvizziscono, terreno molto secco e duro'). Linguaggio quotidiano, in italiano."
+  },
+  "guidaLuceAccessibile": {
+    "oreEsposizioneGiornaliere": "string — Ore di sole diretto o indiretto al giorno (es. '3-4 ore di sole diretto al mattino')",
+    "orientamentoFinestra": "string — Tipo o orientamento di finestra consigliato (es. 'finestra a est o sud')",
+    "segniLuceTroppa": "string — Segni visivi che indicano troppa luce (es. 'foglie che ingialliscono o bruciano ai margini')",
+    "segniLucePoca": "string — Segni visivi che indicano luce insufficiente (es. 'foglie che impallidiscono, steli che si allungano verso la finestra')"
+  },
+  "guidaUmiditaAccessibile": {
+    "metodoPratico": "string — almeno un metodo concreto e a basso costo per aumentare l'umidità usando oggetti comuni di casa (es. 'Spruzza le foglie con acqua a temperatura ambiente ogni 2-3 giorni'). Nessun termine tecnico, in italiano.",
+    "livelloPratico": "string — livello di umidità ideale espresso con un'analogia concreta, non come percentuale (es. \"L'umidità tipica di un bagno dopo la doccia è sufficiente\"). In italiano.",
+    "segnaliAriaSecca": "string — segni visivi osservabili che indicano aria troppo secca (es. 'Punte delle foglie che diventano marroni e secche'). Linguaggio quotidiano, in italiano."
+  },
+  "guidaTemperaturaAccessibile": {
+    "rangeConRiferimentoDomestico": "string — range di temperatura in gradi Celsius con un riferimento domestico comprensibile (es. 'tra 18°C e 24°C — la temperatura normale di un appartamento'). Se la specie è incerta o il livelloConfidenza < 0.5, usa 'tra 15°C e 25°C — una temperatura confortevole per la maggior parte delle piante da appartamento' come fallback.",
+    "situazioniDaEvitare": "array di stringhe — almeno 2 situazioni domestiche concrete da evitare (es. ['non vicino a porte esterne in inverno', 'non sopra un termosifone']). Nessun termine tecnico, in italiano.",
+    "segniStressDaTemperatura": "string — segni visivi osservabili dello stress da temperatura descritti in linguaggio quotidiano (es. 'foglie che cadono all'improvviso in inverno'). In italiano."
   },
   "diagnosi": [
     {
@@ -62,7 +80,14 @@ Regole:
 - Il campo cosaAspettarsi deve indicare tempi realistici di recupero.
 - Le ottimizzazioni devono essere contestualizzate a ciò che osservi nella foto, non generiche.
 - Per una pianta in ottime condizioni (statoSalute "excellent" o "good"), l'array diagnosi deve contenere solo Ottimizzazione, nessuna DiagnosiDettagliata.
-- Il campo guidaAnnaffiaturaAccessibile.metodoVerifica deve spiegare il test del dito in modo semplice e rassicurante, senza termini botanici o tecnici non spiegati (es. "Infila il dito nel terreno fino a circa 2 cm di profondità: se lo senti asciutto è il momento di annaffiare, se è ancora umido aspetta ancora un po'").
+- Il campo guidaAnnaffiaturaAccessibile.metodoVerifica deve essere specifico per la specie identificata: NON usare sempre "infilare un dito nel terreno" come metodo universale. Per succulente e cactus: osservazione visiva del turgore o attesa di terreno completamente asciutto da più giorni. Per ortaggi e piante da orto: colore e consistenza del terreno superficiale, eventualmente stagione. Per alberi da frutto e piante da esterno: condizioni meteo, stagione, aspetto del terreno. Il test del dito è appropriato solo per piante tropicali e comuni da appartamento. Massimo 1-2 frasi, nessun termine tecnico.
 - Il campo guidaAnnaffiaturaAccessibile.frequenzaGiorni deve contenere solo un numero o un intervallo di giorni (es. "3-5", "7"); se la specie non è identificata con certezza (livelloConfidenza < 0.5), usa "3-5" come valore di fallback.
+- I campi guidaAnnaffiaturaAccessibile.segnaliTroppaAcqua e guidaAnnaffiaturaAccessibile.segnaliPocaAcqua devono descrivere segni visivi concreti usando linguaggio quotidiano. Se la specie non è identificata con certezza (livelloConfidenza < 0.5), usa fallback sicuri: segnaliTroppaAcqua "foglie gialle e molli, terreno sempre bagnato", segnaliPocaAcqua "foglie che avvizziscono o si accartocciano, terreno molto secco".
+- I campi di guidaLuceAccessibile devono usare un tono rassicurante e un linguaggio quotidiano, senza termini tecnici non spiegati (es. non usare "fototropismo" o "fotoperiodo" senza spiegarli).
+- Se la specie non è identificata con certezza (livelloConfidenza < 0.5), usa valori di fallback sicuri e generici per guidaLuceAccessibile: oreEsposizioneGiornaliere "2-4 ore di luce indiretta", orientamentoFinestra "finestra a est o nord", segniLuceTroppa "foglie che ingialliscono o si seccano ai margini", segniLucePoca "foglie che impallidiscono, steli che si allungano verso la finestra".
+- I campi di guidaUmiditaAccessibile devono usare un tono rassicurante e oggetti comuni di casa (spruzzino, piattino con acqua, vaso vicino al bagno), senza termini specialistici.
+- Se la specie non è identificata con certezza (livelloConfidenza < 0.5), usa valori di fallback sicuri per guidaUmiditaAccessibile: metodoPratico "Spruzza le foglie con acqua a temperatura ambiente ogni 2-3 giorni", livelloPratico "Simile all'umidità di un bagno dopo la doccia", segnaliAriaSecca "Punte delle foglie che diventano marroni e secche".
+- I campi di guidaTemperaturaAccessibile devono usare un linguaggio quotidiano e situazioni domestiche concrete, senza termini tecnici (es. non usare "termofilia", "criofilia", "stress termico"). Vietato usare "dormienza" o "fitotossicità".
+- Se la specie non è identificata con certezza (livelloConfidenza < 0.5), usa valori di fallback sicuri per guidaTemperaturaAccessibile: rangeConRiferimentoDomestico "tra 15°C e 25°C — una temperatura confortevole per la maggior parte delle piante da appartamento", situazioniDaEvitare ["non vicino a porte esterne in inverno", "non sopra o vicino a un termosifone"], segniStressDaTemperatura "foglie che cadono o ingialliscono improvvisamente, specialmente in inverno o in estate".
 - Rispondi SOLO con JSON valido, nessun testo prima o dopo.`;
 }

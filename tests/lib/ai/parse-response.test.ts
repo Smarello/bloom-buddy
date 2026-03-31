@@ -454,6 +454,8 @@ describe("parseRispostaGemini", () => {
       dati.guidaAnnaffiaturaAccessibile = {
         frequenzaGiorni: "7-10",
         metodoVerifica: "Infila il dito nel terriccio fino alla seconda nocca",
+        segnaliTroppaAcqua: "foglie gialle e molli, radici scure",
+        segnaliPocaAcqua: "foglie che si accartocciano, terreno compatto",
       };
 
       const risultato = parseRispostaGemini(JSON.stringify(dati));
@@ -462,6 +464,38 @@ describe("parseRispostaGemini", () => {
       expect(risultato.guidaAnnaffiaturaAccessibile!.frequenzaGiorni).toBe("7-10");
       expect(risultato.guidaAnnaffiaturaAccessibile!.metodoVerifica).toBe(
         "Infila il dito nel terriccio fino alla seconda nocca",
+      );
+      expect(risultato.guidaAnnaffiaturaAccessibile!.segnaliTroppaAcqua).toBe("foglie gialle e molli, radici scure");
+      expect(risultato.guidaAnnaffiaturaAccessibile!.segnaliPocaAcqua).toBe("foglie che si accartocciano, terreno compatto");
+    });
+
+    it("usa il fallback per segnaliTroppaAcqua quando è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaAnnaffiaturaAccessibile = {
+        frequenzaGiorni: "7",
+        metodoVerifica: "Controlla il terreno",
+        segnaliPocaAcqua: "foglie appassite",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaAnnaffiaturaAccessibile!.segnaliTroppaAcqua).toBe(
+        "foglie gialle e molli, terreno sempre bagnato",
+      );
+    });
+
+    it("usa il fallback per segnaliPocaAcqua quando è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaAnnaffiaturaAccessibile = {
+        frequenzaGiorni: "7",
+        metodoVerifica: "Controlla il terreno",
+        segnaliTroppaAcqua: "foglie gialle",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaAnnaffiaturaAccessibile!.segnaliPocaAcqua).toBe(
+        "foglie che avvizziscono o si accartocciano, terreno molto secco",
       );
     });
 
@@ -501,7 +535,7 @@ describe("parseRispostaGemini", () => {
 
       expect(risultato.guidaAnnaffiaturaAccessibile).toBeDefined();
       expect(risultato.guidaAnnaffiaturaAccessibile!.metodoVerifica).toBe(
-        "Tocca il terreno con il dito a 2 cm di profondità",
+        "Osserva il terreno e il comportamento delle foglie prima di annaffiare",
       );
     });
 
@@ -516,7 +550,7 @@ describe("parseRispostaGemini", () => {
 
       expect(risultato.guidaAnnaffiaturaAccessibile).toBeDefined();
       expect(risultato.guidaAnnaffiaturaAccessibile!.metodoVerifica).toBe(
-        "Tocca il terreno con il dito a 2 cm di profondità",
+        "Osserva il terreno e il comportamento delle foglie prima di annaffiare",
       );
     });
 
@@ -527,6 +561,383 @@ describe("parseRispostaGemini", () => {
 
       expect(risultato.guidaAnnaffiaturaAccessibile).toBeUndefined();
       expect(risultato.nomeComune).toBe("Pothos dorato");
+    });
+  });
+
+  describe("guida luce accessibile", () => {
+    it("restituisce i dati invariati quando guidaLuceAccessibile è completo e valido", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = {
+        oreEsposizioneGiornaliere: "6-8 ore",
+        orientamentoFinestra: "finestra a sud",
+        segniLuceTroppa: "foglie con macchie brune o scolorite",
+        segniLucePoca: "steli lunghi e sottili, foglie piccole",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeDefined();
+      expect(risultato.guidaLuceAccessibile!.oreEsposizioneGiornaliere).toBe("6-8 ore");
+      expect(risultato.guidaLuceAccessibile!.orientamentoFinestra).toBe("finestra a sud");
+      expect(risultato.guidaLuceAccessibile!.segniLuceTroppa).toBe("foglie con macchie brune o scolorite");
+      expect(risultato.guidaLuceAccessibile!.segniLucePoca).toBe("steli lunghi e sottili, foglie piccole");
+    });
+
+    it("usa '2-4 ore di luce indiretta' come fallback quando oreEsposizioneGiornaliere è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = {
+        orientamentoFinestra: "finestra a est",
+        segniLuceTroppa: "foglie bruciate",
+        segniLucePoca: "foglie pallide",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeDefined();
+      expect(risultato.guidaLuceAccessibile!.oreEsposizioneGiornaliere).toBe("2-4 ore di luce indiretta");
+    });
+
+    it("usa '2-4 ore di luce indiretta' come fallback quando oreEsposizioneGiornaliere è una stringa vuota", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = {
+        oreEsposizioneGiornaliere: "   ",
+        orientamentoFinestra: "finestra a nord",
+        segniLuceTroppa: "foglie bruciate",
+        segniLucePoca: "foglie pallide",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeDefined();
+      expect(risultato.guidaLuceAccessibile!.oreEsposizioneGiornaliere).toBe("2-4 ore di luce indiretta");
+    });
+
+    it("usa il fallback generico quando orientamentoFinestra è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = {
+        oreEsposizioneGiornaliere: "5 ore",
+        segniLuceTroppa: "foglie bruciate",
+        segniLucePoca: "foglie pallide",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeDefined();
+      expect(risultato.guidaLuceAccessibile!.orientamentoFinestra).toBe("finestra a est o nord");
+    });
+
+    it("usa il fallback generico quando segniLuceTroppa è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = {
+        oreEsposizioneGiornaliere: "5 ore",
+        orientamentoFinestra: "finestra a est",
+        segniLucePoca: "foglie pallide",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeDefined();
+      expect(risultato.guidaLuceAccessibile!.segniLuceTroppa).toBe("foglie che ingialliscono o bruciano");
+    });
+
+    it("usa il fallback generico quando segniLucePoca è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = {
+        oreEsposizioneGiornaliere: "5 ore",
+        orientamentoFinestra: "finestra a est",
+        segniLuceTroppa: "foglie bruciate",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeDefined();
+      expect(risultato.guidaLuceAccessibile!.segniLucePoca).toBe("foglie che impallidiscono o steli che si allungano");
+    });
+
+    it("restituisce undefined e non interrompe il parsing quando guidaLuceAccessibile è assente", () => {
+      const risposta = creaRispostaValida();
+
+      const risultato = parseRispostaGemini(risposta);
+
+      expect(risultato.guidaLuceAccessibile).toBeUndefined();
+      expect(risultato.nomeComune).toBe("Pothos dorato");
+    });
+
+    it("restituisce undefined quando guidaLuceAccessibile è null", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = null;
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeUndefined();
+    });
+
+    it("restituisce undefined quando guidaLuceAccessibile è una stringa anziché un oggetto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = "non è un oggetto";
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeUndefined();
+    });
+
+    it("usa tutti i fallback quando guidaLuceAccessibile è un oggetto vuoto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaLuceAccessibile = {};
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaLuceAccessibile).toBeDefined();
+      expect(risultato.guidaLuceAccessibile!.oreEsposizioneGiornaliere).toBe("2-4 ore di luce indiretta");
+      expect(risultato.guidaLuceAccessibile!.orientamentoFinestra).toBe("finestra a est o nord");
+      expect(risultato.guidaLuceAccessibile!.segniLuceTroppa).toBe("foglie che ingialliscono o bruciano");
+      expect(risultato.guidaLuceAccessibile!.segniLucePoca).toBe("foglie che impallidiscono o steli che si allungano");
+    });
+  });
+
+  describe("guida umidità accessibile", () => {
+    it("restituisce i dati invariati quando guidaUmiditaAccessibile è completo e valido", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaUmiditaAccessibile = {
+        metodoPratico: "Spruzza le foglie ogni mattina con uno spruzzino",
+        livelloPratico: "Come il vapore in un bagno dopo la doccia",
+        segnaliAriaSecca: "Punte delle foglie che imbruniscono e si arricciano",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaUmiditaAccessibile).toBeDefined();
+      expect(risultato.guidaUmiditaAccessibile!.metodoPratico).toBe("Spruzza le foglie ogni mattina con uno spruzzino");
+      expect(risultato.guidaUmiditaAccessibile!.livelloPratico).toBe("Come il vapore in un bagno dopo la doccia");
+      expect(risultato.guidaUmiditaAccessibile!.segnaliAriaSecca).toBe("Punte delle foglie che imbruniscono e si arricciano");
+    });
+
+    it("usa il fallback quando metodoPratico è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaUmiditaAccessibile = {
+        livelloPratico: "Umidità di un bagno",
+        segnaliAriaSecca: "Punte secche",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaUmiditaAccessibile).toBeDefined();
+      expect(risultato.guidaUmiditaAccessibile!.metodoPratico).toBe("Spruzza le foglie con acqua a temperatura ambiente ogni 2-3 giorni");
+    });
+
+    it("usa il fallback quando livelloPratico è una stringa vuota", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaUmiditaAccessibile = {
+        metodoPratico: "Spruzza le foglie",
+        livelloPratico: "   ",
+        segnaliAriaSecca: "Punte secche",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaUmiditaAccessibile).toBeDefined();
+      expect(risultato.guidaUmiditaAccessibile!.livelloPratico).toBe("Simile all'umidità di un bagno dopo la doccia");
+    });
+
+    it("usa il fallback quando segnaliAriaSecca è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaUmiditaAccessibile = {
+        metodoPratico: "Spruzza le foglie",
+        livelloPratico: "Umidità di un bagno",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaUmiditaAccessibile).toBeDefined();
+      expect(risultato.guidaUmiditaAccessibile!.segnaliAriaSecca).toBe("Punte delle foglie che diventano marroni e secche");
+    });
+
+    it("usa tutti i fallback quando guidaUmiditaAccessibile è un oggetto vuoto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaUmiditaAccessibile = {};
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaUmiditaAccessibile).toBeDefined();
+      expect(risultato.guidaUmiditaAccessibile!.metodoPratico).toBe("Spruzza le foglie con acqua a temperatura ambiente ogni 2-3 giorni");
+      expect(risultato.guidaUmiditaAccessibile!.livelloPratico).toBe("Simile all'umidità di un bagno dopo la doccia");
+      expect(risultato.guidaUmiditaAccessibile!.segnaliAriaSecca).toBe("Punte delle foglie che diventano marroni e secche");
+    });
+
+    it("restituisce undefined e non interrompe il parsing quando guidaUmiditaAccessibile è assente", () => {
+      const risposta = creaRispostaValida();
+
+      const risultato = parseRispostaGemini(risposta);
+
+      expect(risultato.guidaUmiditaAccessibile).toBeUndefined();
+      expect(risultato.nomeComune).toBe("Pothos dorato");
+    });
+
+    it("restituisce undefined quando guidaUmiditaAccessibile è null", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaUmiditaAccessibile = null;
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaUmiditaAccessibile).toBeUndefined();
+    });
+
+    it("restituisce undefined quando guidaUmiditaAccessibile è una stringa anziché un oggetto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaUmiditaAccessibile = "non è un oggetto";
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaUmiditaAccessibile).toBeUndefined();
+    });
+  });
+
+  describe("guida temperatura accessibile", () => {
+    it("restituisce i dati invariati quando guidaTemperaturaAccessibile è completo e valido", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = {
+        rangeConRiferimentoDomestico: "tra 18°C e 24°C — la temperatura tipica di un soggiorno",
+        situazioniDaEvitare: ["non vicino a finestre aperte in inverno", "non a contatto con termosifoni accesi"],
+        segniStressDaTemperatura: "foglie che cadono improvvisamente o margini che imbruniscono",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeDefined();
+      expect(risultato.guidaTemperaturaAccessibile!.rangeConRiferimentoDomestico).toBe(
+        "tra 18°C e 24°C — la temperatura tipica di un soggiorno",
+      );
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare).toEqual([
+        "non vicino a finestre aperte in inverno",
+        "non a contatto con termosifoni accesi",
+      ]);
+      expect(risultato.guidaTemperaturaAccessibile!.segniStressDaTemperatura).toBe(
+        "foglie che cadono improvvisamente o margini che imbruniscono",
+      );
+    });
+
+    it("usa il fallback quando rangeConRiferimentoDomestico è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = {
+        situazioniDaEvitare: ["non vicino a porte esterne", "non sopra un termosifone"],
+        segniStressDaTemperatura: "foglie gialle improvvise",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeDefined();
+      expect(risultato.guidaTemperaturaAccessibile!.rangeConRiferimentoDomestico).toBe(
+        "tra 15°C e 25°C — una temperatura confortevole per la maggior parte delle piante da appartamento",
+      );
+    });
+
+    it("usa il fallback quando segniStressDaTemperatura è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = {
+        rangeConRiferimentoDomestico: "tra 16°C e 22°C",
+        situazioniDaEvitare: ["non vicino a porte esterne", "non sopra un termosifone"],
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeDefined();
+      expect(risultato.guidaTemperaturaAccessibile!.segniStressDaTemperatura).toBe(
+        "foglie che cadono o ingialliscono improvvisamente, specialmente in inverno o in estate",
+      );
+    });
+
+    it("completa situazioniDaEvitare con i fallback generici quando l'array ha meno di 2 voci valide", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = {
+        rangeConRiferimentoDomestico: "tra 16°C e 22°C",
+        situazioniDaEvitare: ["non vicino alla porta del balcone"],
+        segniStressDaTemperatura: "foglie gialle",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeDefined();
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare).toHaveLength(2);
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare[0]).toBe("non vicino alla porta del balcone");
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare[1]).toBe("non vicino a porte esterne in inverno");
+    });
+
+    it("converte situazioniDaEvitare da stringa singola ad array aggiungendo un fallback come secondo elemento", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = {
+        rangeConRiferimentoDomestico: "tra 16°C e 22°C",
+        situazioniDaEvitare: "non vicino alla finestra in inverno",
+        segniStressDaTemperatura: "foglie gialle",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeDefined();
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare).toHaveLength(2);
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare[0]).toBe("non vicino alla finestra in inverno");
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare[1]).toBe("non sopra o vicino a un termosifone");
+    });
+
+    it("usa entrambi i fallback generici quando situazioniDaEvitare è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = {
+        rangeConRiferimentoDomestico: "tra 16°C e 22°C",
+        segniStressDaTemperatura: "foglie gialle",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeDefined();
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare).toEqual([
+        "non vicino a porte esterne in inverno",
+        "non sopra o vicino a un termosifone",
+      ]);
+    });
+
+    it("usa tutti i fallback quando guidaTemperaturaAccessibile è un oggetto vuoto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = {};
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeDefined();
+      expect(risultato.guidaTemperaturaAccessibile!.rangeConRiferimentoDomestico).toBe(
+        "tra 15°C e 25°C — una temperatura confortevole per la maggior parte delle piante da appartamento",
+      );
+      expect(risultato.guidaTemperaturaAccessibile!.situazioniDaEvitare).toEqual([
+        "non vicino a porte esterne in inverno",
+        "non sopra o vicino a un termosifone",
+      ]);
+      expect(risultato.guidaTemperaturaAccessibile!.segniStressDaTemperatura).toBe(
+        "foglie che cadono o ingialliscono improvvisamente, specialmente in inverno o in estate",
+      );
+    });
+
+    it("restituisce undefined e non interrompe il parsing quando guidaTemperaturaAccessibile è assente", () => {
+      const risposta = creaRispostaValida();
+
+      const risultato = parseRispostaGemini(risposta);
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeUndefined();
+      expect(risultato.nomeComune).toBe("Pothos dorato");
+    });
+
+    it("restituisce undefined quando guidaTemperaturaAccessibile è null", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = null;
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeUndefined();
+    });
+
+    it("restituisce undefined quando guidaTemperaturaAccessibile è una stringa anziché un oggetto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaTemperaturaAccessibile = "non è un oggetto";
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaTemperaturaAccessibile).toBeUndefined();
     });
   });
 
