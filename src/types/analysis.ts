@@ -24,6 +24,7 @@ export interface PlantAnalysis {
   informazioniGenerali: CareInfo;
   informazioniRapide: CareInfo;
   diagnosi?: RisultatoDiagnosi[];
+  guidaAnnaffiaturaAccessibile?: GuidaAnnaffiaturaAccessibile;
 }
 
 export interface DiagnosiDettagliata {
@@ -42,3 +43,8 @@ export interface Ottimizzazione {
 }
 
 export type RisultatoDiagnosi = DiagnosiDettagliata | Ottimizzazione;
+
+export interface GuidaAnnaffiaturaAccessibile {
+  metodoVerifica: string;
+  frequenzaGiorni: string;
+}

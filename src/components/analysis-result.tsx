@@ -808,7 +808,7 @@ export function AnalysisResult({
             Cura quotidiana
           </h2>
         </div>
-        <CareInfoGrid informazioni={analisi.informazioniGenerali} />
+        <CareInfoGrid informazioni={analisi.informazioniGenerali} guidaAnnaffiaturaAccessibile={analisi.guidaAnnaffiaturaAccessibile} />
       </section>
 
       {/* 5. SALVA NELLA COLLEZIONE */}

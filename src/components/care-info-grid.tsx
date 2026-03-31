@@ -1,7 +1,8 @@
-import type { CareInfo } from "@/types/analysis";
+import type { CareInfo, GuidaAnnaffiaturaAccessibile } from "@/types/analysis";
 
 interface PropsCareInfoGrid {
   informazioni: CareInfo;
+  guidaAnnaffiaturaAccessibile?: GuidaAnnaffiaturaAccessibile;
 }
 
 interface VoceCura {
@@ -80,7 +81,7 @@ const VOCI_CURA: VoceCura[] = [
   },
 ];
 
-export function CareInfoGrid({ informazioni }: PropsCareInfoGrid) {
+export function CareInfoGrid({ informazioni, guidaAnnaffiaturaAccessibile }: PropsCareInfoGrid) {
   return (
     <div className="grid grid-cols-2 max-md:grid-cols-1 gap-5">
       {VOCI_CURA.map(({ chiave, etichetta, gradienteBorder, gradientiIcona, icona }) => (
@@ -106,6 +107,37 @@ export function CareInfoGrid({ informazioni }: PropsCareInfoGrid) {
               {etichetta}
             </h4>
           </div>
+          {chiave === "annaffiatura" && guidaAnnaffiaturaAccessibile && (
+            <div className="flex flex-col gap-2 mb-3">
+              {/* Blocco 1: Metodo fisico di verifica */}
+              <div className="flex items-start gap-2 rounded-lg px-3 py-2 bg-[rgba(91,155,213,0.08)] border border-[rgba(91,155,213,0.15)]">
+                <span aria-hidden="true" className="mt-[1px] shrink-0">
+                  <svg viewBox="0 0 18 18" fill="none" className="w-4 h-4">
+                    <circle cx="9" cy="9" r="7" stroke="#5b9bd5" strokeWidth="1.5" fill="none" />
+                    <path d="M6 9.5l2 2 4-4" stroke="#5b9bd5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <p className="text-xs text-[var(--color-text-secondary)] leading-snug">
+                  <span className="font-semibold text-[var(--color-text-primary)]">Controlla così: </span>
+                  {guidaAnnaffiaturaAccessibile.metodoVerifica}
+                </p>
+              </div>
+              {/* Blocco 2: Frequenza in giorni */}
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-[rgba(91,155,213,0.08)] border border-[rgba(91,155,213,0.15)]">
+                <span aria-hidden="true" className="shrink-0">
+                  <svg viewBox="0 0 18 18" fill="none" className="w-4 h-4">
+                    <rect x="2" y="3" width="14" height="13" rx="2" stroke="#5b9bd5" strokeWidth="1.5" fill="none" />
+                    <path d="M6 1v3M12 1v3M2 7h14" stroke="#5b9bd5" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <p className="text-xs leading-snug">
+                  <strong className="font-bold text-[var(--color-text-primary)]">
+                    Controlla ogni {guidaAnnaffiaturaAccessibile.frequenzaGiorni} giorni
+                  </strong>
+                </p>
+              </div>
+            </div>
+          )}
           <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
             {informazioni[chiave]}
           </p>

@@ -448,6 +448,88 @@ describe("parseRispostaGemini", () => {
     });
   });
 
+  describe("guida annaffiatura accessibile", () => {
+    it("restituisce i dati invariati quando guidaAnnaffiaturaAccessibile è completo e valido", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaAnnaffiaturaAccessibile = {
+        frequenzaGiorni: "7-10",
+        metodoVerifica: "Infila il dito nel terriccio fino alla seconda nocca",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaAnnaffiaturaAccessibile).toBeDefined();
+      expect(risultato.guidaAnnaffiaturaAccessibile!.frequenzaGiorni).toBe("7-10");
+      expect(risultato.guidaAnnaffiaturaAccessibile!.metodoVerifica).toBe(
+        "Infila il dito nel terriccio fino alla seconda nocca",
+      );
+    });
+
+    it("usa '3-5' come fallback quando frequenzaGiorni è assente", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaAnnaffiaturaAccessibile = {
+        metodoVerifica: "Controlla il peso del vaso",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaAnnaffiaturaAccessibile).toBeDefined();
+      expect(risultato.guidaAnnaffiaturaAccessibile!.frequenzaGiorni).toBe("3-5");
+    });
+
+    it("usa '3-5' come fallback quando frequenzaGiorni è una stringa vuota", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaAnnaffiaturaAccessibile = {
+        frequenzaGiorni: "   ",
+        metodoVerifica: "Controlla il peso del vaso",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaAnnaffiaturaAccessibile).toBeDefined();
+      expect(risultato.guidaAnnaffiaturaAccessibile!.frequenzaGiorni).toBe("3-5");
+    });
+
+    it("usa la stringa generica come fallback quando metodoVerifica è vuoto", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaAnnaffiaturaAccessibile = {
+        frequenzaGiorni: "5-7",
+        metodoVerifica: "",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaAnnaffiaturaAccessibile).toBeDefined();
+      expect(risultato.guidaAnnaffiaturaAccessibile!.metodoVerifica).toBe(
+        "Tocca il terreno con il dito a 2 cm di profondità",
+      );
+    });
+
+    it("usa la stringa generica come fallback quando metodoVerifica è solo spazi bianchi", () => {
+      const dati = JSON.parse(creaRispostaValida());
+      dati.guidaAnnaffiaturaAccessibile = {
+        frequenzaGiorni: "5-7",
+        metodoVerifica: "   ",
+      };
+
+      const risultato = parseRispostaGemini(JSON.stringify(dati));
+
+      expect(risultato.guidaAnnaffiaturaAccessibile).toBeDefined();
+      expect(risultato.guidaAnnaffiaturaAccessibile!.metodoVerifica).toBe(
+        "Tocca il terreno con il dito a 2 cm di profondità",
+      );
+    });
+
+    it("restituisce undefined e non interrompe il parsing quando guidaAnnaffiaturaAccessibile è assente", () => {
+      const risposta = creaRispostaValida();
+
+      const risultato = parseRispostaGemini(risposta);
+
+      expect(risultato.guidaAnnaffiaturaAccessibile).toBeUndefined();
+      expect(risultato.nomeComune).toBe("Pothos dorato");
+    });
+  });
+
   describe("confidenza bassa", () => {
     it("lancia ErroreAnalisi con tipo confidenza-bassa se livelloConfidenza è < 0.4", () => {
       const dati = JSON.parse(creaRispostaValida());

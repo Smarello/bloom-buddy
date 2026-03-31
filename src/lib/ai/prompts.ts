@@ -29,6 +29,10 @@ Lo schema JSON richiesto è:
     "temperatura": "string — valore sintetico, max 4 parole, es. '18–24 °C'",
     "umidita": "string — valore sintetico, max 4 parole, es. 'Alta'"
   },
+  "guidaAnnaffiaturaAccessibile": {
+    "metodoVerifica": "string — spiega il test del dito in linguaggio quotidiano: tocca il terreno con il dito a circa 2 cm di profondità e descrivi cosa fare in base a ciò che senti (asciutto/umido). Nessun termine botanico, tono rassicurante, in italiano.",
+    "frequenzaGiorni": "string — solo il numero o intervallo di giorni tra un'annaffiatura e l'altra (es. '3-5', '7'). Se la specie è incerta o il livelloConfidenza è basso, usa '3-5' come valore di fallback."
+  },
   "diagnosi": [
     {
       "categoria": "critico | attenzione",
@@ -58,5 +62,7 @@ Regole:
 - Il campo cosaAspettarsi deve indicare tempi realistici di recupero.
 - Le ottimizzazioni devono essere contestualizzate a ciò che osservi nella foto, non generiche.
 - Per una pianta in ottime condizioni (statoSalute "excellent" o "good"), l'array diagnosi deve contenere solo Ottimizzazione, nessuna DiagnosiDettagliata.
+- Il campo guidaAnnaffiaturaAccessibile.metodoVerifica deve spiegare il test del dito in modo semplice e rassicurante, senza termini botanici o tecnici non spiegati (es. "Infila il dito nel terreno fino a circa 2 cm di profondità: se lo senti asciutto è il momento di annaffiare, se è ancora umido aspetta ancora un po'").
+- Il campo guidaAnnaffiaturaAccessibile.frequenzaGiorni deve contenere solo un numero o un intervallo di giorni (es. "3-5", "7"); se la specie non è identificata con certezza (livelloConfidenza < 0.5), usa "3-5" come valore di fallback.
 - Rispondi SOLO con JSON valido, nessun testo prima o dopo.`;
 }

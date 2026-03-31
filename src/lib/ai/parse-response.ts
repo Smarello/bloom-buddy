@@ -1,4 +1,4 @@
-import type { PlantAnalysis, HealthStatus, CareInfo, RisultatoDiagnosi, DiagnosiDettagliata, Ottimizzazione } from "@/types/analysis";
+import type { PlantAnalysis, HealthStatus, CareInfo, RisultatoDiagnosi, DiagnosiDettagliata, Ottimizzazione, GuidaAnnaffiaturaAccessibile } from "@/types/analysis";
 
 export class ErroreAnalisi extends Error {
   constructor(
@@ -57,6 +57,16 @@ function normalizzaOttimizzazione(obj: Record<string, unknown>): Ottimizzazione 
     : "ottimizzazione";
 
   return { categoria, titolo, descrizione };
+}
+
+function normalizzaGuidaAnnaffiaturaAccessibile(raw: unknown): GuidaAnnaffiaturaAccessibile | undefined {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const obj = raw as Record<string, unknown>;
+
+  const frequenzaGiorni = stringaConFallback(obj.frequenzaGiorni, "3-5");
+  const metodoVerifica = stringaConFallback(obj.metodoVerifica, "Tocca il terreno con il dito a 2 cm di profondità");
+
+  return { frequenzaGiorni, metodoVerifica };
 }
 
 function parseDiagnosi(datiGrezzi: unknown[]): RisultatoDiagnosi[] {
@@ -202,6 +212,9 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
     : undefined;
   const diagnosi = diagnosiParsata && diagnosiParsata.length > 0 ? diagnosiParsata : undefined;
 
+  // Validazione guidaAnnaffiaturaAccessibile
+  const guidaAnnaffiaturaAccessibile = normalizzaGuidaAnnaffiaturaAccessibile(dati.guidaAnnaffiaturaAccessibile);
+
   return {
     nomeComune: dati.nomeComune.trim(),
     nomeScientifico,
@@ -213,5 +226,6 @@ export function parseRispostaGemini(testoRisposta: string): PlantAnalysis {
     informazioniGenerali,
     informazioniRapide,
     ...(diagnosi && { diagnosi }),
+    ...(guidaAnnaffiaturaAccessibile && { guidaAnnaffiaturaAccessibile }),
   };
 }
