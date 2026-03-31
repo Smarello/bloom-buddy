@@ -66,45 +66,47 @@ export default function GrigliaAnalisiCollezione({
         });
 
         return (
-          <Link
-            key={analisi.id}
-            href={`/analysis?id=${analisi.id}`}
-            aria-label={`Apri analisi del ${dataFormattata}`}
-          >
-            <article className="group relative rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
-              {/* Pulsante elimina analisi */}
-              <PulsanteEliminaAnalisiCard
-                idAnalisi={analisi.id}
-                onEliminata={() => rimuoviAnalisi(analisi.id)}
-              />
+          <div key={analisi.id} className="relative">
+            <Link
+              href={`/analysis?id=${analisi.id}`}
+              aria-label={`Apri analisi del ${dataFormattata}`}
+              className="block"
+            >
+              <article className="group rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
+                {/* Foto con badge stato salute */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-primary-50)]">
+                  <Image
+                    src={analisi.urlFoto}
+                    alt={datiValidati.nomeComune}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <span
+                    className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${salute.bg} ${salute.testo}`}
+                  >
+                    {salute.etichetta}
+                  </span>
+                </div>
 
-              {/* Foto con badge stato salute */}
-              <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-primary-50)]">
-                <Image
-                  src={analisi.urlFoto}
-                  alt={datiValidati.nomeComune}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <span
-                  className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${salute.bg} ${salute.testo}`}
-                >
-                  {salute.etichetta}
-                </span>
-              </div>
+                {/* Data analisi */}
+                <div className="p-4">
+                  <time
+                    dateTime={new Date(analisi.createdAt).toISOString()}
+                    className="text-sm text-[var(--color-text-secondary)]"
+                  >
+                    {dataFormattata}
+                  </time>
+                </div>
+              </article>
+            </Link>
 
-              {/* Data analisi */}
-              <div className="p-4">
-                <time
-                  dateTime={new Date(analisi.createdAt).toISOString()}
-                  className="text-sm text-[var(--color-text-secondary)]"
-                >
-                  {dataFormattata}
-                </time>
-              </div>
-            </article>
-          </Link>
+            {/* Pulsante elimina analisi — fuori dal Link per evitare navigazione al click */}
+            <PulsanteEliminaAnalisiCard
+              idAnalisi={analisi.id}
+              onEliminata={() => rimuoviAnalisi(analisi.id)}
+            />
+          </div>
         );
       })}
     </div>

@@ -127,61 +127,65 @@ export default async function PaginaCollezione() {
                 totaleAnalisi === 1 ? "1 analisi" : `${totaleAnalisi} analisi`;
 
               return (
-                <Link
-                  key={collezione.id}
-                  href={`/collezione/${collezione.id}`}
-                  aria-label={`Apri collezione di ${collezione.nome}`}
-                >
-                  <article className="group rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
-                    <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-primary-50)]">
-                      {ultimaAnalisi && (
-                        <Image
-                          src={ultimaAnalisi.urlFoto}
-                          alt={collezione.nome}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      )}
-                      <PulsanteEliminaCollezioneCard
-                        idCollezione={collezione.id}
-                        nomeCollezione={collezione.nome}
-                        numeroAnalisi={totaleAnalisi}
-                      />
-                      {datiAnalisi && (
-                        <span
-                          className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${salute.bg} ${salute.testo}`}
-                        >
-                          {salute.etichetta}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-4">
-                      <h2 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-text)] leading-tight mb-0.5">
-                        {collezione.nome}
-                      </h2>
-                      {collezione.nomeScientifico && (
-                        <p className="text-sm text-[var(--color-text-muted)] italic mb-3">
-                          {collezione.nomeScientifico}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between">
+                <div key={collezione.id} className="relative">
+                  <Link
+                    href={`/collezione/${collezione.id}`}
+                    aria-label={`Apri collezione di ${collezione.nome}`}
+                    className="block"
+                  >
+                    <article className="group rounded-2xl border border-[rgba(218,232,218,0.5)] bg-white/70 backdrop-blur-sm overflow-hidden transition-shadow hover:shadow-lg hover:shadow-[var(--color-primary-100)]/40">
+                      <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-primary-50)]">
                         {ultimaAnalisi && (
-                          <time
-                            dateTime={new Date(ultimaAnalisi.createdAt).toISOString()}
-                            className="text-xs text-[var(--color-text-secondary)]"
-                          >
-                            {dataFormattata}
-                          </time>
+                          <Image
+                            src={ultimaAnalisi.urlFoto}
+                            alt={collezione.nome}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
                         )}
-                        <span className="text-xs font-medium text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-2 py-0.5 rounded-full">
-                          {etichettaAnalisi}
-                        </span>
+                        {datiAnalisi && (
+                          <span
+                            className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${salute.bg} ${salute.testo}`}
+                          >
+                            {salute.etichetta}
+                          </span>
+                        )}
                       </div>
-                    </div>
-                  </article>
-                </Link>
+
+                      <div className="p-4">
+                        <h2 className="font-[family-name:var(--font-display)] font-bold text-base text-[var(--color-text)] leading-tight mb-0.5">
+                          {collezione.nome}
+                        </h2>
+                        {collezione.nomeScientifico && (
+                          <p className="text-sm text-[var(--color-text-muted)] italic mb-3">
+                            {collezione.nomeScientifico}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between">
+                          {ultimaAnalisi && (
+                            <time
+                              dateTime={new Date(ultimaAnalisi.createdAt).toISOString()}
+                              className="text-xs text-[var(--color-text-secondary)]"
+                            >
+                              {dataFormattata}
+                            </time>
+                          )}
+                          <span className="text-xs font-medium text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-2 py-0.5 rounded-full">
+                            {etichettaAnalisi}
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  </Link>
+
+                  {/* Pulsante elimina collezione — fuori dal Link per evitare navigazione al click */}
+                  <PulsanteEliminaCollezioneCard
+                    idCollezione={collezione.id}
+                    nomeCollezione={collezione.nome}
+                    numeroAnalisi={totaleAnalisi}
+                  />
+                </div>
               );
             })}
           </div>

@@ -48,6 +48,7 @@ export default function DialogoEliminaCollezione({
   }, [aperto]);
 
   function gestisciClickBackdrop(e: React.MouseEvent<HTMLDialogElement>) {
+    e.stopPropagation();
     if (e.target === refDialog.current && !inEliminazione) onChiudi();
   }
 
@@ -89,7 +90,6 @@ export default function DialogoEliminaCollezione({
   return (
     <dialog
       ref={refDialog}
-      onClose={onChiudi}
       onClick={gestisciClickBackdrop}
       className="fixed inset-0 z-50 m-auto w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-[var(--color-border-light)] shadow-[var(--shadow-lg)] p-0 bg-white backdrop:bg-black/40 backdrop:backdrop-blur-sm"
       style={{
